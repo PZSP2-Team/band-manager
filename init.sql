@@ -6,48 +6,48 @@ CREATE TABLE "groups" (
 
 CREATE TABLE "subgroups" (
     id SERIAL PRIMARY KEY,
-    group_id INTEGER REFERENCES "groups"(id),
-    name VARCHAR(255),
+    group_id INTEGER REFERENCES "groups"(id) NOT NULL,
+    name VARCHAR(255) NOT NULL,
     description VARCHAR(255)
 );
 
 CREATE TABLE "users" (
     id SERIAL PRIMARY KEY,
-    first_name VARCHAR(255),
-    last_name VARCHAR(255),
+    first_name VARCHAR(255) NOT NULL,
+    last_name VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    role VARCHAR(10),
+    role VARCHAR(10) NOT NULL CHECK (role IN ('Default', 'Moderator', 'Manager')),
     group_id INTEGER REFERENCES "groups"(id)
 );
 
 CREATE TABLE "announcements" (
     id SERIAL PRIMARY KEY,
-    title VARCHAR(255),
-    sender_id INTEGER REFERENCES "users"(id), 
-    description VARCHAR(255),
-    priority INTEGER,
-    group_id INTEGER REFERENCES "groups"(id)
+    title VARCHAR(255) NOT NULL,
+    sender_id INTEGER REFERENCES "users"(id) NOT NULL, 
+    description VARCHAR(255) NOT NULL,
+    priority INTEGER NOT NULL,
+    group_id INTEGER REFERENCES "groups"(id) NOT NULL
 );
 
 CREATE TABLE "events" (
     id SERIAL PRIMARY KEY,
-    title VARCHAR(255),
+    title VARCHAR(255) NOT NULL,
     description VARCHAR(255),
-    date DATE,
-    location VARCHAR(255),
-    group_id INTEGER REFERENCES "groups"(id)
+    date DATE NOT NULL,
+    location VARCHAR(255) NOT NULL,
+    group_id INTEGER REFERENCES "groups"(id) NOT NULL
 );
 
 CREATE TABLE "tracks" (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255)
+    name VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE "notesheets" (
     id SERIAL PRIMARY KEY,
-    track_id INTEGER REFERENCES "tracks"(id),
-    filepath VARCHAR(255)
+    track_id INTEGER REFERENCES "tracks"(id) NOT NULL,
+    filepath VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE "announcement_subgroup" (
@@ -68,7 +68,7 @@ CREATE TABLE "notesheet_subgroup" (
     PRIMARY KEY (notesheet_id, subgroup_id)
 );
 
-CREATE TABLE "event_track" (
+CREATE TABLE "performances" (
     event_id INTEGER REFERENCES "events"(id),
     track_id INTEGER REFERENCES "tracks"(id),
     PRIMARY KEY (event_id, track_id)
