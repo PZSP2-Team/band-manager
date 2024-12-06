@@ -51,8 +51,8 @@ func InitDB() {
 	db = database
 
 	if !db.Migrator().HasTable(&models.User{}) {
-    	createDB()
-	}	
+		createDB()
+	}
 
 	fmt.Println("backend_manager_db connection successful")
 }

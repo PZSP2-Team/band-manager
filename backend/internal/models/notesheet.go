@@ -1,8 +1,8 @@
 package models
 
 type Notesheet struct {
-    ID          	uint   			`gorm:"primarykey"`
-	Filepath		string			`gorm:"not null"`
-	TrackId     	uint   			`gorm:"not null;"`
-	Subgroups		[]*Subgroup		`gorm:"many2many:notesheet_subgroup;constraint:OnDelete:CASCADE"`
+	ID        uint        `gorm:"primarykey"`
+	Filepath  string      `gorm:"not null"`
+	TrackId   uint        `gorm:"not null;"`
+	Subgroups []*Subgroup `gorm:"many2many:notesheet_subgroup;constraint:OnDelete:CASCADE"`
 }
