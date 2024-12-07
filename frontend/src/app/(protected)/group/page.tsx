@@ -1,6 +1,7 @@
 "use client"
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
+import { UserRoundPlus, UsersRound, Info } from "lucide-react";
 
 export default function GroupPage() {
     const { data: session } = useSession();
@@ -31,20 +32,23 @@ export default function GroupPage() {
     }
 
     return (
-        <div className="max-w-md mx-auto mt-10 p-6">
-            <h1 className="text-2xl font-bold mb-6">You do not belong to any group.</h1>
-            <div className="space-y-4">
+        <div className="min-h-[calc(100vh-74px)] flex flex-col mx-auto py-16 gap-8">
+            <div className="flex-grow flex flex-row gap-10 px-40 ">
                 <button 
                     onClick={() => {/* create group logic */}}
-                    className="w-full p-4 bg-blue-500 text-white rounded hover:bg-blue-600"
+                    className="flex flex-col items-center justify-center w-full p-4 border border-customGray text-customGray rounded hover:bg-hoverGray group"
                 >
-                    Create new group
+                    <UsersRound size={48} className="mb-4 transform transition-transform group-hover:-translate-y-4" />
+                    <span className="text-lg font-semibold mb-2">Create new group</span>
+                    <p className="text-sm text-center">Start your own group and invite others to join</p>
                 </button>
                 <button
                     onClick={() => {/* join group logic */}}
-                    className="w-full p-4 bg-green-500 text-white rounded hover:bg-green-600"
+                    className="flex flex-col items-center justify-center w-full p-4 border border-customGray text-customGray rounded hover:bg-hoverGray group"
                 >
-                    Join group with code
+                    <UserRoundPlus size={48} className="mb-4 transform transition-transform group-hover:-translate-y-4" />
+                    <span className="text-lg font-semibold mb-2">Join group with code</span>
+                    <p className="text-sm text-center">Use an invite code to join an existing group</p>
                 </button>
             </div>
         </div>

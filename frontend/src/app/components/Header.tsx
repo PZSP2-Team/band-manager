@@ -6,8 +6,8 @@ import { LogOut } from "lucide-react"
 
 export default function Header() {
     return (
-        <header className="shadow-md">
-            <nav className="max-w-7xl mx-auto, px-4, h-16, flex justify-between items-center">
+        <header className="bg-headerGray p-4 shadow-xl">
+            <nav className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
                     <Image
                         src="/live-music.png"
@@ -19,7 +19,7 @@ export default function Header() {
                 </div>
                 <button
                     onClick={() => signOut({ callbackUrl: "/" })}
-                    className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded transition-colors"
+                    className="bg-headerGray flex items-center gap-2 border border-customGray text-customGray hover:bg-headerHoverGray px-4 py-2 rounded transition-colors"
                 >
                     <LogOut className="h-4 w-4" />
                     Log out
