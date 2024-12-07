@@ -2,12 +2,7 @@ import NextAuth, { User, Session } from "next-auth"
 import { JWT } from "next-auth/jwt"
 import CredentialsProvider from "next-auth/providers/credentials"
 
-interface CustomUser extends User {
-    role?: string
-    groupId?: number | null
-};
-
-const authOptions = {
+export const authOptions = {
     providers: [
         CredentialsProvider({
             name: "Credentials",
@@ -26,7 +21,7 @@ const authOptions = {
                     email: string,
                     password: string
                 } | undefined
-            ): Promise<CustomUser | null> {
+            ): Promise<User | null> {
                 if (!credentials) return null;
                 if (
                     credentials?.email === process.env.TEST_EMAIL && 
@@ -45,7 +40,7 @@ const authOptions = {
         })
     ],
     callbacks: {
-        async jwt({ token, user }: { token: JWT, user?: CustomUser }): Promise<JWT> {
+        async jwt({ token, user }: { token: JWT, user?: User }): Promise<JWT> {
             if (user) {
                 token.role = user.role;
                 token.group = user.groupId;
@@ -54,8 +49,8 @@ const authOptions = {
         },
         async session({ session, token }: { session: Session, token: JWT & { role?: string, group?: number | null } }): Promise<Session> {
             if (session.user) {
-                (session.user as CustomUser).role = token.role;
-                (session.user as CustomUser).groupId = token.group;
+                session.user.role = token.role;
+                session.user.groupId = token.group;
             }
             return session;
         }
