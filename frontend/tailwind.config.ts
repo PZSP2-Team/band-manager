@@ -11,6 +11,10 @@ export default {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        customGray: "#6f6f6f",
+        headerHoverGray: "#181818",
+        hoverGray: "#151515",
+        headerGray: "#131313"
       },
     },
   },
