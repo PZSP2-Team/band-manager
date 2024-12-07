@@ -8,14 +8,14 @@ export default function Header() {
     return (
         <header className="bg-headerGray p-4 shadow-xl">
             <nav className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-4">
                     <Image
                         src="/live-music.png"
                         alt="Band Manager Logo"
-                        width={24}
-                        height={24}
+                        width={32}
+                        height={32}
                     />
-                    <span className="font-bold text-xl">Band Manager</span>
+                    <span className="font-bold text-2xl">Band Manager</span>
                 </div>
                 <button
                     onClick={() => signOut({ callbackUrl: "/" })}
