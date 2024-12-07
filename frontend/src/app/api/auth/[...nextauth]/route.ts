@@ -4,9 +4,10 @@ import CredentialsProvider from "next-auth/providers/credentials"
 
 interface CustomUser extends User {
     role?: string
-}
+    groupId?: number | null
+};
 
-export const authOptions = {
+const authOptions = {
     providers: [
         CredentialsProvider({
             name: "Credentials",
@@ -35,25 +36,28 @@ export const authOptions = {
                         id: "1",
                         email: credentials.email!,
                         name: "Test User",
-                        role: "manager"
-                    }
+                        role: "manager",
+                        groupId: null
+                    };
                 }
-                return null
+                return null;
             }
         })
     ],
     callbacks: {
         async jwt({ token, user }: { token: JWT, user?: CustomUser }): Promise<JWT> {
             if (user) {
-                token.role = user.role
+                token.role = user.role;
+                token.group = user.groupId;
             }
-            return token
+            return token;
         },
-        async session({ session, token }: { session: Session, token: JWT & { role?: string } }): Promise<Session> {
+        async session({ session, token }: { session: Session, token: JWT & { role?: string, group?: number | null } }): Promise<Session> {
             if (session.user) {
-                (session.user as CustomUser).role = token.role
+                (session.user as CustomUser).role = token.role;
+                (session.user as CustomUser).groupId = token.group;
             }
-            return session
+            return session;
         }
     },
     pages: {
@@ -62,6 +66,6 @@ export const authOptions = {
     secret: process.env.NEXTAUTH_SECRET
 }
 
-const handler = NextAuth(authOptions)
-export const GET = handler
-export const POST = handler
+const handler = NextAuth(authOptions);
+export const GET = handler;
+export const POST = handler;
