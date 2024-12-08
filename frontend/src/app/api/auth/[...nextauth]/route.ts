@@ -43,15 +43,15 @@ export const authOptions = {
         async jwt({ token, user }: { token: JWT, user?: User }): Promise<JWT> {
             if (user) {
                 token.role = user.role;
-                token.group = user.groupId;
+                token.groupId = user.groupId;
                 console.log("JWT token updated:", token);
             }
             return token;
         },
-        async session({ session, token }: { session: Session, token: JWT & { role?: string, group?: number | null } }): Promise<Session> {
+        async session({ session, token }: { session: Session, token: JWT & { role?: string, groupId?: number | null } }): Promise<Session> {
             if (session.user) {
                 session.user.role = token.role;
-                session.user.groupId = token.group;
+                session.user.groupId = token.groupId;
                 console.log("Session updated:", session);
             }
             return session;
