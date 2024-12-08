@@ -1,5 +1,5 @@
 "use client";
-import { useSession, getSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { UserRoundPlus, UsersRound } from "lucide-react";
 
@@ -31,13 +31,7 @@ export default function GroupPage() {
   
       const newGroupId = 1;
       try {
-        // Обновляем данные пользователя, отправляя их на сервер
         await update({ user: {...session?.user, groupId: newGroupId } });
-  
-        // Рефетчим сессию, чтобы получить обновленные данные
-        const updatedSession = await getSession();
-  
-        console.log(`User group_id successfully updated. Current group_id: ${updatedSession?.user?.groupId}`);
       } catch (err) {
         console.error("Failed to update group_id:", err);
       }
@@ -47,9 +41,6 @@ export default function GroupPage() {
     }
   };
   
-  
-  
-
   if (group) {
     return (
       <div className="max-w-md mx-auto mt-10 p-6">
