@@ -11,7 +11,7 @@ export default function GroupPage() {
   const [error, setError] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  const TEST_JOIN_CODE = process.env.NEXT_PUBLIC_TEST_JOIN_CODE; // Accessing the code from .env
+  const TEST_JOIN_CODE = process.env.NEXT_PUBLIC_TEST_JOIN_CODE;
 
   useEffect(() => {
     if (session?.user?.groupId) {
@@ -44,7 +44,7 @@ export default function GroupPage() {
 
   return (
     <div className="min-h-[calc(100vh-74px)] flex flex-col mx-auto py-16 gap-8">
-      <div className="flex-grow flex flex-row gap-10 px-40 ">
+      <div className="flex-grow flex flex-row gap-10 px-40">
         <button
           onClick={() => {/* create group logic */}}
           className="flex flex-col items-center justify-center w-full p-4 border border-customGray text-customGray rounded hover:bg-hoverGray group"
@@ -65,27 +65,27 @@ export default function GroupPage() {
 
       {showJoinModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-md shadow-lg w-96 relative">
+          <div className="bg-gray-900 text-white p-8 rounded-md shadow-lg w-[28rem] relative">
             <button
               onClick={() => setShowJoinModal(false)}
-              className="absolute top-2 right-2 text-gray-500 hover:text-gray-800"
+              className="absolute top-2 right-2 text-customGray hover:text-white"
             >
               ✕
             </button>
             {!success ? (
               <>
-                <h2 className="text-xl font-bold mb-4 text-center">Join group with code</h2>
-                <p className="text-gray-600 mb-4 text-center">Paste your code</p>
+                <h2 className="text-2xl font-bold mb-4 text-center">Join group with code</h2>
+                <p className="text-gray-400 mb-4 text-center">Paste your code</p>
                 <input
                   type="text"
                   value={joinCode}
                   onChange={(e) => setJoinCode(e.target.value)}
                   placeholder="Enter group code"
-                  className="w-full px-4 py-2 mb-4 border border-gray-300 rounded-md"
+                  className="px-3 py-2 mb-4 block w-full rounded-md bg-gray-700 border border-customGray text-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                 />
                 <button
                   onClick={handleJoinGroup}
-                  className="w-full py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                  className="w-full py-2 px-4 rounded bg-cornflowerblue text-white font-bold hover:bg-blue-600 active:bg-blue-700 transition-colors duration-300"
                 >
                   Join
                 </button>
@@ -93,7 +93,7 @@ export default function GroupPage() {
               </>
             ) : (
               <div className="text-center">
-                <h2 className="text-xl font-bold mb-4">Successfully joined!</h2>
+                <h2 className="text-2xl font-bold mb-4">Successfully joined!</h2>
                 <span className="text-4xl">🎉</span>
               </div>
             )}
