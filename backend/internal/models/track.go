@@ -6,4 +6,5 @@ type Track struct {
 	GroupID    uint        `gorm:"not null"`
 	Events     []*Event    `gorm:"many2many:track_event;constraint:OnDelete:CASCADE"`
 	Notesheets []Notesheet `gorm:"constraint:OnDelete:CASCADE"`
+	Performances []Performance `gorm:"constraint:OnDelete:CASCADE"`
 }
