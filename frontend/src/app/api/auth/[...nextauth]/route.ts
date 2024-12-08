@@ -44,6 +44,7 @@ export const authOptions = {
             if (user) {
                 token.role = user.role;
                 token.group = user.groupId;
+                console.log("JWT token updated:", token);
             }
             return token;
         },
@@ -51,10 +52,12 @@ export const authOptions = {
             if (session.user) {
                 session.user.role = token.role;
                 session.user.groupId = token.group;
+                console.log("Session updated:", session);
             }
             return session;
         }
     },
+
     pages: {
         signIn: "/login",
     },
