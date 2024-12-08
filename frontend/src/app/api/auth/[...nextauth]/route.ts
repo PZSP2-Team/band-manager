@@ -1,4 +1,4 @@
-import NextAuth, { User, Session } from "next-auth"
+import NextAuth, { User, Session, CallbacksOptions } from "next-auth"
 import { JWT } from "next-auth/jwt"
 import CredentialsProvider from "next-auth/providers/credentials"
 
@@ -40,11 +40,14 @@ export const authOptions = {
         })
     ],
     callbacks: {
-        async jwt({ token, user }: { token: JWT, user?: User }): Promise<JWT> {
+        async jwt({ token, user, trigger, session }: Parameters<CallbacksOptions["jwt"]>[0]): Promise<JWT> {
             if (user) {
                 token.role = user.role;
                 token.groupId = user.groupId;
                 console.log("JWT token updated:", token);
+            }
+            if (trigger == "update" && session?.user) {
+                token.groupId = session.user.groupId;
             }
             return token;
         },
