@@ -1,5 +1,5 @@
 "use client";
-import { useSession } from "next-auth/react";
+import { useSession, getSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { UserRoundPlus, UsersRound } from "lucide-react";
 
@@ -60,7 +60,9 @@ export default function GroupPage() {
         // Update the session with the new group ID
         await update({ user: { ...session?.user, groupId: newGroup.id } });
 
-        console.log(`New group created: ${newGroup.name}`);
+        const updatedSession = await getSession();
+
+        console.log(`New group created: ${updatedSession?.user.groupId}`);
       } catch (err) {
         console.error("Failed to create group:", err);
       }
