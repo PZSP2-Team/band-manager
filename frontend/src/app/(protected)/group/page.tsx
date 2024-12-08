@@ -1,5 +1,5 @@
 "use client";
-import { useSession, getSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { UserRoundPlus, UsersRound } from "lucide-react";
 
