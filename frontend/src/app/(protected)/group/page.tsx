@@ -1,10 +1,11 @@
 "use client";
-import { useSession } from "next-auth/react";
+import { useSession, getSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { UserRoundPlus, UsersRound } from "lucide-react";
 
+
 export default function GroupPage() {
-  const { data: session } = useSession();
+  const { data: session, update } = useSession(); // Получаем функцию update для обновления сессии
   const [group, setGroup] = useState<{ id: number; name: string; description: string } | null>(null);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [joinCode, setJoinCode] = useState("");
@@ -23,15 +24,31 @@ export default function GroupPage() {
     }
   }, [session]);
 
-  const handleJoinGroup = () => {
+  const handleJoinGroup = async () => {
     if (joinCode === TEST_JOIN_CODE) {
       setSuccess(true);
       setError(false);
+  
+      const newGroupId = 1;
+      try {
+        // Обновляем данные пользователя, отправляя их на сервер
+        await update({ user: {...session?.user, groupId: newGroupId } });
+  
+        // Рефетчим сессию, чтобы получить обновленные данные
+        const updatedSession = await getSession();
+  
+        console.log(`User group_id successfully updated. Current group_id: ${updatedSession?.user?.groupId}`);
+      } catch (err) {
+        console.error("Failed to update group_id:", err);
+      }
     } else {
       setError(true);
       setJoinCode("");
     }
   };
+  
+  
+  
 
   if (group) {
     return (
