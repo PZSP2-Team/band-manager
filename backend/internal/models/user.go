@@ -6,7 +6,7 @@ type User struct {
 	LastName      string `gorm:"not null"`
 	Email         string `gorm:"unique;not null"`
 	PasswordHash  string `gorm:"not null"`
-	Role          string `gorm:"not null"`
+	Role          string 
 	GroupID       uint
 	Announcements []Announcement `gorm:"foreignKey:SenderID;constraint:OnDelete:SET NULL"`
 	Subgroups     []*Subgroup    `gorm:"many2many:subgroup_user;constraint:OnDelete:CASCADE"`
