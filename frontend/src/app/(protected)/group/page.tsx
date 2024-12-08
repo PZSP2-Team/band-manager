@@ -32,7 +32,7 @@ export default function GroupPage() {
       const newGroupId = 1;
       try {
         // Обновляем данные пользователя, отправляя их на сервер
-        await update({ user: {...session?.user, groupId: newGroupId } });
+        await update({...session, user: {...session?.user, groupId: newGroupId } });
   
         // Рефетчим сессию, чтобы получить обновленные данные
         const updatedSession = await getSession();
