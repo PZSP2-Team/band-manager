@@ -1,7 +1,7 @@
 package db
 
 import (
-	"band-manager-backend/internal/models"
+	"band-manager-backend/internal/model"
 	"fmt"
 	"log"
 	"os"
@@ -15,13 +15,13 @@ var db *gorm.DB
 
 func createDB() {
 	err := db.AutoMigrate(
-		&models.Group{},
-		&models.User{},
-		&models.Subgroup{},
-		&models.Announcement{},
-		&models.Event{},
-		&models.Track{},
-		&models.Notesheet{},
+		&model.Group{},
+		&model.User{},
+		&model.Subgroup{},
+		&model.Announcement{},
+		&model.Event{},
+		&model.Track{},
+		&model.Notesheet{},
 	)
 	if err != nil {
 		log.Fatal("migrations failed: ", err)
@@ -50,7 +50,7 @@ func InitDB() {
 
 	db = database
 
-	if !db.Migrator().HasTable(&models.User{}) {
+	if !db.Migrator().HasTable(&model.User{}) {
 		createDB()
 	}
 
