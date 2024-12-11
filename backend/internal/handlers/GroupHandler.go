@@ -86,3 +86,31 @@ func (h *GroupHandler) Join(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
+
+func (h *GroupHandler) GetGroupInfo(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Na potrzeby testów używamy hardkodowanego ID
+	const userID uint = 5
+
+	// Pobieramy informacje o grupie użytkownika
+	name, description, accessToken, err := h.groupUsecase.GetGroupInfo(userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Tworzymy odpowiedź w formacie JSON
+	response := map[string]interface{}{
+		"name":        name,
+		"description": description,
+		"accessToken": accessToken,
+	}
+
+	// Ustawiamy nagłówek i wysyłamy odpowiedź
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
