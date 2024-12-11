@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
 )
 
 type GroupHandler struct {
@@ -33,6 +35,7 @@ func (h *GroupHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var request struct {
 		Name        string `json:"name"`
 		Description string `json:"description"`
+		UserID      uint   `json:"user_id"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -78,7 +81,6 @@ func (h *GroupHandler) Join(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := map[string]interface{}{
-		"ack":           true,
 		"user_role":     userRole,
 		"user_group_id": groupID,
 	}
@@ -93,10 +95,19 @@ func (h *GroupHandler) GetGroupInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Na potrzeby testów używamy hardkodowanego ID
-	const userID uint = 5
+	pathParts := strings.Split(r.URL.Path, "/")
+	if len(pathParts) < 3 {
+		http.Error(w, "Invalid URL format", http.StatusBadRequest)
+		return
+	}
 
-	name, description, accessToken, err := h.groupUsecase.GetGroupInfo(userID)
+	userID, err := strconv.ParseUint(pathParts[len(pathParts)-1], 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	name, description, accessToken, err := h.groupUsecase.GetGroupInfo(uint(userID))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
