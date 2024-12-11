@@ -62,8 +62,8 @@ func (h *GroupHandler) Join(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var request struct {
-		UserID      uint   `json:"userId"`
-		AccessToken string `json:"accessToken"`
+		UserID      uint   `json:"user_id"`
+		AccessToken string `json:"access_token"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -103,9 +103,9 @@ func (h *GroupHandler) GetGroupInfo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := map[string]interface{}{
-		"name":        name,
-		"description": description,
-		"accessToken": accessToken,
+		"name":         name,
+		"description":  description,
+		"access_token": accessToken,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
