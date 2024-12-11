@@ -3,6 +3,7 @@ package handlers
 import (
 	"band-manager-backend/internal/usecases"
 	"encoding/json"
+	"fmt"
 	"net/http"
 )
 
@@ -18,13 +19,16 @@ func NewGroupHandler() *GroupHandler {
 }
 
 func (h *GroupHandler) Create(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Received request to /api/group/create")
+
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	// Get user ID from context (you need to implement authentication middleware)
-	userID := r.Context().Value("userID").(uint)
+	// userID := r.Context().Value("userID").(uint)
+	userID := uint(9)
 
 	var request struct {
 		Name        string `json:"name"`
