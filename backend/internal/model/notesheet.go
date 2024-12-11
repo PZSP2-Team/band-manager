@@ -1,4 +1,4 @@
-package models
+package model
 
 type Notesheet struct {
 	ID        uint        `gorm:"primarykey"`

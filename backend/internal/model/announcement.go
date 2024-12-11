@@ -1,4 +1,4 @@
-package models
+package model
 
 type Announcement struct {
 	ID          uint   `gorm:"primarykey"`

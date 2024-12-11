@@ -2,6 +2,7 @@ package main
 
 import (
 	"band-manager-backend/internal/db"
+	"band-manager-backend/internal/handlers"
 	"fmt"
 	"log"
 	"net/http"
@@ -21,8 +22,15 @@ func main() {
 		fmt.Fprintf(w, "Hello World!")
 	})
 
+	authHandler := handlers.NewAuthHandler()
+
+	// Set up routes
+	http.HandleFunc("/api/auth/login", authHandler.Login)
+	http.HandleFunc("/api/auth/register", authHandler.Register)
+
 	fmt.Printf("Server starting on http://localhost:%s\n", port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatal(err)
 	}
+
 }

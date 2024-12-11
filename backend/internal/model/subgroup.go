@@ -1,4 +1,4 @@
-package models
+package model
 
 type Subgroup struct {
 	ID            uint   `gorm:"primarykey"`
