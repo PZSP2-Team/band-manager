@@ -26,7 +26,7 @@ export const authOptions = {
                 if (!credentials) return null;
 
                 try {
-                    const response = await fetch(`${BACKEND_URL}/api/users/login`, {
+                    const response = await fetch(`${BACKEND_URL}/api/verify/login`, {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json"
@@ -61,17 +61,20 @@ export const authOptions = {
     callbacks: {
         async jwt({ token, user, trigger, session }: Parameters<CallbacksOptions["jwt"]>[0]): Promise<JWT> {
             if (user) {
+                token.id = user.id;
                 token.role = user.role;
                 token.groupId = user.groupId;
                 console.log("JWT token updated:", token);
             }
             if (trigger == "update" && session?.user) {
+                token.role = session.user.role;
                 token.groupId = session.user.groupId;
             }
             return token;
         },
-        async session({ session, token }: { session: Session, token: JWT & { role?: string, groupId?: number | null } }): Promise<Session> {
+        async session({ session, token }: { session: Session, token: JWT & { id?: number, role?: string, groupId?: number | null } }): Promise<Session> {
             if (session.user) {
+                session.user.id = token.id;
                 session.user.role = token.role;
                 session.user.groupId = token.groupId;
                 console.log("Session updated:", session);

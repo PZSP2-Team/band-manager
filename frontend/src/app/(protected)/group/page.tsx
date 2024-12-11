@@ -150,7 +150,12 @@ export default function GroupPage() {
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-gray-900 text-white p-8 rounded-md shadow-lg w-[28rem] relative">
             <button
-            onClick={() => setShowCreateModal(false)}
+            onClick={() => {
+                setShowCreateModal(false);
+                setErrorMessage("");
+                setGroupName("");
+                setGroupDescription("");
+            }}
             className="absolute top-2 right-2 text-customGray hover:text-white"
             >
             ✕
@@ -159,26 +164,33 @@ export default function GroupPage() {
                 <>
                 <h2 className="text-2xl font-bold mb-4 text-center">Create New Group</h2>
                 <p className="text-gray-400 mb-4 text-center">Enter group details</p>
-                <input
-                type="text"
-                value={groupName}
-                onChange={(e) => setGroupName(e.target.value)}
-                placeholder="Group name"
-                className="px-3 py-2 mb-4 block w-full rounded-md bg-gray-700 border border-customGray text-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                />
-                <textarea
-                value={groupDescription}
-                onChange={(e) => setGroupDescription(e.target.value)}
-                placeholder="Group description"
-                className="px-3 py-2 mb-4 block w-full rounded-md bg-gray-700 border border-customGray text-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                />
-                <button
-                onClick={handleCreateGroup}
-                className="w-full py-2 px-4 rounded bg-cornflowerblue text-white font-bold hover:bg-blue-600 active:bg-blue-700 transition-colors duration-300"
-                >
-                Create
-                </button>
-                {errorMessage && <p className="mt-2 text-red-500 text-center">Please fill in all fields</p>}
+                <form onSubmit={(e) => {
+                    e.preventDefault();
+                    handleCreateGroup();
+                }}>
+                    <input
+                        type="text"
+                        value={groupName}
+                        onChange={(e) => setGroupName(e.target.value)}
+                        placeholder="Group name"
+                        required
+                        className="px-3 py-2 mb-4 block w-full rounded-md bg-gray-700 border border-customGray text-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                    />
+                    <textarea
+                        value={groupDescription}
+                        onChange={(e) => setGroupDescription(e.target.value)}
+                        placeholder="Group description"
+                        required
+                        className="px-3 py-2 mb-4 block w-full rounded-md bg-gray-700 border border-customGray text-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                    />
+                    <button
+                        type="submit"
+                        className="w-full py-2 px-4 rounded bg-cornflowerblue text-white font-bold hover:bg-blue-600 active:bg-blue-700 transition-colors duration-300"
+                    >
+                        Create
+                    </button>
+                    {errorMessage && <p className="mt-2 text-red-500 text-center">{errorMessage}</p>}
+                </form>
                 </>
             ) : (
             <div className="text-center">
@@ -194,7 +206,11 @@ export default function GroupPage() {
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-gray-900 text-white p-8 rounded-md shadow-lg w-[28rem] relative">
             <button
-            onClick={() => setShowJoinModal(false)}
+            onClick={() => {
+                setShowJoinModal(false);
+                setErrorMessage("");
+                setJoinToken("");
+            }}
             className="absolute top-2 right-2 text-customGray hover:text-white"
             >
             ✕
@@ -203,20 +219,26 @@ export default function GroupPage() {
                 <>
                 <h2 className="text-2xl font-bold mb-4 text-center">Join group with code</h2>
                 <p className="text-gray-400 mb-4 text-center">Paste your code</p>
-                <input
-                type="text"
-                value={joinCode}
-                onChange={(e) => setJoinToken(e.target.value)}
-                placeholder="Enter group code"
-                className="px-3 py-2 mb-4 block w-full rounded-md bg-gray-700 border border-customGray text-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                />
-                <button
-                onClick={handleJoinGroup}
-                className="w-full py-2 px-4 rounded bg-cornflowerblue text-white font-bold hover:bg-blue-600 active:bg-blue-700 transition-colors duration-300"
-                >
-                Join
-                </button>
-                {errorMessage && <p className="mt-2 text-red-500 text-center">Try again or check your code</p>}
+                <form onSubmit={(e) => {
+                    e.preventDefault();
+                    handleJoinGroup();
+                }}>
+                    <input
+                        type="text"
+                        value={joinToken}
+                        onChange={(e) => setJoinToken(e.target.value)}
+                        placeholder="Enter group code"
+                        required
+                        className="px-3 py-2 mb-4 block w-full rounded-md bg-gray-700 border border-customGray text-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                    />
+                    <button
+                        type="submit"
+                        className="w-full py-2 px-4 rounded bg-cornflowerblue text-white font-bold hover:bg-blue-600 active:bg-blue-700 transition-colors duration-300"
+                    >
+                        Join
+                    </button>
+                    {errorMessage && <p className="mt-2 text-red-500 text-center">Try again or check your code</p>}
+                </form>
                 </>
             ) : (
             <div className="text-center">
