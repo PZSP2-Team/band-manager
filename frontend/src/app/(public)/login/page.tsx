@@ -7,13 +7,13 @@ import Link from "next/link";
 import { signIn } from "next-auth/react";
 
 export default function Login() {
-    const [error, setError] = useState("");
+    const [errorMessage, setErrorMessage] = useState("");
     const router = useRouter();
     const formRef = useRef<HTMLFormElement>(null)
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setError("");
+        setErrorMessage("");
 
         const form = formRef.current;
         const email = form?.email?.value;
@@ -26,15 +26,15 @@ export default function Login() {
                 redirect: false,
             })
             if (result?.error) {
-                setError("Invalid email or password")
+                setErrorMessage("Invalid email or password")
                 return
             }
             if (result?.ok) {
                 router.push("/group")
                 router.refresh()
             }
-        } catch (error) {
-            setError("An unexpected error occured. Please try again in few minutes.")
+        } catch (err) {
+            setErrorMessage("An unexpected error occured. Please try again in few minutes.")
         }
     }
 
@@ -52,9 +52,9 @@ export default function Login() {
             <div className="w-1/2 flex items-center justify-center">
                 <div className="w-96 border border-customGray p-8 rounded-md shadow-md">
                     <h2 className="text-2xl font-bold mb-4 text-center">Sign in to Band Manager</h2>
-                    {error && (
+                    {errorMessage && (
                         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                            {error}
+                            {errorMessage}
                         </div>
                     )}
                     <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
