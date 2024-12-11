@@ -2,6 +2,7 @@ package main
 
 import (
 	"band-manager-backend/internal/db"
+	"band-manager-backend/internal/handlers"
 	"fmt"
 	"log"
 	"net/http"
@@ -31,6 +32,5 @@ func main() {
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatal(err)
 	}
-
 
 }
