@@ -57,3 +57,30 @@ func (u *GroupUsecase) CreateGroup(name, description string, creatorID uint) (st
 
 	return creator.Role, group.ID, nil
 }
+
+// JoinGroup adds a user to an existing group
+func (u *GroupUsecase) JoinGroup(userID uint, accessToken string) (string, uint, error) {
+	group, err := u.groupRepo.GetGroupByAccessToken(accessToken)
+	if err != nil {
+		return "", 0, errors.New("invalid access token")
+	}
+
+	user, err := u.userRepo.GetUserByID(userID)
+	if err != nil {
+		return "", 0, errors.New("user not found")
+	}
+
+	if user.GroupID != nil {
+		return "", 0, errors.New("user already belongs to a group")
+	}
+
+	user.GroupID = &group.ID
+	user.Role = "member"
+
+	err = u.userRepo.UpdateUser(user)
+	if err != nil {
+		return "", 0, errors.New("failed to join group")
+	}
+
+	return user.Role, group.ID, nil
+}
