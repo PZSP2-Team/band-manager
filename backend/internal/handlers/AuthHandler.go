@@ -19,6 +19,16 @@ func NewAuthHandler() *AuthHandler {
 
 // Login handles the /api/auth/login endpoint
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+
+	type LoginResponse struct {
+		ID        uint   `json:"id"`
+		FirstName string `json:"first_name"`
+		LastName  string `json:"last_name"`
+		Email     string `json:"email"`
+		Role      string `json:"role"`
+		GroupID   *uint  `json:"group_id"`
+	}
+
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
@@ -33,10 +43,19 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := h.authUsecase.Login(request.Email, request.Password)
+	user, err := h.authUsecase.Login(request.Email, request.Password)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
+	}
+
+	response := LoginResponse{
+		ID:        user.ID,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Email:     user.Email,
+		Role:      user.Role,
+		GroupID:   user.GroupID,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
