@@ -7,7 +7,7 @@ import (
 )
 
 type AuthHandler struct {
-	usecase *usecases.UserUsecase
+	authUsecase *usecases.AuthUsecase
 }
 
 func NewAuthHandler() *AuthHandler {
@@ -16,6 +16,7 @@ func NewAuthHandler() *AuthHandler {
 		authUsecase: authUsecase,
 	}
 }
+
 // Login handles the /api/auth/login endpoint
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -41,7 +42,6 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
-
 
 // Register handles the /api/auth/register endpoint
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
