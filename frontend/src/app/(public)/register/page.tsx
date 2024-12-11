@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
+import { API_URL } from "@/config/api";
 
 export default function Register() {
     const [firstName, setFirstName] = useState("");
@@ -19,8 +20,9 @@ export default function Register() {
         setErrorMessage("");
         setSuccessMessage("");
 
+        console.log('Request URL:', `${API_URL}/auth/register`);
         try {
-            const response = await fetch(`${process.env.API_URL}/api/auth/register`, {
+            const response = await fetch(`${API_URL}/api/auth/register`, {
                 method: "POST",
                 headers: {
                 "Content-Type": "application/json",
@@ -40,7 +42,7 @@ export default function Register() {
             }
 
             const data = await response.json();
-            if (data.result) {
+            if (data.message) {
                 setSuccessMessage(data.message);
                 setTimeout(() => {
                     router.push("/login");
