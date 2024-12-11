@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
+	"fmt"
 )
 
 type GroupUsecase struct {
@@ -83,4 +84,32 @@ func (u *GroupUsecase) JoinGroup(userID uint, accessToken string) (string, uint,
 	}
 
 	return user.Role, group.ID, nil
+}
+
+func (u *GroupUsecase) GetGroupInfo(userID uint) (string, string, string, error) {
+	// Najpierw sprawdzamy, czy użytkownik istnieje
+	user, err := u.userRepo.GetUserByID(userID)
+	if err != nil {
+		return "", "", "", fmt.Errorf("użytkownik nie znaleziony")
+	}
+
+	// Sprawdzamy, czy użytkownik należy do jakiejś grupy
+	if user.GroupID == nil {
+		return "", "", "", fmt.Errorf("użytkownik nie należy do żadnej grupy")
+	}
+
+	// Pobieramy informacje o grupie użytkownika
+	group, err := u.groupRepo.GetGroupByID(*user.GroupID)
+	if err != nil {
+		return "", "", "", fmt.Errorf("nie znaleziono grupy")
+	}
+
+	// Przygotowujemy access token - będzie pusty string, jeśli użytkownik nie jest managerem
+	accessToken := ""
+	if user.Role == "manager" {
+		accessToken = group.AccessToken
+	}
+
+	// Zwracamy kolejno: nazwę grupy, opis i token dostępu
+	return group.Name, group.Description, accessToken, nil
 }
