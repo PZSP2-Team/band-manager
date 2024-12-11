@@ -40,7 +40,6 @@ func main() {
     
     authHandler := handlers.NewAuthHandler()
     
-    // Wrap handlers with CORS middleware
     http.HandleFunc("/", enableCORS(func(w http.ResponseWriter, r *http.Request) {
         fmt.Fprintf(w, "Hello World!")
     }))
