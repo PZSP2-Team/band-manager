@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"band-manager-backend/internal/handlers"
 )
 
 func main() {
@@ -26,10 +25,4 @@ func main() {
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatal(err)
 	}
-
-	// Inicjalizacja handlerów (kontrolerów)
-	userHandler := handlers.NewUserHandler(database)
-
-	// Routing
-	http.HandleFunc("/register", userHandler.Register)
 }
