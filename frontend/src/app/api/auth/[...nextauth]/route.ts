@@ -1,6 +1,6 @@
 import NextAuth, { User, Session, CallbacksOptions } from "next-auth"
 import { JWT } from "next-auth/jwt"
-import { API_URL } from "@/config/api";
+import { BACKEND_URL } from "@/config/api";
 import CredentialsProvider from "next-auth/providers/credentials"
 
 export const authOptions = {
@@ -26,7 +26,7 @@ export const authOptions = {
                 if (!credentials) return null;
 
                 try {
-                    const response = await fetch(`${API_URL}/api/auth/login`, {
+                    const response = await fetch(`${BACKEND_URL}/api/users/login`, {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json"

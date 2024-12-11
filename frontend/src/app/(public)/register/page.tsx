@@ -4,7 +4,6 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { API_URL } from "@/config/api";
 
 export default function Register() {
     const [firstName, setFirstName] = useState("");
@@ -20,9 +19,8 @@ export default function Register() {
         setErrorMessage("");
         setSuccessMessage("");
 
-        console.log('Request URL:', `${API_URL}/auth/register`);
         try {
-            const response = await fetch(`${API_URL}/api/auth/register`, {
+            const response = await fetch("/api/users/register", {
                 method: "POST",
                 headers: {
                 "Content-Type": "application/json",
