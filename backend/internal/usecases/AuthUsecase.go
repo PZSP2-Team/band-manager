@@ -8,3 +8,13 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+type AuthUsecase struct {
+	userRepo *repositories.UserRepository
+}
+
+func NewAuthUsecase() *AuthUsecase {
+	userRepo := repositories.NewUserRepository()
+	return &AuthUsecase{
+		userRepo: userRepo,
+	}
+}
