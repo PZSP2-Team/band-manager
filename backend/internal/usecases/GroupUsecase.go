@@ -48,7 +48,7 @@ func (u *GroupUsecase) CreateGroup(name, description string, creatorID uint) (st
 	}
 
 	creator.GroupID = &group.ID
-	creator.Role = "admin"
+	creator.Role = "manager"
 
 	err = u.userRepo.UpdateUser(creator)
 	if err != nil {
