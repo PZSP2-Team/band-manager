@@ -9,28 +9,45 @@ import (
 	"os"
 )
 
+func enableCORS(next http.HandlerFunc) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        frontendPort := os.Getenv("FRONTEND_PORT")
+        if frontendPort == "" {
+            frontendPort = "3000"
+        }
+        
+		allowedOrigin := fmt.Sprintf("http://localhost:%s", frontendPort)
+        w.Header().Set("Access-Control-Allow-Origin", allowedOrigin)
+        w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+        w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        
+        if r.Method == "OPTIONS" {
+            w.WriteHeader(http.StatusOK)
+            return
+        }
+        
+        next(w, r)
+    }
+}
+
 func main() {
-	port := os.Getenv("BACKEND_PORT")
-	if port == "" {
-		port = "8080"
-	}
-
-	db.InitDB()
-
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		// database := db.GetDB()
-		fmt.Fprintf(w, "Hello World!")
-	})
-
-	authHandler := handlers.NewAuthHandler()
-
-	// Set up routes
-	http.HandleFunc("/api/auth/login", authHandler.Login)
-	http.HandleFunc("/api/auth/register", authHandler.Register)
-
-	fmt.Printf("Server starting on http://localhost:%s\n", port)
-	if err := http.ListenAndServe(":"+port, nil); err != nil {
-		log.Fatal(err)
-	}
-
+    port := os.Getenv("BACKEND_PORT")
+    if port == "" {
+        port = "8080"
+    }
+    
+    db.InitDB()
+    
+    authHandler := handlers.NewAuthHandler()
+    
+    http.HandleFunc("/", enableCORS(func(w http.ResponseWriter, r *http.Request) {
+        fmt.Fprintf(w, "Hello World!")
+    }))
+    http.HandleFunc("/api/auth/login", enableCORS(authHandler.Login))
+    http.HandleFunc("/api/auth/register", enableCORS(authHandler.Register))
+    
+    fmt.Printf("Server starting on http://localhost:%s\n", port)
+    if err := http.ListenAndServe(":"+port, nil); err != nil {
+        log.Fatal(err)
+    }
 }
