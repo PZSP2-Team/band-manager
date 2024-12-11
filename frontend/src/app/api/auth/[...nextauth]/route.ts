@@ -23,19 +23,37 @@ export const authOptions = {
                 } | undefined
             ): Promise<User | null> {
                 if (!credentials) return null;
-                if (
-                    credentials?.email === process.env.TEST_EMAIL && 
-                    credentials?.password === process.env.TEST_PASSWORD
-                ) {
+
+                try {
+                    const response = await fetch(`${process.env.API_URL}/api/auth/login`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            email: credentials.email,
+                            password: credentials.password
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(errorText);
+                    }
+
+                    const data = await response.json();
+
                     return {
-                        id: "1",
-                        email: credentials.email!,
-                        name: "Test User",
-                        role: "manager",
-                        groupId: null
+                        id: data.id,
+                        name: data.first_name + data.last_name,
+                        email: data.email,
+                        role: data.role,
+                        groupId: data.group_id
                     };
+                } catch (err) {
+                    console.error("Login error:", err);
+                    return null;
                 }
-                return null;
             }
         })
     ],
