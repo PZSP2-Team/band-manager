@@ -35,3 +35,15 @@ func (r *UserRepository) GetUserByEmail(email string) (*model.User, error) {
 	// Zwracamy użytkownika
 	return &user, nil
 }
+
+
+// CreateUser tworzy nowego użytkownika w bazie danych
+func (r *UserRepository) CreateUser(user *model.User) error {
+	// Używamy GORM do zapisu nowego użytkownika w bazie danych
+	if err := r.db.Create(user).Error; err != nil {
+		// Jeśli wystąpił błąd podczas zapisu, zwracamy błąd
+		return err
+	}
+	// Zwracamy nil, gdy zapis był udany
+	return nil
+}
