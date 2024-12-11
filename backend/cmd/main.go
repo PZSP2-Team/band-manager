@@ -11,12 +11,17 @@ import (
 
 func enableCORS(next http.HandlerFunc) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
+        frontendHost := os.Getenv("FRONTEND_HOST")
+        if frontendHost == "" {
+            frontendHost = "localhost"
+        }
+
         frontendPort := os.Getenv("FRONTEND_PORT")
         if frontendPort == "" {
             frontendPort = "3000"
         }
         
-		allowedOrigin := fmt.Sprintf("http://localhost:%s", frontendPort)
+		allowedOrigin := fmt.Sprintf("http://%s:%s", frontendHost, frontendPort)
         w.Header().Set("Access-Control-Allow-Origin", allowedOrigin)
         w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
         w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
@@ -43,8 +48,8 @@ func main() {
     http.HandleFunc("/", enableCORS(func(w http.ResponseWriter, r *http.Request) {
         fmt.Fprintf(w, "Hello World!")
     }))
-    http.HandleFunc("/api/auth/login", enableCORS(authHandler.Login))
-    http.HandleFunc("/api/auth/register", enableCORS(authHandler.Register))
+    http.HandleFunc("/api/users/login", enableCORS(authHandler.Login))
+    http.HandleFunc("/api/users/register", enableCORS(authHandler.Register))
     
     fmt.Printf("Server starting on http://localhost:%s\n", port)
     if err := http.ListenAndServe(":"+port, nil); err != nil {
