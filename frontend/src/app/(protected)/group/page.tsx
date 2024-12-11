@@ -18,7 +18,7 @@ export default function GroupPage() {
         const fetchGroupData = async () => {
             if (session?.user?.groupId) {
                 try {
-                    const response = await fetch(`/api/group/${session.user.groupId}`, {
+                    const response = await fetch(`/api/group/${session.user.id}`, {
                         method: "GET",
                         headers: {
                             "Content-Type": "application/json"
@@ -36,7 +36,7 @@ export default function GroupPage() {
         };
 
         fetchGroupData();
-    }, [session?.user?.groupId]);
+    }, [session?.user?.groupId, session?.user?.id]);
 
     const handleJoinGroup = async () => {
         setErrorMessage("");
