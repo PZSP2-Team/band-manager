@@ -28,34 +28,41 @@ func generateAccessToken() string {
 	return hex.EncodeToString(bytes)
 }
 
-func (u *GroupUsecase) CreateGroup(name, description string, creatorID uint) (string, uint, error) {
+func (u *GroupUsecase) CreateGroup(name, description string, userID uint) (string, uint, error) {
 
-	accessToken := generateAccessToken()
+	user, err := u.userRepo.GetUserByID(userID)
+	if err != nil {
+		return "", 0, fmt.Errorf("użytkownik nie znaleziony: %v", err)
+	}
+
+	// Sprawdzamy, czy użytkownik nie należy już do jakiejś grupy
+	if user.GroupID != nil {
+		return "", 0, fmt.Errorf("użytkownik już należy do grupy")
+	}
+
+	// Tworzymy nową grupę
 	group := &model.Group{
 		Name:        name,
 		Description: description,
-		AccessToken: accessToken,
+		AccessToken: generateAccessToken(), // Zakładam, że ta funkcja już istnieje
 	}
 
-	err := u.groupRepo.CreateGroup(group)
+	// Zapisujemy grupę w bazie
+	err = u.groupRepo.CreateGroup(group)
 	if err != nil {
-		return "", 0, errors.New("failed to create group")
+		return "", 0, fmt.Errorf("nie udało się utworzyć grupy: %v", err)
 	}
 
-	creator, err := u.userRepo.GetUserByID(creatorID)
+	// Aktualizujemy użytkownika - ustawiamy GroupID i rolę managera
+	user.GroupID = &group.ID
+	user.Role = "manager"
+
+	err = u.userRepo.UpdateUser(user)
 	if err != nil {
-		return "", 0, errors.New("failed to find creator user")
+		return "", 0, fmt.Errorf("nie udało się zaktualizować użytkownika: %v", err)
 	}
 
-	creator.GroupID = &group.ID
-	creator.Role = "manager"
-
-	err = u.userRepo.UpdateUser(creator)
-	if err != nil {
-		return "", 0, errors.New("failed to update creator's details")
-	}
-
-	return creator.Role, group.ID, nil
+	return user.Role, group.ID, nil
 }
 
 func (u *GroupUsecase) JoinGroup(userID uint, accessToken string) (string, uint, error) {

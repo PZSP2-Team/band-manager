@@ -28,10 +28,6 @@ func (h *GroupHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get user ID from context (you need to implement authentication middleware)
-	// userID := r.Context().Value("userID").(uint)
-	userID := uint(9)
-
 	var request struct {
 		Name        string `json:"name"`
 		Description string `json:"description"`
@@ -43,7 +39,7 @@ func (h *GroupHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userRole, groupID, err := h.groupUsecase.CreateGroup(request.Name, request.Description, userID)
+	userRole, groupID, err := h.groupUsecase.CreateGroup(request.Name, request.Description, request.UserID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -56,6 +52,7 @@ func (h *GroupHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
+
 }
 
 func (h *GroupHandler) Join(w http.ResponseWriter, r *http.Request) {
