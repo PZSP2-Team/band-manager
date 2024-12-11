@@ -1,1 +1,0 @@
-sudo docker exec -it band-manager-db-1 psql -U band_manager_user -d band_manager_db 
