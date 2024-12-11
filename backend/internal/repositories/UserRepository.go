@@ -4,6 +4,7 @@ import (
 	"band-manager-backend/internal/db"
 	"band-manager-backend/internal/model"
 	"errors"
+	"log"
 
 	"gorm.io/gorm"
 )
@@ -46,6 +47,7 @@ func (r *UserRepository) CreateUser(user *model.User) error {
 func (r *UserRepository) UpdateUser(user *model.User) error {
 	result := r.db.Save(user)
 	if result.Error != nil {
+		log.Printf("Error creating user: %v", result.Error)
 		return errors.New("nie udało się zaktualizować użytkownika")
 	}
 

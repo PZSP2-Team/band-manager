@@ -52,7 +52,7 @@ func (u *AuthUsecase) Register(firstName, lastName, email, password string) erro
 		LastName:     lastName,
 		Email:        email,
 		PasswordHash: string(hashedPassword),
-		Role:         "user", // Default role
+		//Role:         , // Default role
 	}
 
 	// Save the user to the database
