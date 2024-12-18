@@ -35,24 +35,19 @@ services:
       db:
         condition: service_healthy
 
-  # frontend:
-  #   build: 
-  #     context: ./frontend
-  #     dockerfile: Dockerfile
-  #   environment:
-  #     NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
-  #     NEXTAUTH_URL: http://localhost:${FRONTEND_PORT}
-  #     NEXT_PUBLIC_BACKEND_HOST: ${BACKEND_HOST}
-  #     NEXT_PUBLIC_BACKEND_PORT: ${BACKEND_PORT}
-  #   ports:
-  #     - "${FRONTEND_PORT}:${FRONTEND_PORT}"
-  #   depends_on:
-    #   - backend
-    #
-    # volumes:
-    #   - ./frontend:/app
-    #   - /app/node_modules
-    #   - /app/.next
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: ${NODE_ENV:-development}.Dockerfile
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: ${FRONTEND_PORT}
+    ports:
+      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
 
 
 volumes:
