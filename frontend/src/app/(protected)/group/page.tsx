@@ -2,7 +2,7 @@
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { UserRoundPlus, UsersRound } from "lucide-react";
-import LoadingScreen from "@/app/components/LoadingScreen";
+import LoadingScreen from "@/src/app/components/LoadingScreen";
 
 type RenderState = 
   | { status: "loading" }
