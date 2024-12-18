@@ -34,6 +34,7 @@ export default function Login() {
                 router.refresh()
             }
         } catch (err) {
+            console.error(`Error: ${err}`);
             setErrorMessage("An unexpected error occured. Please try again in few minutes.")
         }
     }

@@ -47,6 +47,7 @@ export default function Register() {
                 }, 2000);
             }
         } catch (err) {
+            console.error(`Error: ${err}`);
             setErrorMessage("Something went wrong with the registration");
         }
     };
