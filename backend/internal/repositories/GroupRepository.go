@@ -64,3 +64,23 @@ func (r *GroupRepository) GetGroupByID(id uint) (*model.Group, error) {
 	}
 	return &group, nil
 }
+
+func (r *GroupRepository) GetGroupMembers(groupID uint) ([]*model.User, error) {
+	var roles []model.UserGroupRole
+	err := r.db.Where("group_id = ?", groupID).Preload("User").Find(&roles).Error
+	if err != nil {
+		return nil, err
+	}
+
+	// Wyciągamy użytkowników z ról
+	var users []*model.User
+	for _, role := range roles {
+		users = append(users, &role.User)
+	}
+	return users, nil
+}
+
+func (r *GroupRepository) RemoveUserFromGroup(userID uint, groupID uint) error {
+	// Usuwamy wpis w UserGroupRole
+	return r.db.Delete(&model.UserGroupRole{}, "user_id = ? AND group_id = ?", userID, groupID).Error
+}
