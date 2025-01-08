@@ -29,40 +29,29 @@ func generateAccessToken() string {
 }
 
 func (u *GroupUsecase) CreateGroup(name, description string, userID uint) (string, uint, error) {
+	_, err := u.userRepo.GetUserByID(userID)
 
-	user, err := u.userRepo.GetUserByID(userID)
 	if err != nil {
 		return "", 0, fmt.Errorf("użytkownik nie znaleziony: %v", err)
 	}
 
-	// Sprawdzamy, czy użytkownik nie należy już do jakiejś grupy
-	if user.GroupID != nil {
-		return "", 0, fmt.Errorf("użytkownik już należy do grupy")
-	}
-
-	// Tworzymy nową grupę
 	group := &model.Group{
 		Name:        name,
 		Description: description,
-		AccessToken: generateAccessToken(), // Zakładam, że ta funkcja już istnieje
+		AccessToken: generateAccessToken(),
 	}
 
-	// Zapisujemy grupę w bazie
 	err = u.groupRepo.CreateGroup(group)
 	if err != nil {
 		return "", 0, fmt.Errorf("nie udało się utworzyć grupy: %v", err)
 	}
 
-	// Aktualizujemy użytkownika - ustawiamy GroupID i rolę managera
-	user.GroupID = &group.ID
-	user.Role = "manager"
-
-	err = u.userRepo.UpdateUser(user)
+	err = u.groupRepo.AddUserToGroup(userID, group.ID, "manager")
 	if err != nil {
-		return "", 0, fmt.Errorf("nie udało się zaktualizować użytkownika: %v", err)
+		return "", 0, fmt.Errorf("nie udało się dodać użytkownika do grupy: %v", err)
 	}
 
-	return user.Role, group.ID, nil
+	return "manager", group.ID, nil
 }
 
 func (u *GroupUsecase) JoinGroup(userID uint, accessToken string) (string, uint, error) {
@@ -76,39 +65,33 @@ func (u *GroupUsecase) JoinGroup(userID uint, accessToken string) (string, uint,
 		return "", 0, errors.New("user not found")
 	}
 
-	if user.GroupID != nil {
-		return "", 0, errors.New("user already belongs to a group")
+	for _, g := range user.Groups {
+		if g.ID == group.ID {
+			return "", 0, errors.New("user already in group")
+		}
 	}
 
-	user.GroupID = &group.ID
-	user.Role = "member"
-
-	err = u.userRepo.UpdateUser(user)
+	err = u.groupRepo.AddUserToGroup(userID, group.ID, "member")
 	if err != nil {
 		return "", 0, errors.New("failed to join group")
 	}
 
-	return user.Role, group.ID, nil
+	return "member", group.ID, nil
 }
 
-func (u *GroupUsecase) GetGroupInfo(userID uint) (string, string, string, error) {
-
-	user, err := u.userRepo.GetUserByID(userID)
+func (u *GroupUsecase) GetGroupInfo(userID uint, groupID uint) (string, string, string, error) {
+	role, err := u.groupRepo.GetUserRole(userID, groupID)
 	if err != nil {
-		return "", "", "", fmt.Errorf("użytkownik nie znaleziony")
+		return "", "", "", fmt.Errorf("użytkownik nie należy do tej grupy")
 	}
 
-	if user.GroupID == nil {
-		return "", "", "", fmt.Errorf("użytkownik nie należy do żadnej grupy")
-	}
-
-	group, err := u.groupRepo.GetGroupByID(*user.GroupID)
+	group, err := u.groupRepo.GetGroupByID(groupID)
 	if err != nil {
 		return "", "", "", fmt.Errorf("nie znaleziono grupy")
 	}
 
 	accessToken := ""
-	if user.Role == "manager" {
+	if role == "manager" {
 		accessToken = group.AccessToken
 	}
 
