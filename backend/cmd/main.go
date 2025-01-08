@@ -55,6 +55,9 @@ func main() {
 	http.HandleFunc("/api/group/create", enableCORS(groupHandler.Create))
 	http.HandleFunc("/api/group/join", enableCORS(groupHandler.Join))
 	http.HandleFunc("/api/group/", enableCORS(groupHandler.GetGroupInfo))
+	http.HandleFunc("/api/group/user/", enableCORS(groupHandler.GetUserGroups))
+	http.HandleFunc("/api/group/members/", enableCORS(groupHandler.GetGroupMembers))
+	http.HandleFunc("/api/group/remove/", enableCORS(groupHandler.RemoveMember))
 
 	fmt.Printf("Server starting on http://localhost:%s\n", port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
