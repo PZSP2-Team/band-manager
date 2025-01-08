@@ -116,7 +116,7 @@ func (u *GroupUsecase) GetGroupInfo(userID uint, groupID uint) (string, string, 
 
 func (u *GroupUsecase) GetGroupMembers(groupID, requestingUserID uint) ([]MemberInfo, error) {
 
-	role, err := u.groupRepo.GetUserRole(requestingUserID, groupID)
+	_, err := u.groupRepo.GetUserRole(requestingUserID, groupID)
 	if err != nil {
 		return nil, errors.New("user not authorized to view this group")
 	}
@@ -180,12 +180,6 @@ func (u *GroupUsecase) RemoveMember(groupID, userToRemoveID, requestingUserID ui
 
 	if requesterRole != "manager" && requesterRole != "moderator" {
 		return errors.New("insufficient permissions")
-	}
-
-	// Sprawdź rolę usuwanego użytkownika
-	userToRemoveRole, err := u.groupRepo.GetUserRole(userToRemoveID, groupID)
-	if err != nil {
-		return errors.New("user to remove not in group")
 	}
 
 	if userToRemoveID == requestingUserID {
