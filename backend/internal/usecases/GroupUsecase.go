@@ -113,3 +113,33 @@ func (u *GroupUsecase) GetGroupInfo(userID uint, groupID uint) (string, string, 
 
 	return group.Name, group.Description, accessToken, nil
 }
+
+func (u *GroupUsecase) GetGroupMembers(groupID, requestingUserID uint) ([]MemberInfo, error) {
+
+	role, err := u.groupRepo.GetUserRole(requestingUserID, groupID)
+	if err != nil {
+		return nil, errors.New("user not authorized to view this group")
+	}
+
+	members, err := u.groupRepo.GetGroupMembers(groupID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get group members: %v", err)
+	}
+
+	var memberInfos []MemberInfo
+	for _, member := range members {
+		role, err := u.groupRepo.GetUserRole(member.ID, groupID)
+		if err != nil {
+			continue
+		}
+		memberInfos = append(memberInfos, MemberInfo{
+			ID:        member.ID,
+			FirstName: member.FirstName,
+			LastName:  member.LastName,
+			Email:     member.Email,
+			Role:      role,
+		})
+	}
+
+	return memberInfos, nil
+}
