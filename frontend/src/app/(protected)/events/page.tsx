@@ -87,7 +87,7 @@ export default function EventsPage() {
   }
 
   return (
-    <div className="flex mt-10 p-6">
+    <div className="flex flex-col mt-10 p-6">
       <div className="w-1/4">
         <h1 className="text-3xl font-bold mb-6 text-left">Upcoming Events</h1>
         <ul className="space-y-4 text-left">
@@ -105,6 +105,16 @@ export default function EventsPage() {
             </li>
           ))}
         </ul>
+
+        {/* Кнопка Create New Event для роли manager */}
+        {session?.user?.role === "manager" && (
+          <button
+            className="mt-6 px-6 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-500 transition"
+            onClick={() => router.push("/events/create")}
+          >
+            Create New Event
+          </button>
+        )}
       </div>
     </div>
   );
