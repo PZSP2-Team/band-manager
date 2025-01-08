@@ -21,6 +21,22 @@ func NewGroupUsecase() *GroupUsecase {
 	}
 }
 
+type MemberInfo struct {
+	ID        uint   `json:"id"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Email     string `json:"email"`
+	Role      string `json:"role"`
+}
+
+type GroupInfo struct {
+	ID           uint   `json:"id"`
+	Name         string `json:"name"`
+	Description  string `json:"description"`
+	Role         string `json:"role"`
+	MembersCount int    `json:"members_count"`
+}
+
 // generateAccessToken creates a random hex string for group access
 func generateAccessToken() string {
 	bytes := make([]byte, 16)

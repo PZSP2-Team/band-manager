@@ -23,13 +23,13 @@ func NewAuthUsecase() *AuthUsecase {
 	}
 }
 
-type GroupInfo struct {
+type AuthGroupInfo struct {
 	ID   uint
 	Name string
 	Role string
 }
 
-func (u *AuthUsecase) Login(email, password string) (*model.User, []GroupInfo, error) {
+func (u *AuthUsecase) Login(email, password string) (*model.User, []AuthGroupInfo, error) {
 	// Najpierw sprawdzamy czy użytkownik istnieje
 	user, err := u.userRepo.GetUserByEmail(email)
 	if err != nil {
@@ -42,7 +42,7 @@ func (u *AuthUsecase) Login(email, password string) (*model.User, []GroupInfo, e
 	}
 
 	// Pobieramy informacje o grupach użytkownika i jego rolach w nich
-	var userGroups []GroupInfo
+	var userGroups []AuthGroupInfo
 
 	// Pobieramy grupy i role użytkownika
 	roles, err := u.userRepo.GetUserGroupRoles(user.ID)
@@ -56,7 +56,7 @@ func (u *AuthUsecase) Login(email, password string) (*model.User, []GroupInfo, e
 			continue // Pomijamy grupę jeśli wystąpił błąd
 		}
 
-		userGroups = append(userGroups, GroupInfo{
+		userGroups = append(userGroups, AuthGroupInfo{
 			ID:   group.ID,
 			Name: group.Name,
 			Role: role.Role,
