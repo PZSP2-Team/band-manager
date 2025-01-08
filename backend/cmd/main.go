@@ -45,6 +45,7 @@ func main() {
 
 	authHandler := handlers.NewAuthHandler()
 	groupHandler := handlers.NewGroupHandler()
+	subgroupHandler := handlers.NewSubgroupHandler()
 
 	http.HandleFunc("/", enableCORS(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Hello World!")
@@ -58,6 +59,13 @@ func main() {
 	http.HandleFunc("/api/group/user/", enableCORS(groupHandler.GetUserGroups))
 	http.HandleFunc("/api/group/members/", enableCORS(groupHandler.GetGroupMembers))
 	http.HandleFunc("/api/group/remove/", enableCORS(groupHandler.RemoveMember))
+
+	http.HandleFunc("/api/subgroup/create", enableCORS(subgroupHandler.Create))
+	http.HandleFunc("/api/subgroup/info/", enableCORS(subgroupHandler.GetInfo))
+	http.HandleFunc("/api/subgroup/update/", enableCORS(subgroupHandler.Update))
+	http.HandleFunc("/api/subgroup/delete/", enableCORS(subgroupHandler.Delete))
+	http.HandleFunc("/api/subgroup/members/add/", enableCORS(subgroupHandler.AddMembers))
+	http.HandleFunc("/api/subgroup/members/remove/", enableCORS(subgroupHandler.RemoveMember))
 
 	fmt.Printf("Server starting on http://localhost:%s\n", port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
