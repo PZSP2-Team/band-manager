@@ -69,7 +69,7 @@ func InitDB() {
 	db = database
 
 	// Najpierw usuwamy wszystkie tabele
-	dropDB()
+	// dropDB()
 	// Potem tworzymy je od nowa
 	createDB()
 
