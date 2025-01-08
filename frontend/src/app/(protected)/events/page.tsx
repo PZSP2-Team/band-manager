@@ -29,10 +29,8 @@ export default function EventsPage() {
 
     const fetchEvents = async () => {
       try {
-        // Логируем роль пользователя
         console.log("User role:", session?.user?.role);
 
-        // Mocking data instead of fetching from backend
         const mockEvents: Event[] = [
           {
             id: 1,
@@ -60,10 +58,9 @@ export default function EventsPage() {
           },
         ];
 
-        // Фильтрация мероприятий в зависимости от роли пользователя
         const filteredEvents = session?.user?.role === "manager"
-          ? mockEvents  // Менеджер видит все мероприятия
-          : mockEvents.slice(0, 2); // Пользователь видит только первые два мероприятия
+          ? mockEvents
+          : mockEvents.slice(0, 2);
 
         setTimeout(() => {
           setEvents(filteredEvents);
@@ -106,7 +103,6 @@ export default function EventsPage() {
           ))}
         </ul>
 
-        {/* Кнопка Create New Event для роли manager */}
         {session?.user?.role === "manager" && (
           <button
             className="mt-6 px-6 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-500 transition"
