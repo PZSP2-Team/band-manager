@@ -219,7 +219,7 @@ func (h *SubgroupHandler) RemoveMember(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	subgroupID, err := strconv.ParseUint(pathParts[len(pathParts)-4], 10, 64)
+	subgroupID, err := strconv.ParseUint(pathParts[len(pathParts)-3], 10, 64)
 	if err != nil {
 		http.Error(w, "Invalid subgroup ID", http.StatusBadRequest)
 		return
