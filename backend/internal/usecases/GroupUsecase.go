@@ -143,3 +143,54 @@ func (u *GroupUsecase) GetGroupMembers(groupID, requestingUserID uint) ([]Member
 
 	return memberInfos, nil
 }
+
+func (u *GroupUsecase) GetUserGroups(userID uint) ([]GroupInfo, error) {
+	roles, err := u.userRepo.GetUserGroupRoles(userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user roles: %v", err)
+	}
+
+	var groupInfos []GroupInfo
+	for _, role := range roles {
+		group, err := u.groupRepo.GetGroupByID(role.GroupID)
+		if err != nil {
+			continue
+		}
+
+		membersCount := len(group.Users)
+
+		groupInfos = append(groupInfos, GroupInfo{
+			ID:           group.ID,
+			Name:         group.Name,
+			Description:  group.Description,
+			Role:         role.Role,
+			MembersCount: membersCount,
+		})
+	}
+
+	return groupInfos, nil
+}
+
+func (u *GroupUsecase) RemoveMember(groupID, userToRemoveID, requestingUserID uint) error {
+
+	requesterRole, err := u.groupRepo.GetUserRole(requestingUserID, groupID)
+	if err != nil {
+		return errors.New("requesting user not in group")
+	}
+
+	if requesterRole != "manager" && requesterRole != "moderator" {
+		return errors.New("insufficient permissions")
+	}
+
+	// Sprawdź rolę usuwanego użytkownika
+	userToRemoveRole, err := u.groupRepo.GetUserRole(userToRemoveID, groupID)
+	if err != nil {
+		return errors.New("user to remove not in group")
+	}
+
+	if userToRemoveID == requestingUserID {
+		return errors.New("cannot remove yourself from group")
+	}
+
+	return u.groupRepo.RemoveUserFromGroup(userToRemoveID, groupID)
+}
