@@ -112,3 +112,30 @@ func (h *TrackHandler) GetUserNotesheets(w http.ResponseWriter, r *http.Request)
 		"notesheets": notesheets,
 	})
 }
+
+func (h *TrackHandler) GetGroupTracks(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	pathParts := strings.Split(r.URL.Path, "/")
+	groupID, err := strconv.ParseUint(pathParts[len(pathParts)-2], 10, 64)
+	userID, err := strconv.ParseUint(pathParts[len(pathParts)-1], 10, 64)
+
+	if err != nil {
+		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		return
+	}
+
+	tracks, err := h.trackUsecase.GetGroupTracks(uint(groupID), uint(userID))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"tracks": tracks,
+	})
+}
