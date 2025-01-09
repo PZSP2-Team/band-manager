@@ -149,3 +149,17 @@ func (u *EventUsecase) GetGroupEvents(groupID uint, userID uint) ([]*model.Event
 func (u *EventUsecase) GetUserEvents(userID uint) ([]*model.Event, error) {
 	return u.eventRepo.GetUserEvents(userID)
 }
+
+func (u *EventUsecase) GetEventTracks(eventID uint, userID uint) ([]*model.Track, error) {
+	event, err := u.eventRepo.GetEventByID(eventID)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = u.groupRepo.GetUserRole(userID, event.GroupID)
+	if err != nil {
+		return nil, errors.New("access denied")
+	}
+
+	return u.eventRepo.GetEventTracks(eventID)
+}
