@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
-import { useGroup } from "../../contexts/GroupContext";
+// import { useGroup } from "../../contexts/GroupContext";
 import LoadingScreen from "@/src/app/components/LoadingScreen";
 
 type RenderState =
@@ -19,7 +19,8 @@ type Announcement = {
 };
 
 export default function AnnouncementsPage() {
-  const { userRole } = useGroup();
+//   const { userRole } = useGroup();
+  const userRole = 'manager';
   const router = useRouter();
   const { data: session, status: sessionStatus } = useSession();
   const [renderState, setRenderState] = useState<RenderState>({
