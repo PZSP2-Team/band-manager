@@ -35,16 +35,41 @@ func (r *AnnouncementRepository) Delete(id uint) error {
 }
 
 func (r *AnnouncementRepository) AddToSubgroups(announcementID uint, subgroupIDs []uint) error {
-	err := r.db.Model(&model.Announcement{ID: announcementID}).
+	var subgroups []*model.Subgroup
+	for _, id := range subgroupIDs {
+		subgroups = append(subgroups, &model.Subgroup{ID: id})
+	}
+	return r.db.Model(&model.Announcement{ID: announcementID}).
 		Association("Subgroups").
-		Append(&model.Subgroup{ID: subgroupIDs[0]})
-	return err
+		Append(subgroups)
 }
-func (r *AnnouncementRepository) GetGroupAnnouncements(groupID uint) ([]model.Announcement, error) {
-	var announcements []model.Announcement
-	err := r.db.Where("group_id = ?", groupID).
+
+func (r *AnnouncementRepository) GetGroupAnnouncements(groupID uint) ([]*model.Announcement, error) {
+	var announcements []*model.Announcement
+	err := r.db.Where("group_id = ? AND id NOT IN (SELECT announcement_id FROM announcement_subgroup)",
+		groupID).
 		Preload("Sender").
 		Order("priority desc, created_at desc").
 		Find(&announcements).Error
 	return announcements, err
+}
+
+func (r *AnnouncementRepository) GetUserAnnouncements(userID uint) ([]*model.Announcement, error) {
+	var announcements []*model.Announcement
+	err := r.db.Distinct().
+		Joins("JOIN user_group ug ON announcements.group_id = ug.group_id").
+		Where("(ug.user_id = ? AND announcements.id NOT IN (SELECT announcement_id FROM announcement_subgroup)) OR "+
+			"(announcements.id IN (SELECT a.id FROM announcements a "+
+			"JOIN announcement_subgroup asg ON a.id = asg.announcement_id "+
+			"JOIN subgroup_user su ON asg.subgroup_id = su.subgroup_id "+
+			"WHERE su.user_id = ?))", userID, userID).
+		Preload("Sender").
+		Preload("Group").
+		Preload("Subgroups").
+		Order("priority desc, created_at desc").
+		Find(&announcements).Error
+	if err != nil {
+		return nil, err
+	}
+	return announcements, nil
 }
