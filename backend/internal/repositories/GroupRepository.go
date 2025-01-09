@@ -72,7 +72,6 @@ func (r *GroupRepository) GetGroupMembers(groupID uint) ([]*model.User, error) {
 		return nil, err
 	}
 
-	// Wyciągamy użytkowników z ról
 	var users []*model.User
 	for _, role := range roles {
 		users = append(users, &role.User)
@@ -81,6 +80,6 @@ func (r *GroupRepository) GetGroupMembers(groupID uint) ([]*model.User, error) {
 }
 
 func (r *GroupRepository) RemoveUserFromGroup(userID uint, groupID uint) error {
-	// Usuwamy wpis w UserGroupRole
+
 	return r.db.Delete(&model.UserGroupRole{}, "user_id = ? AND group_id = ?", userID, groupID).Error
 }

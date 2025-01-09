@@ -64,3 +64,14 @@ func (r *EventRepository) AddTracksToEvent(eventID uint, trackIDs []uint) error 
 
 	return r.db.Model(&model.Event{ID: eventID}).Association("Tracks").Append(tracks)
 }
+
+func (r *EventRepository) GetEventTracks(eventID uint) ([]*model.Track, error) {
+	var event model.Event
+	err := r.db.Preload("Tracks", func(db *gorm.DB) *gorm.DB {
+		return db.Select("id, name, description")
+	}).First(&event, eventID).Error
+	if err != nil {
+		return nil, err
+	}
+	return event.Tracks, nil
+}
