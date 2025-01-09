@@ -118,3 +118,21 @@ func (u *EventUsecase) UpdateEvent(id uint, title, description, location string,
 
 	return nil
 }
+
+func (u *EventUsecase) DeleteEvent(id uint, userID uint) error {
+	event, err := u.eventRepo.GetEventByID(id)
+	if err != nil {
+		return err
+	}
+
+	role, err := u.groupRepo.GetUserRole(userID, event.GroupID)
+	if err != nil {
+		return errors.New("access denied")
+	}
+
+	if role != "manager" && role != "moderator" {
+		return errors.New("insufficient permissions")
+	}
+
+	return u.eventRepo.DeleteEvent(id)
+}
