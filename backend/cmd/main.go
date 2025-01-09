@@ -62,6 +62,7 @@ func main() {
 	http.HandleFunc("/api/group/user/", enableCORS(groupHandler.GetUserGroups))
 	http.HandleFunc("/api/group/members/", enableCORS(groupHandler.GetGroupMembers))
 	http.HandleFunc("/api/group/remove/", enableCORS(groupHandler.RemoveMember))
+	http.HandleFunc("/api/group/role/", enableCORS(groupHandler.UpdateMemberRole))
 
 	http.HandleFunc("/api/subgroup/create", enableCORS(subgroupHandler.Create))
 	http.HandleFunc("/api/subgroup/info/", enableCORS(subgroupHandler.GetInfo))

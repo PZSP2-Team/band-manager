@@ -83,3 +83,9 @@ func (r *GroupRepository) RemoveUserFromGroup(userID uint, groupID uint) error {
 
 	return r.db.Delete(&model.UserGroupRole{}, "user_id = ? AND group_id = ?", userID, groupID).Error
 }
+
+func (r *GroupRepository) UpdateUserRole(userID uint, groupID uint, newRole string) error {
+	return r.db.Model(&model.UserGroupRole{}).
+		Where("user_id = ? AND group_id = ?", userID, groupID).
+		Update("role", newRole).Error
+}

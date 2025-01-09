@@ -188,3 +188,34 @@ func (u *GroupUsecase) RemoveMember(groupID, userToRemoveID, requestingUserID ui
 
 	return u.groupRepo.RemoveUserFromGroup(userToRemoveID, groupID)
 }
+
+func (u *GroupUsecase) UpdateMemberRole(groupID uint, userToUpdateID uint, requestingUserID uint, newRole string) error {
+	requesterRole, err := u.groupRepo.GetUserRole(requestingUserID, groupID)
+	if err != nil {
+		return errors.New("requesting user not in group")
+	}
+
+	if requesterRole != "manager" {
+		return errors.New("insufficient permissions - only managers can change roles")
+	}
+
+	if userToUpdateID == requestingUserID {
+		return errors.New("cannot change your own role")
+	}
+
+	if !isValidRole(newRole) {
+		return errors.New("invalid role - must be 'manager', 'moderator', or 'member'")
+	}
+
+	return u.groupRepo.UpdateUserRole(userToUpdateID, groupID, newRole)
+}
+
+func isValidRole(role string) bool {
+	validRoles := []string{"manager", "moderator", "member"}
+	for _, r := range validRoles {
+		if r == role {
+			return true
+		}
+	}
+	return false
+}
