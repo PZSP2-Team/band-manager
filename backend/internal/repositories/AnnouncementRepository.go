@@ -33,3 +33,18 @@ func (r *AnnouncementRepository) GetByID(id uint) (*model.Announcement, error) {
 func (r *AnnouncementRepository) Delete(id uint) error {
 	return r.db.Delete(&model.Announcement{}, id).Error
 }
+
+func (r *AnnouncementRepository) AddToSubgroups(announcementID uint, subgroupIDs []uint) error {
+	err := r.db.Model(&model.Announcement{ID: announcementID}).
+		Association("Subgroups").
+		Append(&model.Subgroup{ID: subgroupIDs[0]})
+	return err
+}
+func (r *AnnouncementRepository) GetGroupAnnouncements(groupID uint) ([]model.Announcement, error) {
+	var announcements []model.Announcement
+	err := r.db.Where("group_id = ?", groupID).
+		Preload("Sender").
+		Order("priority desc, created_at desc").
+		Find(&announcements).Error
+	return announcements, err
+}
