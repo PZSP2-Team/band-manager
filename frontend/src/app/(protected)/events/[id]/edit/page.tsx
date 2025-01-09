@@ -113,8 +113,9 @@ export default function EditEventPage() {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full p-1.5 border border-gray-600 rounded bg-gray-800 text-white"
-          />
+            className="p-1.5 border border-gray-600 rounded bg-gray-800 text-white"
+            style={{ width: "30%" }}
+            />
         </div>
 
         {/* Тип */}
@@ -124,6 +125,7 @@ export default function EditEventPage() {
             value={type}
             onChange={(e) => setType(e.target.value as "concert" | "rehearsal")}
             className="w-full p-1.5 border border-gray-600 rounded bg-gray-800 text-white"
+            style={{ width: "30%" }}
           >
             <option value="concert">Concert</option>
             <option value="rehearsal">Rehearsal</option>
@@ -138,6 +140,7 @@ export default function EditEventPage() {
             value={date}
             onChange={(e) => setDate(e.target.value)}
             className="w-full p-1.5 border border-gray-600 rounded bg-gray-800 text-white text-lg"
+            style={{ width: "30%" }}
           />
         </div>
 
@@ -149,6 +152,7 @@ export default function EditEventPage() {
             value={time}
             onChange={(e) => setTime(e.target.value)}
             className="w-full p-1.5 border border-gray-600 rounded bg-gray-800 text-white text-lg"
+            style={{ width: "30%" }}
           />
         </div>
       </div>
