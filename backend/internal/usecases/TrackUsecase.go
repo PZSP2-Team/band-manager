@@ -43,3 +43,57 @@ func (u *TrackUsecase) CreateTrack(title, description string, groupID uint, user
 
 	return track, nil
 }
+
+func (u *TrackUsecase) GetTrack(id uint, userID uint) (*model.Track, error) {
+	track, err := u.trackRepo.GetTrackByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	// Sprawdź czy użytkownik ma dostęp do grupy tego utworu
+	_, err = u.groupRepo.GetUserRole(userID, track.GroupID)
+	if err != nil {
+		return nil, errors.New("access denied")
+	}
+
+	return track, nil
+}
+
+func (u *TrackUsecase) UpdateTrack(id uint, title string, description string, userID uint) error {
+	track, err := u.trackRepo.GetTrackByID(id)
+	if err != nil {
+		return err
+	}
+
+	role, err := u.groupRepo.GetUserRole(userID, track.GroupID)
+	if err != nil {
+		return errors.New("access denied")
+	}
+
+	if role != "manager" && role != "moderator" {
+		return errors.New("insufficient permissions")
+	}
+
+	track.Name = title
+	track.Description = description
+
+	return u.trackRepo.UpdateTrack(track)
+}
+
+func (u *TrackUsecase) DeleteTrack(id uint, userID uint) error {
+	track, err := u.trackRepo.GetTrackByID(id)
+	if err != nil {
+		return err
+	}
+
+	role, err := u.groupRepo.GetUserRole(userID, track.GroupID)
+	if err != nil {
+		return errors.New("access denied")
+	}
+
+	if role != "manager" && role != "moderator" {
+		return errors.New("insufficient permissions")
+	}
+
+	return u.trackRepo.DeleteTrack(id)
+}
