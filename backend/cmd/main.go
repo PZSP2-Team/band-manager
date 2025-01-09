@@ -48,6 +48,7 @@ func main() {
 	subgroupHandler := handlers.NewSubgroupHandler()
 	trackHandler := handlers.NewTrackHandler()
 	eventHandler := handlers.NewEventHandler()
+	announcementHandler := handlers.NewAnnouncementHandler()
 
 	http.HandleFunc("/", enableCORS(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Hello World!")
@@ -80,6 +81,11 @@ func main() {
 	http.HandleFunc("/api/event/delete/", enableCORS(eventHandler.Delete))
 	http.HandleFunc("/api/event/group/", enableCORS(eventHandler.GetGroupEvents))
 	http.HandleFunc("/api/event/user/", enableCORS(eventHandler.GetUserEvents))
+
+	http.HandleFunc("/api/announcement/create", enableCORS(announcementHandler.Create))
+	http.HandleFunc("/api/announcement/delete/", enableCORS(announcementHandler.Delete))
+	http.HandleFunc("/api/announcement/user/", enableCORS(announcementHandler.GetUserAnnouncements))
+	http.HandleFunc("/api/announcement/group/", enableCORS(announcementHandler.GetGroupAnnouncements))
 	fmt.Printf("Server starting on http://localhost:%s\n", port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatal(err)
