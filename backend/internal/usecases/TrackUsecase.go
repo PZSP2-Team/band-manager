@@ -21,7 +21,7 @@ func NewTrackUsecase() *TrackUsecase {
 }
 
 func (u *TrackUsecase) CreateTrack(title, description string, groupID uint, userID uint) (*model.Track, error) {
-	// Sprawdź uprawnienia
+
 	role, err := u.groupRepo.GetUserRole(userID, groupID)
 	if err != nil {
 		return nil, errors.New("user not in group")
@@ -50,7 +50,6 @@ func (u *TrackUsecase) GetTrack(id uint, userID uint) (*model.Track, error) {
 		return nil, err
 	}
 
-	// Sprawdź czy użytkownik ma dostęp do grupy tego utworu
 	_, err = u.groupRepo.GetUserRole(userID, track.GroupID)
 	if err != nil {
 		return nil, errors.New("access denied")
@@ -99,7 +98,7 @@ func (u *TrackUsecase) DeleteTrack(id uint, userID uint) error {
 }
 
 func (u *TrackUsecase) GetGroupTracks(groupID uint, userID uint) ([]*model.Track, error) {
-	// Sprawdź czy użytkownik ma dostęp do grupy
+
 	_, err := u.groupRepo.GetUserRole(userID, groupID)
 	if err != nil {
 		return nil, errors.New("access denied")
@@ -123,7 +122,6 @@ func (u *TrackUsecase) AddNotesheet(trackID uint, instrument string, filepath st
 		return nil, errors.New("insufficient permissions")
 	}
 
-	// Sprawdź czy podgrupy należą do tej samej grupy co utwór
 	for _, subgroupID := range subgroupIDs {
 		subgroup, err := u.subgroupRepo.GetSubgroupByID(subgroupID)
 		if err != nil {

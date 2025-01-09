@@ -1,4 +1,3 @@
-// usecases/event_usecase.go
 package usecases
 
 import (
