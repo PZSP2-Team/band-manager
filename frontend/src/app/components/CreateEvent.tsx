@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { PlusCircle } from "lucide-react";
 
-// Тип песни
 type Song = {
   name: string;
   subgroups: string[];
@@ -16,15 +15,19 @@ export default function CreateEvent() {
   const [eventDate, setEventDate] = useState("");
   const [eventType, setEventType] = useState("concert");
   const [eventTime, setEventTime] = useState("");
-  const [songs, setSongs] = useState<Song[]>([]); // Используем тип Song для массива
+  const [songs, setSongs] = useState<Song[]>([]);
 
   const addSong = () => {
     setSongs([...songs, { name: "", subgroups: [] }]);
   };
 
-  const updateSong = <K extends keyof Song>(index: number, key: K, value: Song[K]) => {
+  const updateSong = <K extends keyof Song>(
+    index: number,
+    key: K,
+    value: Song[K],
+  ) => {
     const updatedSongs = [...songs];
-    updatedSongs[index][key] = value; // Тип автоматически проверяется
+    updatedSongs[index][key] = value;
     setSongs(updatedSongs);
   };
 
@@ -34,7 +37,11 @@ export default function CreateEvent() {
     setSongs(updatedSongs);
   };
 
-  const updateSubgroup = (songIndex: number, subgroupIndex: number, value: string) => {
+  const updateSubgroup = (
+    songIndex: number,
+    subgroupIndex: number,
+    value: string,
+  ) => {
     const updatedSongs = [...songs];
     updatedSongs[songIndex].subgroups[subgroupIndex] = value;
     setSongs(updatedSongs);
@@ -113,7 +120,10 @@ export default function CreateEvent() {
       <div className="mt-8">
         <h2 className="text-2xl font-semibold mb-4">Songs</h2>
         {songs.map((song, index) => (
-          <div key={index} className="p-4 mb-4 border border-gray-300 rounded bg-gray-100">
+          <div
+            key={index}
+            className="p-4 mb-4 border border-gray-300 rounded bg-gray-100"
+          >
             <div className="flex justify-between items-center">
               <input
                 type="text"
@@ -132,7 +142,10 @@ export default function CreateEvent() {
             <div className="mt-4">
               <h3 className="font-medium mb-2">Subgroups</h3>
               {song.subgroups.map((subgroup, subgroupIndex) => (
-                <div key={subgroupIndex} className="flex items-center gap-2 mb-2">
+                <div
+                  key={subgroupIndex}
+                  className="flex items-center gap-2 mb-2"
+                >
                   <input
                     type="text"
                     placeholder="Subgroup Name"

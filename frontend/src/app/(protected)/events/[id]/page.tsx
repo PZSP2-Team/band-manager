@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
 import LoadingScreen from "@/src/app/components/LoadingScreen";
+import { useGroup } from "@/src/app/contexts/GroupContext";
 
 type Event = {
   id: number;
@@ -19,17 +19,15 @@ type Track = {
 
 export default function EventDetailPage() {
   const { id } = useParams();
-  const router = useRouter(); // To navigate to the edit page
-  const { data: session } = useSession();
+  const router = useRouter();
+  const { userRole } = useGroup();
   const [event, setEvent] = useState<Event | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Для добавления новой песни
   const [isAddingSong, setIsAddingSong] = useState(false);
   const [availableTracks, setAvailableTracks] = useState<Track[]>([]);
   const [selectedTrack, setSelectedTrack] = useState("");
 
-  // Управление раскрытием блоков треков
   const [expandedTracks, setExpandedTracks] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -42,8 +40,8 @@ export default function EventDetailPage() {
         time: "18:00",
         materials: [
           { name: "Do Elizy", notes: ["Note 1", "Note 2", "Note 3"] },
-          { name: "Ляляля", notes: ["Note A", "Note B", "Note C"] },
-          { name: "4 времени года зима", notes: ["Sheet 1", "Sheet 2", "Sheet 3"] },
+          { name: "Song 2", notes: ["Note A", "Note B", "Note C"] },
+          { name: "Song ", notes: ["Sheet 1", "Sheet 2", "Sheet 3"] },
         ],
       },
     ];
@@ -55,7 +53,6 @@ export default function EventDetailPage() {
       setEvent(null);
     }
 
-    // Загружаем доступные треки
     const fetchTracks = async () => {
       const mockTracks: Track[] = [
         { name: "New Song 1" },
@@ -113,8 +110,7 @@ export default function EventDetailPage() {
         {event.type === "concert" ? "Concert" : "Rehearsal"}
       </p>
 
-      {/* Кнопка Edit Event */}
-      {session?.user?.role === "manager" && (
+      {userRole === "manager" && (
         <button
           className="mb-6 px-6 py-2 bg-yellow-600 text-white rounded-lg shadow hover:bg-yellow-500 transition"
           onClick={() => router.push(`/events/${id}/edit`)}
@@ -140,7 +136,7 @@ export default function EventDetailPage() {
               </div>
               {expandedTracks.has(material.name) && (
                 <div className="space-y-2">
-                  {(session?.user?.role === "manager"
+                  {(userRole === "manager"
                     ? material.notes
                     : material.notes.slice(0, 1)
                   ).map((note, noteIdx) => (
@@ -164,8 +160,7 @@ export default function EventDetailPage() {
         </div>
       </div>
 
-      {/* Добавление новой песни */}
-      {session?.user?.role === "manager" && (
+      {userRole === "manager" && (
         <div className="mt-6">
           {isAddingSong ? (
             <div className="p-4 bg-gray-800 border border-gray-600 rounded-lg">
