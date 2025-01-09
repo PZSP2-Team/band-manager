@@ -136,3 +136,16 @@ func (u *EventUsecase) DeleteEvent(id uint, userID uint) error {
 
 	return u.eventRepo.DeleteEvent(id)
 }
+
+func (u *EventUsecase) GetGroupEvents(groupID uint, userID uint) ([]*model.Event, error) {
+	_, err := u.groupRepo.GetUserRole(userID, groupID)
+	if err != nil {
+		return nil, errors.New("access denied")
+	}
+
+	return u.eventRepo.GetGroupEvents(groupID)
+}
+
+func (u *EventUsecase) GetUserEvents(userID uint) ([]*model.Event, error) {
+	return u.eventRepo.GetUserEvents(userID)
+}
