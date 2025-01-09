@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import LoadingScreen from "@/src/app/components/LoadingScreen";
 
@@ -19,6 +19,7 @@ type Track = {
 
 export default function EventDetailPage() {
   const { id } = useParams();
+  const router = useRouter(); // To navigate to the edit page
   const { data: session } = useSession();
   const [event, setEvent] = useState<Event | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -111,6 +112,16 @@ export default function EventDetailPage() {
         {new Date(event.date).toLocaleDateString()} • {event.time} •{" "}
         {event.type === "concert" ? "Concert" : "Rehearsal"}
       </p>
+
+      {/* Кнопка Edit Event */}
+      {session?.user?.role === "manager" && (
+        <button
+          className="mb-6 px-6 py-2 bg-yellow-600 text-white rounded-lg shadow hover:bg-yellow-500 transition"
+          onClick={() => router.push(`/events/${id}/edit`)}
+        >
+          Edit Event
+        </button>
+      )}
 
       {/* Список материалов */}
       <div className="mb-8">
