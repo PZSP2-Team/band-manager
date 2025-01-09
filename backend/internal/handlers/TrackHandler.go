@@ -88,26 +88,20 @@ func (h *TrackHandler) AddNotesheet(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(notesheet)
 }
 
-func (h *TrackHandler) GetSubgroupNotesheets(w http.ResponseWriter, r *http.Request) {
+func (h *TrackHandler) GetUserNotesheets(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	pathParts := strings.Split(r.URL.Path, "/")
-	subgroupID, err := strconv.ParseUint(pathParts[len(pathParts)-2], 10, 64)
-	if err != nil {
-		http.Error(w, "Invalid subgroup ID", http.StatusBadRequest)
-		return
-	}
-
 	userID, err := strconv.ParseUint(pathParts[len(pathParts)-1], 10, 64)
 	if err != nil {
 		http.Error(w, "Invalid user ID", http.StatusBadRequest)
 		return
 	}
 
-	notesheets, err := h.trackUsecase.GetSubgroupNotesheets(uint(subgroupID), uint(userID))
+	notesheets, err := h.trackUsecase.GetUserNotesheets(uint(userID))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

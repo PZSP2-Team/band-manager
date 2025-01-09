@@ -62,10 +62,12 @@ func (r *TrackRepository) AddNotesheetToTrack(notesheet *model.Notesheet, subgro
 	return nil
 }
 
-func (r *TrackRepository) GetSubgroupNotesheets(subgroupID uint) ([]*model.Notesheet, error) {
+func (r *TrackRepository) GetUserNotesheets(userID uint) ([]*model.Notesheet, error) {
 	var notesheets []*model.Notesheet
 	err := r.db.Joins("JOIN notesheet_subgroup ON notesheets.id = notesheet_subgroup.notesheet_id").
-		Where("notesheet_subgroup.subgroup_id = ?", subgroupID).
+		Joins("JOIN subgroup_user ON notesheet_subgroup.subgroup_id = subgroup_user.subgroup_id").
+		Where("subgroup_user.user_id = ?", userID).
+		Distinct().
 		Find(&notesheets).Error
 	return notesheets, err
 }

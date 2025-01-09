@@ -147,18 +147,6 @@ func (u *TrackUsecase) AddNotesheet(trackID uint, instrument string, filepath st
 	return notesheet, nil
 }
 
-func (u *TrackUsecase) GetSubgroupNotesheets(subgroupID uint, userID uint) ([]*model.Notesheet, error) {
-	// Sprawdź czy użytkownik należy do tej podgrupy
-	subgroup, err := u.subgroupRepo.GetSubgroupByID(subgroupID)
-	if err != nil {
-		return nil, err
-	}
-
-	// Sprawdź dostęp do grupy
-	_, err = u.groupRepo.GetUserRole(userID, subgroup.GroupID)
-	if err != nil {
-		return nil, errors.New("access denied")
-	}
-
-	return u.trackRepo.GetSubgroupNotesheets(subgroupID)
+func (u *TrackUsecase) GetUserNotesheets(userID uint) ([]*model.Notesheet, error) {
+	return u.trackRepo.GetUserNotesheets(userID)
 }

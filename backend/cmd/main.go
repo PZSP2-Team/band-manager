@@ -71,7 +71,7 @@ func main() {
 
 	http.HandleFunc("/api/track/create", enableCORS(trackHandler.Create))
 	http.HandleFunc("/api/track/notesheet", enableCORS(trackHandler.AddNotesheet))
-	http.HandleFunc("/api/track/subgroup/notesheets/", enableCORS(trackHandler.GetSubgroupNotesheets))
+	http.HandleFunc("/api/track/user/notesheets/", enableCORS(trackHandler.GetUserNotesheets))
 
 	// Event endpoints
 	http.HandleFunc("/api/event/create", enableCORS(eventHandler.Create))
