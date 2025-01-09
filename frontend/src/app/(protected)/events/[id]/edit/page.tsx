@@ -104,52 +104,58 @@ export default function EditEventPage() {
     <div className="p-6">
       <h1 className="text-3xl font-bold mb-6">Edit Event</h1>
 
-      {/* Flex container для полей */}
-      <div className="flex flex-wrap gap-6">
-        {/* Колонка 1: Название и Тип */}
-        <div className="flex-1 min-w-[330px]">
+      {/* Поля для редактирования */}
+      <div className="flex flex-col gap-4">
+        {/* Название */}
+        <div>
           <label className="block text-lg font-semibold mb-2">Name</label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full p-[2.2rem] border border-gray-600 rounded bg-gray-800 text-white"
+            className="w-full p-1.5 border border-gray-600 rounded bg-gray-800 text-white"
           />
+        </div>
 
-          <label className="block text-lg font-semibold mt-4 mb-2">Type</label>
+        {/* Тип */}
+        <div>
+          <label className="block text-lg font-semibold mb-2">Type</label>
           <select
             value={type}
             onChange={(e) => setType(e.target.value as "concert" | "rehearsal")}
-            className="w-full p-[2.2rem] border border-gray-600 rounded bg-gray-800 text-white"
+            className="w-full p-1.5 border border-gray-600 rounded bg-gray-800 text-white"
           >
             <option value="concert">Concert</option>
             <option value="rehearsal">Rehearsal</option>
           </select>
         </div>
 
-        {/* Колонка 2: Дата и Время */}
-        <div className="flex-1 min-w-[330px]">
+        {/* Дата */}
+        <div>
           <label className="block text-lg font-semibold mb-2">Date</label>
           <input
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="w-full p-[2.2rem] border border-gray-600 rounded bg-gray-800 text-white"
+            className="w-full p-1.5 border border-gray-600 rounded bg-gray-800 text-white text-lg"
           />
+        </div>
 
-          <label className="block text-lg font-semibold mt-4 mb-2">Time</label>
+        {/* Время */}
+        <div>
+          <label className="block text-lg font-semibold mb-2">Time</label>
           <input
             type="time"
             value={time}
             onChange={(e) => setTime(e.target.value)}
-            className="w-full p-[2.2rem] border border-gray-600 rounded bg-gray-800 text-white"
+            className="w-full p-1.5 border border-gray-600 rounded bg-gray-800 text-white text-lg"
           />
         </div>
       </div>
 
       {/* Кнопка сохранения */}
       <button
-        className="mt-6 px-6 py-[2.2rem] bg-green-600 text-white rounded-lg shadow hover:bg-green-500 transition"
+        className="mt-6 px-6 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-500 transition"
         onClick={handleSave}
       >
         Save Changes
