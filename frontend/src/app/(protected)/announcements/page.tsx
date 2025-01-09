@@ -110,7 +110,7 @@ export default function AnnouncementsPage() {
               <p className="text-gray-600 text-sm">
                 {new Date(announcement.date).toLocaleDateString()}
               </p>
-              <p className="text-gray-800 mt-2">{announcement.description}</p>
+              <p className="text-gray-400 mt-2">{announcement.description}</p>
             </li>
           ))}
         </ul>
