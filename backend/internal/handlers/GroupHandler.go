@@ -55,14 +55,17 @@ func (h *GroupHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// handlers/group_handler.go
 func (h *GroupHandler) Join(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
+	// Pobieramy ID użytkownika z kontekstu (dodane przez middleware)
+	userID := r.Context().Value("userID").(uint)
+
 	var request struct {
-		UserID      uint   `json:"user_id"`
 		AccessToken string `json:"access_token"`
 	}
 
@@ -71,7 +74,7 @@ func (h *GroupHandler) Join(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userRole, groupID, err := h.groupUsecase.JoinGroup(request.UserID, request.AccessToken)
+	userRole, groupID, err := h.groupUsecase.JoinGroup(userID, request.AccessToken)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

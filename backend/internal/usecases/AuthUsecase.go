@@ -5,7 +5,9 @@ import (
 	"band-manager-backend/internal/repositories"
 	"errors"
 	"fmt"
+	"time"
 
+	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -29,25 +31,38 @@ type AuthGroupInfo struct {
 	Role string
 }
 
-func (u *AuthUsecase) Login(email, password string) (*model.User, []AuthGroupInfo, error) {
+const JWTSecretKey = "twoj-tajny-klucz-jwt"
+
+func (u *AuthUsecase) Login(email, password string) (*model.User, []AuthGroupInfo, string, error) {
 	// Najpierw sprawdzamy czy użytkownik istnieje
 	user, err := u.userRepo.GetUserByEmail(email)
 	if err != nil {
-		return nil, nil, errors.New("user not found")
+		return nil, nil, "", errors.New("user not found")
 	}
 
 	// Sprawdzamy hasło
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
-		return nil, nil, errors.New("invalid credentials")
+		return nil, nil, "", errors.New("invalid credentials")
 	}
 
+	claims := jwt.MapClaims{
+		"user_id": user.ID,
+		"exp":     time.Now().Add(24 * time.Hour).Unix(), // Token ważny 24h
+		"iat":     time.Now().Unix(),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString([]byte(JWTSecretKey))
+	if err != nil {
+		return nil, nil, "", errors.New("błąd podczas generowania tokenu")
+	}
 	// Pobieramy informacje o grupach użytkownika i jego rolach w nich
 	var userGroups []AuthGroupInfo
 
 	// Pobieramy grupy i role użytkownika
 	roles, err := u.userRepo.GetUserGroupRoles(user.ID)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to get user roles: %v", err)
+		return nil, nil, "", fmt.Errorf("failed to get user roles: %v", err)
 	}
 
 	for _, role := range roles {
@@ -63,7 +78,7 @@ func (u *AuthUsecase) Login(email, password string) (*model.User, []AuthGroupInf
 		})
 	}
 
-	return user, userGroups, nil
+	return user, userGroups, tokenString, nil
 }
 
 func (u *AuthUsecase) Register(firstName, lastName, email, password string) error {

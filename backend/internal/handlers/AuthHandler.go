@@ -18,11 +18,13 @@ func NewAuthHandler() *AuthHandler {
 }
 
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+	// Struktura odpowiedzi zawierająca również token
 	type LoginResponse struct {
 		ID        uint   `json:"id"`
 		FirstName string `json:"first_name"`
 		LastName  string `json:"last_name"`
 		Email     string `json:"email"`
+		Token     string `json:"token"` // Dodajemy pole na token
 		Groups    []struct {
 			ID   uint   `json:"id"`
 			Name string `json:"name"`
@@ -45,7 +47,8 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, groups, err := h.authUsecase.Login(request.Email, request.Password)
+	// Zauważ, że teraz Login zwraca również token
+	user, groups, token, err := h.authUsecase.Login(request.Email, request.Password)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
@@ -56,6 +59,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
 		Email:     user.Email,
+		Token:     token, // Dodajemy token do odpowiedzi
 		Groups: make([]struct {
 			ID   uint   `json:"id"`
 			Name string `json:"name"`
@@ -63,6 +67,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		}, len(groups)),
 	}
 
+	// Wypełniamy informacje o grupach
 	for i, group := range groups {
 		response.Groups[i] = struct {
 			ID   uint   `json:"id"`
