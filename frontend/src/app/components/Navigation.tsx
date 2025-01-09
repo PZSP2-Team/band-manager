@@ -11,7 +11,7 @@ export default function NavigationBar() {
 
   const navigationItems = [
     { href: "/events", label: "Events" },
-    { href: "/notifications", label: "Notifications" },
+    { href: "/announcements", label: "Announcements" },
     { href: "/tracks", label: "Tracks" },
     { href: "/subgroups", label: "Subgroups" },
     { href: "/manage", label: "Manage" },
