@@ -61,7 +61,7 @@ func (h *TrackHandler) AddNotesheet(w http.ResponseWriter, r *http.Request) {
 	var request struct {
 		TrackID     uint   `json:"track_id"`
 		UserID      uint   `json:"user_id"`
-		Filepath    string `json:"filepath"` // Ścieżka do pliku z frontendu
+		Filepath    string `json:"filepath"`
 		Instrument  string `json:"instrument"`
 		SubgroupIDs []uint `json:"subgroup_ids"`
 	}

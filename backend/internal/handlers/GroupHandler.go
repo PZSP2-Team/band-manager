@@ -188,7 +188,6 @@ func (h *GroupHandler) GetUserGroups(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// RemoveMember handles DELETE /api/group/{groupId}/members/{userId}
 func (h *GroupHandler) RemoveMember(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
