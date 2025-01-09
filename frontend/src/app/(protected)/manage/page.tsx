@@ -1,299 +1,164 @@
 "use client";
-import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useGroup } from "../../contexts/GroupContext";
 import LoadingScreen from "@/src/app/components/LoadingScreen";
 
-// Type Definitions
 type RenderState =
   | { status: "loading" }
   | { status: "loaded" }
   | { status: "error" };
 
-type Group = {
+type GroupMember = {
   id: number;
-  name: string;
-  description: string;
-  access_token: string;
-  members: User[];
-};
-
-type User = {
-  id: number;
-  first_name: string;
-  last_name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   role: "manager" | "moderator" | "member";
 };
 
-export default function ManagePage() {
+type GroupInfo = {
+  name: string;
+  description: string;
+  access_token: string;
+};
+
+export default function ManageGroupPage() {
+  const { groupId } = useGroup(); // Fetch group ID from context
   const router = useRouter();
-  const { data: session, status: sessionStatus } = useSession();
   const [renderState, setRenderState] = useState<RenderState>({
     status: "loading",
   });
-  const [groups, setGroups] = useState<Group[]>([]);
-  const [expandedGroup, setExpandedGroup] = useState<number | null>(null);
-  const [showUserDropdown, setShowUserDropdown] = useState<number | null>(null);
-  const mockUsers: User[] = [
-    { id: 111, first_name: "John", last_name: "Doe", email: "john@example.com", role: "member" },
-    { id: 112, first_name: "Jane", last_name: "Smith", email: "jane@example.com", role: "member" },
-    { id: 113, first_name: "Jim", last_name: "Beam", email: "jim@example.com", role: "member" },
-  ];
+  const [groupInfo, setGroupInfo] = useState<GroupInfo | null>(null);
+  const [members, setMembers] = useState<GroupMember[]>([]);
 
   useEffect(() => {
-    if (sessionStatus === "loading") return;
+    const fetchGroupData = async () => {
+      try {
+        // Mock data
+        const mockGroupInfo: GroupInfo = {
+          name: "Jazz Band",
+          description: "A group of passionate jazz musicians.",
+          access_token: "12345-abcdef-67890",
+        };
 
-    // Mock data for testing
-    const mockGroups: Group[] = [
-      {
-        id: 1,
-        name: "Orchestra",
-        description: "The main orchestra group",
-        access_token: "abc123xyz789",
-        members: [
+        const mockMembers: GroupMember[] = [
           {
-            id: 101,
-            first_name: "Alice",
-            last_name: "Smith",
+            id: 1,
+            firstName: "Alice",
+            lastName: "Smith",
             email: "alice@example.com",
             role: "manager",
           },
           {
-            id: 102,
-            first_name: "Bob",
-            last_name: "Jones",
+            id: 2,
+            firstName: "Bob",
+            lastName: "Johnson",
             email: "bob@example.com",
             role: "member",
           },
-        ],
-      },
-      {
-        id: 2,
-        name: "Choir",
-        description: "Choir group",
-        access_token: "def456uvw123",
-        members: [
           {
-            id: 103,
-            first_name: "Carol",
-            last_name: "Taylor",
-            email: "carol@example.com",
+            id: 3,
+            firstName: "Charlie",
+            lastName: "Brown",
+            email: "charlie@example.com",
             role: "moderator",
           },
-          {
-            id: 104,
-            first_name: "Dave",
-            last_name: "Wilson",
-            email: "dave@example.com",
-            role: "member",
-          },
-        ],
-      },
-    ];
+        ];
 
-    setTimeout(() => {
-      setGroups(mockGroups);
-      setRenderState({ status: "loaded" });
-    }, 1000);
-  }, [sessionStatus]);
+        // Simulate network delay
+        setTimeout(() => {
+          setGroupInfo(mockGroupInfo);
+          setMembers(mockMembers);
+          setRenderState({ status: "loaded" });
+        }, 1000);
+      } catch (error) {
+        console.error("Error fetching group data:", error);
+        setRenderState({ status: "error" });
+      }
+    };
 
-  const handleRemoveUser = async (groupId: number, userId: number) => {
-    try {
-      // Commented out for mock implementation
-      // await fetch(/api/group/remove/${groupId}/${session?.user.id}/${userId}, {
-      //   method: "DELETE",
-      // });
+    fetchGroupData();
+  }, [groupId]);
 
-      setGroups((prevGroups) =>
-        prevGroups.map((group) =>
-          group.id === groupId
-            ? {
-                ...group,
-                members: group.members.filter((member) => member.id !== userId),
-              }
-            : group
-        )
-      );
-    } catch (error) {
-      console.error("Error removing user:", error);
-    }
-  };
-
-  const handleRoleChange = (groupId: number, userId: number, newRole: "manager" | "moderator" | "member") => {
-    setGroups((prevGroups) =>
-      prevGroups.map((group) =>
-        group.id === groupId
-          ? {
-              ...group,
-              members: group.members.map((member) =>
-                member.id === userId ? { ...member, role: newRole } : member
-              ),
-            }
-          : group
+  const handleRoleChange = (userId: number, newRole: GroupMember["role"]) => {
+    setMembers((prev) =>
+      prev.map((member) =>
+        member.id === userId ? { ...member, role: newRole } : member
       )
     );
   };
 
-  const handleAddUser = async (groupId: number, userId: number) => {
-    try {
-      const accessToken = groups.find((group) => group.id === groupId)?.access_token;
-      if (!accessToken) throw new Error("Access token not found");
+  const handleRemoveMember = (userId: number) => {
+    setMembers((prev) => prev.filter((member) => member.id !== userId));
+  };
 
-      const newUser: User = {
-        id: userId,
-        first_name: "New",
-        last_name: "User",
-        email: `newuser${Date.now()}@example.com`,
-        role: "member",
-      };
-
-      setGroups((prevGroups) =>
-        prevGroups.map((group) =>
-          group.id === groupId
-            ? {
-                ...group,
-                members: [...group.members, newUser],
-              }
-            : group
-        )
-      );
-
-      // Close the dropdown after adding the user
-      setShowUserDropdown(null);
-    } catch (error) {
-      console.error("Error adding user:", error);
+  const handleCopyToken = () => {
+    if (groupInfo?.access_token) {
+      navigator.clipboard.writeText(groupInfo.access_token);
+      alert("Access token copied to clipboard!");
     }
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    alert("Access token copied to clipboard");
-  };
-
-  if (sessionStatus === "loading" || renderState.status === "loading") {
-    return <LoadingScreen />;
-  }
-
-  if (renderState.status === "error") {
+  if (renderState.status === "loading") return <LoadingScreen />;
+  if (renderState.status === "error")
     return (
       <div className="text-center mt-10">
-        Failed to load groups. Please try again later.
+        Failed to load group data. Please try again later.
       </div>
     );
-  }
 
   return (
-    <div className="flex flex-col mt-10 p-6">
-      <h1 className="text-3xl font-bold mb-6 text-left">Manage Groups</h1>
-      <ul className="space-y-4">
-        {groups.map((group) => (
-          <li key={group.id} className="p-4 border border-gray-300 rounded shadow">
-            <div
-              className="flex justify-between items-center hover:cursor-pointer"
-              onClick={() =>
-                setExpandedGroup((prev) => (prev === group.id ? null : group.id))
-              }
+    <div className="p-6">
+      <h1 className="text-3xl font-bold mb-4">{groupInfo?.name}</h1>
+      <p className="text-gray-600 mb-4">{groupInfo?.description}</p>
+      {groupInfo?.access_token && (
+        <div className="mb-6">
+            <p className="text-gray-400">
+            <span
+                className="hover:cursor-pointer hover:text-gray-300"
+                onClick={handleCopyToken}
             >
-              <div>
-                <h2 className="text-lg font-semibold">{group.name}</h2>
-                <p className="text-gray-600 text-sm">{group.description}</p>
-              </div>
-              <div className="flex items-center space-x-4">
-                <span
-                  className="text-sm text-gray-400 hover:cursor-pointer"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    copyToClipboard(group.access_token);
-                  }}
-                >
-                  {group.access_token.slice(0, 4)}...{group.access_token.slice(-4)}
-                </span>
-                
-                <button className="text-blue-600 hover:underline">
-                  {expandedGroup === group.id ? "▲" : "▼"}
-                </button>
-              </div>
+                {groupInfo.access_token}
+            </span>
+            </p>
+        </div>
+        )}
+
+
+      <h2 className="text-2xl font-semibold mb-4">Members</h2>
+      <ul className="space-y-4">
+        {members.map((member) => (
+          <li
+            key={member.id}
+            className="flex items-center justify-between p-4 border border-gray-300 rounded shadow"
+          >
+            <div>
+              <p className="font-semibold">
+                {member.firstName} {member.lastName}
+              </p>
+              <p className="text-sm text-gray-500">{member.email}</p>
             </div>
-            {expandedGroup === group.id && (
-              <div className="mt-4 border-t border-gray-200 pt-4">
-                <h3 className="text-md font-bold mb-2">Participants</h3>
-                <ul className="space-y-2">
-                {group.members.map((member, index) => (
-                    <li
-                    key={member.id}
-                    className="flex justify-between items-center space-x-4" // добавлен space-x для отступов между элементами
-                    >
-                    <div className="flex flex-col space-y-1"> {/* flex-col для вертикальной ориентации внутри div */}
-                        <p className="font-medium">
-                        {index + 1}. {member.first_name} {member.last_name}
-                        </p>
-                        <p className="text-sm text-gray-500">{member.email}</p>
-                    </div>
+            <div className="flex items-center space-x-4">
+              <select
+                value={member.role}
+                onChange={(e) =>
+                  handleRoleChange(member.id, e.target.value as GroupMember["role"])
+                }
+                className="p-2 border rounded bg-gray-800 text-white"
+              >
+                <option value="manager">Manager</option>
+                <option value="moderator">Moderator</option>
+                <option value="member">Member</option>
+              </select>
 
-                    <div className="flex items-center space-x-2"> {/* добавлен flex для горизонтального расположения */}
-                        <select
-                        value={member.role}
-                        onChange={(e) =>
-                            handleRoleChange(
-                            group.id,
-                            member.id,
-                            e.target.value as "manager" | "moderator" | "member"
-                            )
-                        }
-                        className="p-1 border-gray-600 rounded bg-gray-800 text-white"
-                        >
-                        <option value="manager">Manager</option>
-                        <option value="moderator">Moderator</option>
-                        <option value="member">Member</option>
-                        </select>
-                        <button
-                        onClick={() => handleRemoveUser(group.id, member.id)}
-                        className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-500"
-                        >
-                        Remove
-                        </button>
-                    </div>
-                    </li>
-                ))}
-                </ul>
-
-
-                
-                
-                <button
-                  className="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-500"
-                  onClick={() =>
-                    setShowUserDropdown((prev) =>
-                      prev === group.id ? null : group.id
-                    )
-                  }
-                >
-                  Add User
-                </button>
-                {showUserDropdown === group.id && (
-                  <div className="mt-2 p-2 bg-gray-100 rounded shadow">
-                    <ul>
-                      {mockUsers.map((user) => (
-                        <li
-                          key={user.id}
-                          className="p-2 hover:bg-gray-200 cursor-pointer"
-                          onClick={() => handleAddUser(group.id, user.id)}
-                        >
-                          {user.first_name} {user.last_name}
-                        </li>
-                      ))}
-                    </ul>
-                    <button
-                      className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500"
-                      onClick={() => setShowUserDropdown(null)}
-                    >
-                      Submit
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
+              <button
+                className="px-4 py-2 bg-red-500 text-white rounded shadow hover:bg-red-400"
+                onClick={() => handleRemoveMember(member.id)}
+              >
+                Remove
+              </button>
+            </div>
           </li>
         ))}
       </ul>
