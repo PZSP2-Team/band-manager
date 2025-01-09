@@ -11,7 +11,6 @@ type Event = {
   date: string;
   type: "concert" | "rehearsal";
   time: string;
-  materials: { name: string; subgroups: string[] }[];
 };
 
 export default function EditEventPage() {
@@ -26,7 +25,6 @@ export default function EditEventPage() {
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [type, setType] = useState<"concert" | "rehearsal">("concert");
-  const [materials, setMaterials] = useState<{ name: string; subgroups: string[] }[]>([]);
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -39,11 +37,6 @@ export default function EditEventPage() {
             date: "2025-01-15",
             type: "concert",
             time: "18:00",
-            materials: [
-              { name: "К Элизе", subgroups: ["Guitar", "Drums"] },
-              { name: "Ляляля", subgroups: ["Vocals", "Keyboard"] },
-              { name: "4 времени года - Зима", subgroups: ["Violins", "Cello"] },
-            ],
           },
           {
             id: 2,
@@ -51,10 +44,6 @@ export default function EditEventPage() {
             date: "2025-01-20",
             type: "concert",
             time: "20:00",
-            materials: [
-              { name: "Saxophone", subgroups: ["Solo", "Bass"] },
-              { name: "Piano", subgroups: ["Chords", "Strings"] },
-            ],
           },
           {
             id: 3,
@@ -62,10 +51,6 @@ export default function EditEventPage() {
             date: "2025-02-01",
             type: "rehearsal",
             time: "15:00",
-            materials: [
-              { name: "Sheet Music", subgroups: ["Violins", "Conductor"] },
-              { name: "Conductor's Baton", subgroups: ["Percussion", "Strings"] },
-            ],
           },
         ];
 
@@ -76,7 +61,6 @@ export default function EditEventPage() {
           setDate(fetchedEvent.date);
           setTime(fetchedEvent.time);
           setType(fetchedEvent.type);
-          setMaterials(fetchedEvent.materials);
         } else {
           setEvent(null);
         }
@@ -96,7 +80,6 @@ export default function EditEventPage() {
         date,
         time,
         type,
-        materials,
       });
 
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -124,20 +107,20 @@ export default function EditEventPage() {
       {/* Flex container для полей */}
       <div className="flex flex-wrap gap-6">
         {/* Колонка 1: Название и Тип */}
-        <div className="flex-1 min-w-[300px]">
+        <div className="flex-1 min-w-[330px]">
           <label className="block text-lg font-semibold mb-2">Name</label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full p-2 border border-gray-600 rounded bg-gray-800 text-white"
+            className="w-full p-[2.2rem] border border-gray-600 rounded bg-gray-800 text-white"
           />
 
           <label className="block text-lg font-semibold mt-4 mb-2">Type</label>
           <select
             value={type}
             onChange={(e) => setType(e.target.value as "concert" | "rehearsal")}
-            className="w-full p-2 border border-gray-600 rounded bg-gray-800 text-white"
+            className="w-full p-[2.2rem] border border-gray-600 rounded bg-gray-800 text-white"
           >
             <option value="concert">Concert</option>
             <option value="rehearsal">Rehearsal</option>
@@ -145,13 +128,13 @@ export default function EditEventPage() {
         </div>
 
         {/* Колонка 2: Дата и Время */}
-        <div className="flex-1 min-w-[300px]">
+        <div className="flex-1 min-w-[330px]">
           <label className="block text-lg font-semibold mb-2">Date</label>
           <input
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="w-full p-2 border border-gray-600 rounded bg-gray-800 text-white"
+            className="w-full p-[2.2rem] border border-gray-600 rounded bg-gray-800 text-white"
           />
 
           <label className="block text-lg font-semibold mt-4 mb-2">Time</label>
@@ -159,59 +142,14 @@ export default function EditEventPage() {
             type="time"
             value={time}
             onChange={(e) => setTime(e.target.value)}
-            className="w-full p-2 border border-gray-600 rounded bg-gray-800 text-white"
+            className="w-full p-[2.2rem] border border-gray-600 rounded bg-gray-800 text-white"
           />
         </div>
       </div>
 
-      {/* Редактирование материалов */}
-      <div className="mb-4 mt-6">
-        <h2 className="text-2xl font-semibold mb-4">Materials</h2>
-        {materials.map((material, idx) => (
-          <div key={idx} className="mb-4 p-4 border border-gray-600 rounded bg-gray-800">
-            <input
-              type="text"
-              value={material.name}
-              onChange={(e) => {
-                const updatedMaterials = [...materials];
-                updatedMaterials[idx].name = e.target.value;
-                setMaterials(updatedMaterials);
-              }}
-              className="w-full p-2 border border-gray-600 rounded bg-gray-800 text-white mb-2"
-            />
-            <div>
-              <h3 className="font-semibold text-white">Subgroups</h3>
-              {material.subgroups.map((subgroup, subIdx) => (
-                <input
-                  key={subIdx}
-                  type="text"
-                  value={subgroup}
-                  onChange={(e) => {
-                    const updatedMaterials = [...materials];
-                    updatedMaterials[idx].subgroups[subIdx] = e.target.value;
-                    setMaterials(updatedMaterials);
-                  }}
-                  className="w-full p-2 border border-gray-600 rounded bg-gray-800 text-white mb-2"
-                />
-              ))}
-              <button
-                className="mt-2 px-4 py-2 bg-blue-600 text-white rounded"
-                onClick={() => {
-                  const updatedMaterials = [...materials];
-                  updatedMaterials[idx].subgroups.push("");
-                  setMaterials(updatedMaterials);
-                }}
-              >
-                Add Subgroup
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-
       {/* Кнопка сохранения */}
       <button
-        className="mt-6 px-6 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-500 transition"
+        className="mt-6 px-6 py-[2.2rem] bg-green-600 text-white rounded-lg shadow hover:bg-green-500 transition"
         onClick={handleSave}
       >
         Save Changes
