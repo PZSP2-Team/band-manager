@@ -14,7 +14,12 @@ export default {
         customGray: "#6f6f6f",
         headerHoverGray: "#181818",
         hoverGray: "#151515",
-        headerGray: "#131313"
+        headerGray: "#131313",
+        sidebarBackgroundGray: "#191919",
+        sidebarHoverGray:"#191919",
+        sidebarTextGray:"#191919",
+        sidebarButtonYellow: "#fea613",
+        sidebarButtonHover: "#feb43c"
       },
     },
   },

@@ -7,7 +7,7 @@ export default withAuth(
     const isPublicPath = path === "/login" || path === "/register" || path === "/";
 
     if (isPublicPath && req.nextauth.token) {
-      return NextResponse.redirect(new URL("/group", req.url));
+      return NextResponse.redirect(new URL("/groups", req.url));
     }
   },
   {
@@ -26,5 +26,5 @@ export default withAuth(
 );
 
 export const config = {
-  matcher: ["/", "/login", "/register", "/group/:path*", "/events/:path*"],
+  matcher: ["/", "/login", "/register", "/groups/:path*", "/events/:path*"],
 };
