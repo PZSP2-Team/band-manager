@@ -4,6 +4,8 @@ import (
 	"band-manager-backend/internal/usecases"
 	"encoding/json"
 	"net/http"
+	"strconv"
+	"strings"
 )
 
 type TrackHandler struct {
@@ -84,4 +86,35 @@ func (h *TrackHandler) AddNotesheet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(notesheet)
+}
+
+func (h *TrackHandler) GetSubgroupNotesheets(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	pathParts := strings.Split(r.URL.Path, "/")
+	subgroupID, err := strconv.ParseUint(pathParts[len(pathParts)-2], 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid subgroup ID", http.StatusBadRequest)
+		return
+	}
+
+	userID, err := strconv.ParseUint(pathParts[len(pathParts)-1], 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	notesheets, err := h.trackUsecase.GetSubgroupNotesheets(uint(subgroupID), uint(userID))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"notesheets": notesheets,
+	})
 }
