@@ -97,3 +97,68 @@ func (u *TrackUsecase) DeleteTrack(id uint, userID uint) error {
 
 	return u.trackRepo.DeleteTrack(id)
 }
+
+func (u *TrackUsecase) GetGroupTracks(groupID uint, userID uint) ([]*model.Track, error) {
+	// Sprawdź czy użytkownik ma dostęp do grupy
+	_, err := u.groupRepo.GetUserRole(userID, groupID)
+	if err != nil {
+		return nil, errors.New("access denied")
+	}
+
+	return u.trackRepo.GetGroupTracks(groupID)
+}
+
+func (u *TrackUsecase) AddNotesheet(trackID uint, instrument string, filepath string, subgroupIDs []uint, userID uint) (*model.Notesheet, error) {
+	track, err := u.trackRepo.GetTrackByID(trackID)
+	if err != nil {
+		return nil, err
+	}
+
+	role, err := u.groupRepo.GetUserRole(userID, track.GroupID)
+	if err != nil {
+		return nil, errors.New("user not in group")
+	}
+
+	if role != "manager" && role != "moderator" {
+		return nil, errors.New("insufficient permissions")
+	}
+
+	// Sprawdź czy podgrupy należą do tej samej grupy co utwór
+	for _, subgroupID := range subgroupIDs {
+		subgroup, err := u.subgroupRepo.GetSubgroupByID(subgroupID)
+		if err != nil {
+			return nil, err
+		}
+		if subgroup.GroupID != track.GroupID {
+			return nil, errors.New("subgroup does not belong to track's group")
+		}
+	}
+
+	notesheet := &model.Notesheet{
+		TrackId:    trackID,
+		Instrument: instrument,
+		Filepath:   filepath,
+	}
+
+	if err := u.trackRepo.AddNotesheetToTrack(notesheet, subgroupIDs); err != nil {
+		return nil, err
+	}
+
+	return notesheet, nil
+}
+
+func (u *TrackUsecase) GetSubgroupNotesheets(subgroupID uint, userID uint) ([]*model.Notesheet, error) {
+	// Sprawdź czy użytkownik należy do tej podgrupy
+	subgroup, err := u.subgroupRepo.GetSubgroupByID(subgroupID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Sprawdź dostęp do grupy
+	_, err = u.groupRepo.GetUserRole(userID, subgroup.GroupID)
+	if err != nil {
+		return nil, errors.New("access denied")
+	}
+
+	return u.trackRepo.GetSubgroupNotesheets(subgroupID)
+}
