@@ -8,6 +8,8 @@ type Event struct {
 	Location     string `gorm:"not null"`
 	Description  string
 	Date         time.Time
-	GroupID      uint     `gorm:"not null"`
+	GroupID      uint          `gorm:"not null"`
+	Group        Group         `gorm:"foreignKey:GroupID" json:"group"`
+	Tracks       []*Track      `gorm:"many2many:event_tracks;" json:"tracks"`
 	Performances []Performance `gorm:"constraint:OnDelete:CASCADE"`
 }
