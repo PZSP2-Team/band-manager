@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"band-manager-backend/internal/model"
 	"band-manager-backend/internal/usecases"
 	"encoding/json"
 	"net/http"
@@ -168,5 +169,61 @@ func (h *EventHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
 		"message": "Event deleted successfully",
+	})
+}
+
+func (h *EventHandler) GetGroupEvents(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	pathParts := strings.Split(r.URL.Path, "/")
+	groupID, err := strconv.ParseUint(pathParts[len(pathParts)-2], 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid group ID", http.StatusBadRequest)
+		return
+	}
+
+	userID, err := strconv.ParseUint(pathParts[len(pathParts)-1], 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	events, err := h.eventUsecase.GetGroupEvents(uint(groupID), uint(userID))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string][]*model.Event{
+		"events": events,
+	})
+}
+
+func (h *EventHandler) GetUserEvents(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	pathParts := strings.Split(r.URL.Path, "/")
+	userID, err := strconv.ParseUint(pathParts[len(pathParts)-1], 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	events, err := h.eventUsecase.GetUserEvents(uint(userID))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string][]*model.Event{
+		"events": events,
 	})
 }
