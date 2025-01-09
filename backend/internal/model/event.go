@@ -11,5 +11,6 @@ type Event struct {
 	GroupID      uint          `gorm:"not null"`
 	Group        Group         `gorm:"foreignKey:GroupID" json:"group"`
 	Tracks       []*Track      `gorm:"many2many:event_tracks;" json:"tracks"`
+	Users        []*User       `gorm:"many2many:event_users;constraint:OnDelete:CASCADE" json:"users"`
 	Performances []Performance `gorm:"constraint:OnDelete:CASCADE"`
 }

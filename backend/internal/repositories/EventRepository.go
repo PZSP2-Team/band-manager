@@ -62,13 +62,11 @@ func (r *EventRepository) GetGroupEvents(groupID uint) ([]*model.Event, error) {
 
 func (r *EventRepository) GetUserEvents(userID uint) ([]*model.Event, error) {
 	var events []*model.Event
-	err := r.db.Joins("JOIN user_group_roles ON user_group_roles.group_id = events.group_id").
-		Where("user_group_roles.user_id = ?", userID).
+	err := r.db.Preload("Users").
+		Joins("JOIN event_users ON event_users.event_id = events.id").
+		Where("event_users.user_id = ?", userID).
 		Find(&events).Error
-	if err != nil {
-		return nil, err
-	}
-	return events, nil
+	return events, err
 }
 
 func (r *EventRepository) AddTracksToEvent(eventID uint, trackIDs []uint) error {
