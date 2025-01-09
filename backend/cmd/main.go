@@ -45,6 +45,9 @@ func main() {
 
 	authHandler := handlers.NewAuthHandler()
 	groupHandler := handlers.NewGroupHandler()
+	subgroupHandler := handlers.NewSubgroupHandler()
+	trackHandler := handlers.NewTrackHandler()
+	eventHandler := handlers.NewEventHandler()
 
 	http.HandleFunc("/", enableCORS(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Hello World!")
@@ -55,7 +58,28 @@ func main() {
 	http.HandleFunc("/api/group/create", enableCORS(groupHandler.Create))
 	http.HandleFunc("/api/group/join", enableCORS(groupHandler.Join))
 	http.HandleFunc("/api/group/", enableCORS(groupHandler.GetGroupInfo))
+	http.HandleFunc("/api/group/user/", enableCORS(groupHandler.GetUserGroups))
+	http.HandleFunc("/api/group/members/", enableCORS(groupHandler.GetGroupMembers))
+	http.HandleFunc("/api/group/remove/", enableCORS(groupHandler.RemoveMember))
 
+	http.HandleFunc("/api/subgroup/create", enableCORS(subgroupHandler.Create))
+	http.HandleFunc("/api/subgroup/info/", enableCORS(subgroupHandler.GetInfo))
+	http.HandleFunc("/api/subgroup/update/", enableCORS(subgroupHandler.Update))
+	http.HandleFunc("/api/subgroup/delete/", enableCORS(subgroupHandler.Delete))
+	http.HandleFunc("/api/subgroup/members/add/", enableCORS(subgroupHandler.AddMembers))
+	http.HandleFunc("/api/subgroup/members/remove/", enableCORS(subgroupHandler.RemoveMember))
+
+	http.HandleFunc("/api/track/create", enableCORS(trackHandler.Create))
+	http.HandleFunc("/api/track/notesheet", enableCORS(trackHandler.AddNotesheet))
+	http.HandleFunc("/api/track/user/notesheets/", enableCORS(trackHandler.GetUserNotesheets))
+
+	// Event endpoints
+	http.HandleFunc("/api/event/create", enableCORS(eventHandler.Create))
+	http.HandleFunc("/api/event/info/", enableCORS(eventHandler.GetInfo))
+	http.HandleFunc("/api/event/update/", enableCORS(eventHandler.Update))
+	http.HandleFunc("/api/event/delete/", enableCORS(eventHandler.Delete))
+	http.HandleFunc("/api/event/group/", enableCORS(eventHandler.GetGroupEvents))
+	http.HandleFunc("/api/event/user/", enableCORS(eventHandler.GetUserEvents))
 	fmt.Printf("Server starting on http://localhost:%s\n", port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatal(err)

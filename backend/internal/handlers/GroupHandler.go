@@ -93,8 +93,14 @@ func (h *GroupHandler) GetGroupInfo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pathParts := strings.Split(r.URL.Path, "/")
-	if len(pathParts) < 3 {
+	if len(pathParts) < 4 { // /api/group/{groupId}/{userId}
 		http.Error(w, "Invalid URL format", http.StatusBadRequest)
+		return
+	}
+
+	groupID, err := strconv.ParseUint(pathParts[len(pathParts)-2], 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid group ID", http.StatusBadRequest)
 		return
 	}
 
@@ -104,7 +110,7 @@ func (h *GroupHandler) GetGroupInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	name, description, accessToken, err := h.groupUsecase.GetGroupInfo(uint(userID))
+	name, description, accessToken, err := h.groupUsecase.GetGroupInfo(uint(userID), uint(groupID))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -118,4 +124,104 @@ func (h *GroupHandler) GetGroupInfo(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
+}
+
+func (h *GroupHandler) GetGroupMembers(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	pathParts := strings.Split(r.URL.Path, "/")
+	if len(pathParts) < 4 {
+		http.Error(w, "Invalid URL format", http.StatusBadRequest)
+		return
+	}
+
+	groupID, err := strconv.ParseUint(pathParts[len(pathParts)-2], 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid group ID", http.StatusBadRequest)
+		return
+	}
+
+	userID, err := strconv.ParseUint(pathParts[len(pathParts)-1], 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	members, err := h.groupUsecase.GetGroupMembers(uint(groupID), uint(userID))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"members": members,
+	})
+}
+
+// GetUserGroups handles GET /api/group/user/{userId}
+func (h *GroupHandler) GetUserGroups(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	pathParts := strings.Split(r.URL.Path, "/")
+	userID, err := strconv.ParseUint(pathParts[len(pathParts)-1], 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	groups, err := h.groupUsecase.GetUserGroups(uint(userID))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"groups": groups,
+	})
+}
+
+// RemoveMember handles DELETE /api/group/{groupId}/members/{userId}
+func (h *GroupHandler) RemoveMember(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	pathParts := strings.Split(r.URL.Path, "/")
+	groupID, err := strconv.ParseUint(pathParts[len(pathParts)-3], 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid group ID", http.StatusBadRequest)
+		return
+	}
+
+	userID, err := strconv.ParseUint(pathParts[len(pathParts)-1], 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	requesterID, err := strconv.ParseUint(pathParts[len(pathParts)-2], 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid requester ID", http.StatusBadRequest)
+		return
+	}
+
+	err = h.groupUsecase.RemoveMember(uint(groupID), uint(userID), uint(requesterID))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Member removed successfully",
+	})
 }

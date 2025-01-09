@@ -13,11 +13,28 @@ import (
 
 var db *gorm.DB
 
+func dropDB() {
+	// Usuwamy wszystkie tabele
+	db.Migrator().DropTable(
+		&model.Group{},
+		&model.User{},
+		&model.Subgroup{},
+		&model.UserGroupRole{},
+		&model.Announcement{},
+		&model.Event{},
+		&model.Track{},
+		&model.Notesheet{},
+		"user_group", // tabela łącząca dla relacji many-to-many
+	)
+	fmt.Println("all tables dropped successfully")
+}
+
 func createDB() {
 	err := db.AutoMigrate(
 		&model.Group{},
 		&model.User{},
 		&model.Subgroup{},
+		&model.UserGroupRole{},
 		&model.Announcement{},
 		&model.Event{},
 		&model.Track{},
@@ -44,15 +61,17 @@ func InitDB() {
 	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})
+
 	if err != nil {
 		log.Fatal("backend_manager_db connection failed")
 	}
 
 	db = database
 
-	if !db.Migrator().HasTable(&model.User{}) {
-		createDB()
-	}
+	// Najpierw usuwamy wszystkie tabele
+	// dropDB()
+	// Potem tworzymy je od nowa
+	createDB()
 
 	fmt.Println("backend_manager_db connection successful")
 }

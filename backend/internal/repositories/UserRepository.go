@@ -68,3 +68,12 @@ func (r *UserRepository) GetUserByID(id uint) (*model.User, error) {
 
 	return &user, nil
 }
+
+func (r *UserRepository) GetUserGroupRoles(userID uint) ([]model.UserGroupRole, error) {
+	var roles []model.UserGroupRole
+	result := r.db.Where("user_id = ?", userID).Find(&roles)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return roles, nil
+}
