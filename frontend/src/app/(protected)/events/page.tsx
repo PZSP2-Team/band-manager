@@ -2,6 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
+import { useGroup } from "../../contexts/GroupContext";
 import LoadingScreen from "@/src/app/components/LoadingScreen";
 
 type RenderState =
@@ -19,9 +20,12 @@ type Event = {
 };
 
 export default function EventsPage() {
+  const { userRole } = useGroup();
   const router = useRouter();
   const { data: session, status: sessionStatus } = useSession();
-  const [renderState, setRenderState] = useState<RenderState>({ status: "loading" });
+  const [renderState, setRenderState] = useState<RenderState>({
+    status: "loading",
+  });
   const [events, setEvents] = useState<Event[]>([]);
 
   useEffect(() => {
@@ -29,7 +33,7 @@ export default function EventsPage() {
 
     const fetchEvents = async () => {
       try {
-        console.log("User role:", session?.user?.role);
+        console.log("User role:", userRole);
 
         const mockEvents: Event[] = [
           {
@@ -38,7 +42,7 @@ export default function EventsPage() {
             date: "2025-01-15",
             type: "concert",
             time: "18:00",
-            materials: ["Guitar", "Drums", "Microphone"]
+            materials: ["Guitar", "Drums", "Microphone"],
           },
           {
             id: 2,
@@ -46,7 +50,7 @@ export default function EventsPage() {
             date: "2025-01-20",
             type: "concert",
             time: "20:00",
-            materials: ["Saxophone", "Piano", "Bass"]
+            materials: ["Saxophone", "Piano", "Bass"],
           },
           {
             id: 3,
@@ -54,13 +58,12 @@ export default function EventsPage() {
             date: "2025-02-01",
             type: "rehearsal",
             time: "15:00",
-            materials: ["Sheet Music", "Violin", "Conductor's Baton"]
+            materials: ["Sheet Music", "Violin", "Conductor's Baton"],
           },
         ];
 
-        const filteredEvents = session?.user?.role === "manager"
-          ? mockEvents
-          : mockEvents.slice(0, 2);
+        const filteredEvents =
+          userRole === "manager" ? mockEvents : mockEvents.slice(0, 2);
 
         setTimeout(() => {
           setEvents(filteredEvents);
@@ -73,14 +76,18 @@ export default function EventsPage() {
     };
 
     fetchEvents();
-  }, [sessionStatus, session?.user?.role]);
+  }, [sessionStatus, userRole]);
 
   if (sessionStatus === "loading" || renderState.status === "loading") {
     return <LoadingScreen />;
   }
 
   if (renderState.status === "error") {
-    return <div className="text-center mt-10">Failed to load events. Please try again later.</div>;
+    return (
+      <div className="text-center mt-10">
+        Failed to load events. Please try again later.
+      </div>
+    );
   }
 
   return (
@@ -98,12 +105,14 @@ export default function EventsPage() {
               <h2 className="text-lg font-semibold">
                 {index + 1}. {event.name}
               </h2>
-              <p className="text-gray-600">{new Date(event.date).toLocaleDateString()}</p>
+              <p className="text-gray-600">
+                {new Date(event.date).toLocaleDateString()}
+              </p>
             </li>
           ))}
         </ul>
 
-        {session?.user?.role === "manager" && (
+        {userRole === "manager" && (
           <button
             className="mt-6 px-6 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-500 transition"
             onClick={() => router.push("/events/create")}
