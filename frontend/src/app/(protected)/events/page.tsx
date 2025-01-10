@@ -72,36 +72,35 @@ export default function EventsPage() {
 
   return (
     <RequireGroup>
-      <div className="flex flex-col mt-10 p-6">
-        <div className="w-1/4">
-          <h1 className="text-3xl font-bold mb-6 text-left">Upcoming Events</h1>
-          <ul className="space-y-4 text-left">
-            {events.map((event, index) => (
-              <li
-                key={event.id}
-                onClick={() => router.push(`/events/${event.id}`)}
-                className="p-4 border border-gray-300 rounded shadow hover:cursor-pointer hover:bg-white hover:text-black transition"
-                style={{ opacity: 0.8 }}
-              >
-                <h2 className="text-lg font-semibold">
-                  {index + 1}. {event.title}
-                </h2>
-                <p className="text-gray-600">
-                  {new Date(event.date).toLocaleDateString()}
-                </p>
-              </li>
-            ))}
-          </ul>
-
+      <div className="flex flex-col p-10">
+        <div className="flex flex-row items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold text-left">Upcoming Events</h1>
           {userRole === "manager" && (
             <button
-              className="mt-6 px-6 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-500 transition"
+              className="px-6 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-500 transition"
               onClick={() => router.push("/events/create")}
             >
               Create New Event
             </button>
           )}
         </div>
+        <ul className="space-y-4 text-left">
+          {events.map((event, index) => (
+            <li
+              key={event.id}
+              onClick={() => router.push(`/events/${event.id}`)}
+              className="p-4 border border-gray-300 rounded shadow hover:cursor-pointer hover:bg-white hover:text-black transition"
+              style={{ opacity: 0.8 }}
+            >
+              <h2 className="text-lg font-semibold">
+                {index + 1}. {event.title}
+              </h2>
+              <p className="text-gray-600">
+                {new Date(event.date).toLocaleDateString()}
+              </p>
+            </li>
+          ))}
+        </ul>
       </div>
     </RequireGroup>
   );

@@ -104,38 +104,35 @@ export default function TracksPage() {
     <RequireGroup>
       <RequireManager>
         <div className="flex flex-col py-10 px-10">
-          <div className="w-full">
-            <h1 className="text-3xl font-bold mb-6 text-left">
-              Available tracks
-            </h1>
-            <ul className="space-y-4 text-left">
-              {tracks.map((track, index) => (
-                <li
-                  key={track.id}
-                  className="flex flex-row p-4 border border-customGray items-center justify-between rounded shadow transition"
-                  style={{ opacity: 0.8 }}
-                >
-                  <div className="flex flex-row space-x-4">
-                    <Music4></Music4>
-                    <h2 className="font-semibold">{track.title}</h2>
-                  </div>
-                  <button
-                    onClick={() => removeTrack(index)}
-                    className="p-2 text-red-500 hover:bg-red-100 rounded-full transition"
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
-                </li>
-              ))}
-            </ul>
-
+          <div className="flex flex-row items-center justify-between mb-6">
+            <h1 className="text-3xl font-bold text-left">Available tracks</h1>
             <button
-              className="mt-6 px-6 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-500 transition"
+              className="px-6 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-500 transition"
               onClick={() => router.push("/tracks/add")}
             >
               Add new track
             </button>
           </div>
+          <ul className="space-y-4 text-left">
+            {tracks.map((track, index) => (
+              <li
+                key={track.id}
+                className="flex flex-row p-4 border border-customGray items-center justify-between rounded shadow transition"
+                style={{ opacity: 0.8 }}
+              >
+                <div className="flex flex-row space-x-4">
+                  <Music4></Music4>
+                  <h2 className="font-semibold">{track.title}</h2>
+                </div>
+                <button
+                  onClick={() => removeTrack(index)}
+                  className="p-2 text-red-500 hover:bg-red-100 rounded-full transition"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </li>
+            ))}
+          </ul>
         </div>
       </RequireManager>
     </RequireGroup>
