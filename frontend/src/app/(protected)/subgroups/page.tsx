@@ -2,20 +2,19 @@
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
+import { ChevronUp, ChevronDown, Check } from "lucide-react";
 import LoadingScreen from "@/src/app/components/LoadingScreen";
+import { useGroup } from "../../contexts/GroupContext";
 
-// Type Definitions
 type RenderState =
   | { status: "loading" }
   | { status: "loaded" }
   | { status: "error" };
 
-type Group = {
+type Subgroup = {
   id: number;
   name: string;
-  description: string;
-  access_token: string;
-  members: User[];
+  members: number[];
 };
 
 type User = {
@@ -23,180 +22,331 @@ type User = {
   first_name: string;
   last_name: string;
   email: string;
-  role: "manager" | "moderator" | "member";
 };
 
-export default function ManagePage() {
+export default function SubgroupsPage() {
+  const { groupId } = useGroup();
   const router = useRouter();
-  const { data: session, status: sessionStatus } = useSession();
+  const { data: session } = useSession();
+  const [availableUsers, setAvailableUsers] = useState<User[]>([]);
   const [renderState, setRenderState] = useState<RenderState>({
     status: "loading",
   });
-  const [groups, setGroups] = useState<Group[]>([]);
+  const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
+  const [subgroups, setSubgroups] = useState<Subgroup[]>([]);
   const [expandedGroup, setExpandedGroup] = useState<number | null>(null);
   const [showUserDropdown, setShowUserDropdown] = useState<number | null>(null);
-  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState<number | null>(null);
-
-  const mockUsers: User[] = [
-    { id: 111, first_name: "John", last_name: "Doe", email: "john@example.com", role: "member" },
-    { id: 112, first_name: "Jane", last_name: "Smith", email: "jane@example.com", role: "member" },
-    { id: 113, first_name: "Jim", last_name: "Beam", email: "jim@example.com", role: "member" },
-  ];
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState<
+    number | null
+  >(null);
 
   useEffect(() => {
-    if (sessionStatus === "loading") return;
+    const fetchData = async () => {
+      try {
+        const membersResponse = await fetch(
+          `/api/group/members/${groupId}/${session?.user?.id}`,
+        );
 
-    // Mock data for testing
-    const mockGroups: Group[] = [
-      {
-        id: 1,
-        name: "Orchestra",
-        description: "The main orchestra group",
-        access_token: "abc123xyz789",
-        members: [
-          { id: 101, first_name: "Alice", last_name: "Smith", email: "alice@example.com", role: "manager" },
-          { id: 102, first_name: "Bob", last_name: "Jones", email: "bob@example.com", role: "member" },
-        ],
-      },
-      {
-        id: 2,
-        name: "Choir",
-        description: "Choir group",
-        access_token: "def456uvw123",
-        members: [
-          { id: 103, first_name: "Carol", last_name: "Taylor", email: "carol@example.com", role: "moderator" },
-          { id: 104, first_name: "Dave", last_name: "Wilson", email: "dave@example.com", role: "member" },
-        ],
-      },
-    ];
+        if (!membersResponse.ok) {
+          throw new Error("Failed to fetch members");
+        }
 
-    setTimeout(() => {
-      setGroups(mockGroups);
-      setRenderState({ status: "loaded" });
-    }, 1000);
-  }, [sessionStatus]);
+        const membersData = await membersResponse.json();
+        setAvailableUsers(membersData.members);
 
-  const handleRemoveUser = async (groupId: number, userId: number) => {
+        const subgroupsResponse = await fetch(
+          `/api/group/subgroups/${groupId}/${session?.user?.id}`,
+        );
+
+        if (!subgroupsResponse.ok) {
+          throw new Error("Failed to fetch subgroups");
+        }
+
+        const subgroupsData = await subgroupsResponse.json();
+
+        setSubgroups(subgroupsData.subgroups);
+        setRenderState({ status: "loaded" });
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setRenderState({ status: "error" });
+      }
+    };
+
+    fetchData();
+  }, [groupId, session?.user?.id]);
+
+  const handleGroupExpand = (groupId: number) => {
+    if (expandedGroup !== groupId) {
+      setSelectedUserIds([]);
+      setShowUserDropdown(null);
+    }
+    setExpandedGroup((prev) => (prev === groupId ? null : groupId));
+  };
+
+  const handleRemoveUser = async (subgroupId: number, userId: number) => {
     try {
-      setGroups((prevGroups) =>
-        prevGroups.map((group) =>
-          group.id === groupId
-            ? { ...group, members: group.members.filter((member) => member.id !== userId) }
-            : group
-        )
+      const response = await fetch(
+        `/api/group/subgroups/${groupId}/members/${session?.user?.id}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            subgroup_id: subgroupId,
+            user_id: userId,
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to remove user");
+      }
+
+      setSubgroups((prevSubgroups) =>
+        prevSubgroups.map((subgroup) =>
+          subgroup.id === subgroupId
+            ? {
+                ...subgroup,
+                members: subgroup.members.filter(
+                  (memberId) => memberId !== userId,
+                ),
+              }
+            : subgroup,
+        ),
       );
     } catch (error) {
       console.error("Error removing user:", error);
     }
   };
 
-  const handleAddUser = async (groupId: number, userId: number) => {
+  const handleAddSelectedUsers = async (subgroupId: number) => {
     try {
-      const newUser: User = {
-        id: userId,
-        first_name: "New",
-        last_name: "User",
-        email: `newuser${Date.now()}@example.com`,
-        role: "member",
-      };
-
-      setGroups((prevGroups) =>
-        prevGroups.map((group) =>
-          group.id === groupId
-            ? { ...group, members: [...group.members, newUser] }
-            : group
-        )
+      const response = await fetch(
+        `/api/group/subgroups/${groupId}/members/${session?.user?.id}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            subgroup_id: subgroupId,
+            userIds: selectedUserIds,
+          }),
+        },
       );
 
-      setShowUserDropdown(null); // Close dropdown
+      if (!response.ok) {
+        throw new Error("Failed to add users to subgroup");
+      }
+
+      setSubgroups((prevSubgroups) =>
+        prevSubgroups.map((subgroup) =>
+          subgroup.id === subgroupId
+            ? {
+                ...subgroup,
+                members: [...subgroup.members, ...selectedUserIds],
+              }
+            : subgroup,
+        ),
+      );
+
+      setSelectedUserIds([]);
+      setShowUserDropdown(null);
     } catch (error) {
-      console.error("Error adding user:", error);
+      console.error("Error adding users:", error);
     }
   };
 
-  const handleDeleteGroup = (groupId: number) => {
-    setGroups((prevGroups) => prevGroups.filter((group) => group.id !== groupId));
-    setShowDeleteConfirmation(null);
+  const handleUserSelect = (userId: number) => {
+    setSelectedUserIds((prev) =>
+      prev.includes(userId)
+        ? prev.filter((id) => id !== userId)
+        : [...prev, userId],
+    );
   };
 
-  if (sessionStatus === "loading" || renderState.status === "loading") {
+  const handleDeleteSubgroup = async (subgroupId: number) => {
+    try {
+      const response = await fetch(
+        `/api/group/subgroups/${groupId}/${session?.user?.id}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            subgroup_id: subgroupId,
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to delete subgroup");
+      }
+
+      setSubgroups((prevSubgroups) =>
+        prevSubgroups.filter((subgroup) => subgroup.id !== subgroupId),
+      );
+      setShowDeleteConfirmation(null);
+    } catch (error) {
+      console.error("Error deleting subgroup:", error);
+    }
+  };
+
+  if (renderState.status === "loading") {
     return <LoadingScreen />;
   }
 
   if (renderState.status === "error") {
     return (
       <div className="text-center mt-10">
-        Failed to load groups. Please try again later.
+        Failed to load subgroups. Please try again later.
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col mt-10 p-6">
+    <div className="flex flex-col p-10">
       <h1 className="text-3xl font-bold mb-6 text-left">Manage Subgroups</h1>
       <ul className="space-y-4">
-        {groups.map((group) => (
-          <li key={group.id} className="p-4 border border-gray-300 rounded shadow">
+        {subgroups.map((subgroup) => (
+          <li
+            key={subgroup.id}
+            className="p-4 border border-gray-300 rounded shadow"
+          >
             <div
               className="flex justify-between items-center cursor-pointer"
-              onClick={() => setExpandedGroup((prev) => (prev === group.id ? null : group.id))}
+              onClick={() => handleGroupExpand(subgroup.id)}
             >
               <div className="flex flex-col">
-                <h2 className="text-lg font-semibold">{group.name}</h2>
-                <p className="text-gray-600 text-sm">{group.description}</p>
+                <h2 className="text-lg font-semibold">{subgroup.name}</h2>
               </div>
               <button
                 onClick={(e) => {
-                  e.stopPropagation(); // Prevent row click event from triggering
-                  setShowDeleteConfirmation(group.id);
+                  e.stopPropagation();
+                  setShowDeleteConfirmation(subgroup.id);
                 }}
                 className="text-gray-500 hover:text-red-600 text-xl ml-2"
               >
                 🗑️
               </button>
             </div>
-            {expandedGroup === group.id && (
+            {expandedGroup === subgroup.id && (
               <div className="mt-4 border-t border-gray-200 pt-4">
                 <h3 className="text-md font-bold mb-2">Participants</h3>
-                <ul className="space-y-2">
-                  {group.members.map((member) => (
-                    <li key={member.id} className="flex justify-between items-center">
-                      <div>
-                        <p className="font-medium">
-                          {member.first_name} {member.last_name}
-                        </p>
-                        <p className="text-sm text-gray-500">{member.email}</p>
-                      </div>
-                      <button
-                        onClick={() => handleRemoveUser(group.id, member.id)}
-                        className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-500"
-                      >
-                        Remove
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  className="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-500"
-                  onClick={() =>
-                    setShowUserDropdown((prev) => (prev === group.id ? null : group.id))
-                  }
-                >
-                  Add User
-                </button>
-                {showUserDropdown === group.id && (
-                  <div className="mt-2 p-2 bg-gray-100 rounded shadow">
-                    <ul>
-                      {mockUsers.map((user) => (
+                <div className="max-h-96 overflow-y-auto">
+                  <ul className="space-y-2">
+                    {subgroup.members
+                      .map((memberId) =>
+                        availableUsers.find((user) => user.id === memberId),
+                      )
+                      .filter((user): user is User => user !== undefined)
+                      .map((member) => (
                         <li
-                          key={user.id}
-                          className="p-2 hover:bg-gray-200 cursor-pointer"
-                          onClick={() => handleAddUser(group.id, user.id)}
+                          key={member.id}
+                          className="flex justify-between items-center p-2"
                         >
-                          {user.first_name} {user.last_name}
+                          <div>
+                            <p className="font-medium">
+                              {member.first_name} {member.last_name}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              {member.email}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() =>
+                              handleRemoveUser(subgroup.id, member.id)
+                            }
+                            className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-500"
+                          >
+                            Remove
+                          </button>
                         </li>
                       ))}
-                    </ul>
+                  </ul>
+                </div>
+                <div className="relative mt-4">
+                  <button
+                    onClick={() =>
+                      setShowUserDropdown((prev) =>
+                        prev === subgroup.id ? null : subgroup.id,
+                      )
+                    }
+                    className="w-full px-4 py-2 bg-background border border-customGray rounded flex justify-between items-center hover:bg-headerHoverGray"
+                  >
+                    <span>
+                      {selectedUserIds.length > 0
+                        ? `Selected users: ${selectedUserIds.length}`
+                        : "Select users"}
+                    </span>
+                    {showUserDropdown === subgroup.id ? (
+                      <ChevronUp className="h-5 w-5" />
+                    ) : (
+                      <ChevronDown className="h-5 w-5" />
+                    )}
+                  </button>
+                  {showUserDropdown === subgroup.id && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-customGray rounded shadow-lg z-10 max-h-60 overflow-y-auto">
+                      {(() => {
+                        const filteredUsers = availableUsers.filter(
+                          (user) => !subgroup.members.includes(user.id),
+                        );
+
+                        if (filteredUsers.length > 0) {
+                          return filteredUsers.map((user) => {
+                            const isSelected = selectedUserIds.includes(
+                              user.id,
+                            );
+                            return (
+                              <button
+                                key={user.id}
+                                onClick={() => handleUserSelect(user.id)}
+                                className="w-full px-4 py-2 flex items-center justify-between hover:bg-headerHoverGray transition"
+                              >
+                                <span className="truncate">
+                                  {user.first_name} {user.last_name}
+                                </span>
+                                <div
+                                  className={`w-5 h-5 border rounded flex items-center justify-center 
+                  ${isSelected ? "bg-blue-500 border-blue-500" : "border-customGray"}`}
+                                >
+                                  {isSelected && (
+                                    <Check className="h-4 w-4 text-white" />
+                                  )}
+                                </div>
+                              </button>
+                            );
+                          });
+                        }
+
+                        return (
+                          <p className="p-4 text-center text-gray-500">
+                            No users available to add.
+                          </p>
+                        );
+                      })()}
+                    </div>
+                  )}
+                </div>
+                {selectedUserIds.length > 0 && (
+                  <div className="mt-2 flex justify-end space-x-2">
+                    <button
+                      className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                      onClick={() => {
+                        setSelectedUserIds([]);
+                        setShowUserDropdown(null);
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      className="px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700"
+                      onClick={() => handleAddSelectedUsers(subgroup.id)}
+                    >
+                      Add Selected
+                    </button>
                   </div>
                 )}
               </div>
@@ -224,7 +374,7 @@ export default function ManagePage() {
                 Cancel
               </button>
               <button
-                onClick={() => handleDeleteGroup(showDeleteConfirmation!)}
+                onClick={() => handleDeleteSubgroup(showDeleteConfirmation!)}
                 className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500"
               >
                 Delete
