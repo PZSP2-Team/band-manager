@@ -70,6 +70,7 @@ func main() {
 	http.HandleFunc("/api/subgroup/delete/", enableCORS(subgroupHandler.Delete))
 	http.HandleFunc("/api/subgroup/members/add/", enableCORS(subgroupHandler.AddMembers))
 	http.HandleFunc("/api/subgroup/members/remove/", enableCORS(subgroupHandler.RemoveMember))
+	http.HandleFunc("/api/subgroup/group/", enableCORS(subgroupHandler.GetGroupSubgroups))
 
 	http.HandleFunc("/api/track/create", enableCORS(trackHandler.Create))
 	http.HandleFunc("/api/track/notesheet", enableCORS(trackHandler.AddNotesheet))
