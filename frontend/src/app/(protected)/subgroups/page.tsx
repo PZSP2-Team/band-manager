@@ -206,7 +206,7 @@ export default function ManagePage() {
       </ul>
       <button
         className="mt-6 w-48 px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-500 text-left"
-        onClick={() => router.push("/createSubgroup")}
+        onClick={() => router.push("/subgroups/createSubgroup")}
       >
         Create New Subgroup
       </button>
