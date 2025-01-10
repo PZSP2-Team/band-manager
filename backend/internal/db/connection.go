@@ -79,3 +79,7 @@ func InitDB() {
 func GetDB() *gorm.DB {
 	return db
 }
+
+func SetDB(newDB *gorm.DB) {
+	db = newDB
+}
