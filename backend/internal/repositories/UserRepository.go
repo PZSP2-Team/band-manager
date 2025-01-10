@@ -6,6 +6,7 @@ import (
 	"errors"
 	"log"
 
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -76,4 +77,26 @@ func (r *UserRepository) GetUserGroupRoles(userID uint) ([]model.UserGroupRole, 
 		return nil, result.Error
 	}
 	return roles, nil
+}
+
+func (r *UserRepository) ResetPassword(userID uint, newPassword string) error {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	return r.db.Model(&model.User{}).Where("id = ?", userID).Update("password_hash", string(hashedPassword)).Error
+}
+
+func (r *UserRepository) GetTotalUsers() (int64, error) {
+	var count int64
+	err := r.db.Model(&model.User{}).Count(&count).Error
+	return count, err
+}
+
+// repositories/GroupRepository.go
+func (r *GroupRepository) GetTotalGroups() (int64, error) {
+	var count int64
+	err := r.db.Model(&model.Group{}).Count(&count).Error
+	return count, err
 }
