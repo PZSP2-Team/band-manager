@@ -104,7 +104,7 @@ export default function TracksPage() {
     <RequireGroup>
       <RequireManager>
         <div className="flex flex-col py-10 px-10">
-          <div className="w-1/4">
+          <div className="w-full">
             <h1 className="text-3xl font-bold mb-6 text-left">
               Available tracks
             </h1>
