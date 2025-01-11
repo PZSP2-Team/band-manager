@@ -1,8 +1,10 @@
 package main
 
 import (
+	"band-manager-backend/internal/config"
 	"band-manager-backend/internal/db"
-	"band-manager-backend/internal/handlers"
+	"band-manager-backend/internal/handlers" // Nowy import
+	"band-manager-backend/internal/services"
 	"fmt"
 	"log"
 	"net/http"
@@ -38,9 +40,19 @@ func enableCORS(next http.HandlerFunc) http.HandlerFunc {
 }
 
 func main() {
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+	}
 	port := os.Getenv("BACKEND_PORT")
 	if port == "" {
 		port = "8080"
+	}
+
+	gcService, err := services.NewGoogleCalendarService(cfg)
+	if err != nil {
+		log.Printf("Warning: Failed to initialize Google Calendar service: %v", err)
+		// Nie przerywamy działania aplikacji, ale logujemy ostrzeżenie
 	}
 
 	db.InitDB()
@@ -49,7 +61,7 @@ func main() {
 	groupHandler := handlers.NewGroupHandler()
 	subgroupHandler := handlers.NewSubgroupHandler()
 	trackHandler := handlers.NewTrackHandler()
-	eventHandler := handlers.NewEventHandler()
+	eventHandler := handlers.NewEventHandler(gcService)
 	announcementHandler := handlers.NewAnnouncementHandler()
 	adminHandler := handlers.NewAdminHandler()
 
@@ -98,8 +110,10 @@ func main() {
 	http.HandleFunc("/api/track/notesheet/upload/", enableCORS(trackHandler.UploadNotesheetFile))
 	http.HandleFunc("/api/track/notesheet/file/", enableCORS(trackHandler.DownloadNotesheetFile))
 	http.HandleFunc("/api/track/notesheet/create/", enableCORS(trackHandler.CreateNotesheetWithFile))
-	http.HandleFunc("/track/delete/", trackHandler.DeleteTrack)
+	http.HandleFunc("/api/track/delete/", trackHandler.DeleteTrack)
 
+	http.HandleFunc("/api/calendar/auth", enableCORS(eventHandler.GoogleCalendarAuth))
+	http.HandleFunc("/api/calendar/callback", enableCORS(eventHandler.GoogleCalendarCallback))
 	fmt.Printf("Server starting on http://localhost:%s\n", port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatal(err)

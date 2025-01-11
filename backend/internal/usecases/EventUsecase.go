@@ -3,7 +3,9 @@ package usecases
 import (
 	"band-manager-backend/internal/model"
 	"band-manager-backend/internal/repositories"
+	"band-manager-backend/internal/services"
 	"errors"
+	"log"
 	"time"
 )
 
@@ -11,13 +13,15 @@ type EventUsecase struct {
 	eventRepo *repositories.EventRepository
 	groupRepo *repositories.GroupRepository
 	trackRepo *repositories.TrackRepository
+	gcService *services.GoogleCalendarService
 }
 
-func NewEventUsecase() *EventUsecase {
+func NewEventUsecase(gcService *services.GoogleCalendarService) *EventUsecase {
 	return &EventUsecase{
 		eventRepo: repositories.NewEventRepository(),
 		groupRepo: repositories.NewGroupRepository(),
 		trackRepo: repositories.NewTrackRepository(),
+		gcService: gcService,
 	}
 }
 
@@ -86,6 +90,11 @@ func (u *EventUsecase) CreateEvent(title, description, location string, date tim
 		}
 	}
 
+	if u.gcService != nil {
+		if err := u.gcService.CreateCalendarEvent(event); err != nil {
+			log.Printf("Failed to sync with Google Calendar: %v", err)
+		}
+	}
 	return event, nil
 }
 
