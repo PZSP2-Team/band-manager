@@ -38,7 +38,7 @@ func (r *EventRepository) CreateEvent(event *model.Event) error {
 
 func (r *EventRepository) GetEventByID(id uint) (*model.Event, error) {
 	var event model.Event
-	if err := r.db.Preload("Group").Preload("Users").First(&event, id).Error; err != nil {
+	if err := r.db.Preload("Group").Preload("Users").Preload("Tracks").First(&event, id).Error; err != nil {
 		return nil, err
 	}
 	return &event, nil
