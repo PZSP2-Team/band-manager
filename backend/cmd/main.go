@@ -95,6 +95,8 @@ func main() {
 	http.HandleFunc("/api/admin/stats", enableCORS(adminHandler.GetSystemStats))
 	http.HandleFunc("/api/track/notesheet/upload/", enableCORS(trackHandler.UploadNotesheetFile))
 	http.HandleFunc("/api/track/notesheet/file/", enableCORS(trackHandler.DownloadNotesheetFile))
+	http.HandleFunc("/api/track/notesheet/create/", enableCORS(trackHandler.CreateNotesheetWithFile))
+
 	fmt.Printf("Server starting on http://localhost:%s\n", port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatal(err)

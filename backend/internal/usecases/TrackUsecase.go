@@ -155,7 +155,6 @@ func (u *TrackUsecase) GetTrackNotesheets(trackID uint, userID uint) ([]*model.N
 		return nil, err
 	}
 
-	// Sprawdź czy użytkownik ma dostęp do grupy
 	_, err = u.groupRepo.GetUserRole(userID, track.GroupID)
 	if err != nil {
 		return nil, errors.New("access denied")
@@ -165,13 +164,12 @@ func (u *TrackUsecase) GetTrackNotesheets(trackID uint, userID uint) ([]*model.N
 }
 
 func (u *TrackUsecase) UpdateNotesheetFilepath(notesheetID uint, userID uint, filepath string) (*model.Notesheet, error) {
-	// Pobierz notesheet
+
 	notesheet, err := u.trackRepo.GetNotesheet(notesheetID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Sprawdź uprawnienia
 	track, err := u.trackRepo.GetTrackByID(notesheet.TrackId)
 	if err != nil {
 		return nil, err
@@ -186,7 +184,6 @@ func (u *TrackUsecase) UpdateNotesheetFilepath(notesheetID uint, userID uint, fi
 		return nil, errors.New("insufficient permissions")
 	}
 
-	// Zaktualizuj ścieżkę do pliku
 	err = u.trackRepo.UpdateNotesheetFilepath(notesheetID, filepath)
 	if err != nil {
 		return nil, err
@@ -196,19 +193,17 @@ func (u *TrackUsecase) UpdateNotesheetFilepath(notesheetID uint, userID uint, fi
 }
 
 func (u *TrackUsecase) GetNotesheet(notesheetID uint, userID uint) (*model.Notesheet, error) {
-	// Pobierz notesheet
+
 	notesheet, err := u.trackRepo.GetNotesheet(notesheetID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Pobierz track, żeby sprawdzić uprawnienia
 	track, err := u.trackRepo.GetTrackByID(notesheet.TrackId)
 	if err != nil {
 		return nil, err
 	}
 
-	// Sprawdź czy użytkownik ma dostęp do grupy
 	_, err = u.groupRepo.GetUserRole(userID, track.GroupID)
 	if err != nil {
 		return nil, errors.New("access denied")

@@ -123,7 +123,7 @@ func (u *SubgroupUsecase) RemoveMember(subgroupID uint, userID uint, requestingU
 		return errors.New("access denied")
 	}
 
-	if role != "manager" && role != "moderator" {
+	if role != "manager" {
 		return errors.New("insufficient permissions")
 	}
 

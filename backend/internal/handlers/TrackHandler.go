@@ -192,7 +192,6 @@ func (h *TrackHandler) UploadNotesheetFile(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// Pobierz ID notesheetu z URL
 	pathParts := strings.Split(r.URL.Path, "/")
 	notesheetID, err := strconv.ParseUint(pathParts[len(pathParts)-2], 10, 64)
 	if err != nil {
@@ -206,7 +205,6 @@ func (h *TrackHandler) UploadNotesheetFile(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// Parsuj multipart form
 	r.ParseMultipartForm(10 << 20) // 10MB limit
 
 	file, handler, err := r.FormFile("file")
@@ -216,17 +214,14 @@ func (h *TrackHandler) UploadNotesheetFile(w http.ResponseWriter, r *http.Reques
 	}
 	defer file.Close()
 
-	// Utwórz unikalną nazwę pliku
 	filename := fmt.Sprintf("%d_%s", time.Now().UnixNano(), handler.Filename)
 	filepath := path.Join(UPLOAD_DIR, filename)
 
-	// Upewnij się, że katalog istnieje
 	if err := os.MkdirAll(UPLOAD_DIR, 0755); err != nil {
 		http.Error(w, "Server error", http.StatusInternalServerError)
 		return
 	}
 
-	// Utwórz nowy plik
 	dst, err := os.Create(filepath)
 	if err != nil {
 		http.Error(w, "Error creating file", http.StatusInternalServerError)
@@ -234,16 +229,14 @@ func (h *TrackHandler) UploadNotesheetFile(w http.ResponseWriter, r *http.Reques
 	}
 	defer dst.Close()
 
-	// Skopiuj zawartość
 	if _, err := io.Copy(dst, file); err != nil {
 		http.Error(w, "Error saving file", http.StatusInternalServerError)
 		return
 	}
 
-	// Zaktualizuj ścieżkę w bazie
 	notesheet, err := h.trackUsecase.UpdateNotesheetFilepath(uint(notesheetID), uint(userID), filename)
 	if err != nil {
-		// Usuń plik jeśli nie udało się zaktualizować bazy
+
 		os.Remove(filepath)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -259,7 +252,6 @@ func (h *TrackHandler) DownloadNotesheetFile(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	// Pobierz ID notesheetu i użytkownika z URL
 	pathParts := strings.Split(r.URL.Path, "/")
 	notesheetID, err := strconv.ParseUint(pathParts[len(pathParts)-2], 10, 64)
 	if err != nil {
@@ -273,14 +265,12 @@ func (h *TrackHandler) DownloadNotesheetFile(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	// Pobierz notesheet i sprawdź uprawnienia
 	notesheet, err := h.trackUsecase.GetNotesheet(uint(notesheetID), uint(userID))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// Sprawdź czy ścieżka do pliku istnieje
 	if notesheet.Filepath == "" {
 		http.Error(w, "No file uploaded for this notesheet", http.StatusNotFound)
 		return
@@ -288,12 +278,88 @@ func (h *TrackHandler) DownloadNotesheetFile(w http.ResponseWriter, r *http.Requ
 
 	filepath := path.Join(UPLOAD_DIR, notesheet.Filepath)
 
-	// Sprawdź czy plik fizycznie istnieje
 	if _, err := os.Stat(filepath); os.IsNotExist(err) {
 		http.Error(w, "File not found", http.StatusNotFound)
 		return
 	}
 
-	// Wyślij plik
 	http.ServeFile(w, r, filepath)
+}
+
+func (h *TrackHandler) CreateNotesheetWithFile(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	if err := r.ParseMultipartForm(10 << 20); err != nil { // Poprawiony błąd składni
+		http.Error(w, "Error parsing form", http.StatusBadRequest)
+		return
+	}
+
+	file, handler, err := r.FormFile("file")
+	if err != nil {
+		http.Error(w, "Error retrieving file", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	trackID, err := strconv.ParseUint(r.FormValue("track_id"), 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid track ID", http.StatusBadRequest)
+		return
+	}
+
+	userID, err := strconv.ParseUint(r.FormValue("user_id"), 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	var subgroupIDs []uint
+	if subgroupIDsStr := r.FormValue("subgroup_ids"); subgroupIDsStr != "" {
+		if err := json.Unmarshal([]byte(subgroupIDsStr), &subgroupIDs); err != nil {
+			http.Error(w, "Invalid subgroup IDs format", http.StatusBadRequest)
+			return
+		}
+	}
+
+	filename := fmt.Sprintf("%d_%s", time.Now().UnixNano(), handler.Filename)
+	filepath := path.Join(UPLOAD_DIR, filename)
+
+	if err := os.MkdirAll(UPLOAD_DIR, 0755); err != nil {
+		http.Error(w, "Server error", http.StatusInternalServerError)
+		return
+	}
+
+	dst, err := os.Create(filepath)
+	if err != nil {
+		http.Error(w, "Error creating file", http.StatusInternalServerError)
+		return
+	}
+	defer dst.Close()
+
+	if _, err := io.Copy(dst, file); err != nil {
+		os.Remove(filepath)
+		http.Error(w, "Error saving file", http.StatusInternalServerError)
+		return
+	}
+
+	notesheet, err := h.trackUsecase.AddNotesheet(
+		uint(trackID),
+		handler.Header.Get("Content-Type"),
+		filename,
+		subgroupIDs,
+		uint(userID),
+	)
+
+	if err != nil {
+		os.Remove(filepath)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(notesheet)
 }
