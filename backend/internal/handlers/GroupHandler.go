@@ -46,8 +46,9 @@ func (h *GroupHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := map[string]interface{}{
-		"user_role":     userRole,
-		"user_group_id": groupID,
+		"name": request.Name,
+		"id":   groupID,
+		"role": userRole,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -71,7 +72,7 @@ func (h *GroupHandler) Join(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userRole, groupID, err := h.groupUsecase.JoinGroup(request.UserID, request.AccessToken)
+	userRole, groupID, groupName, err := h.groupUsecase.JoinGroup(request.UserID, request.AccessToken)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -80,6 +81,7 @@ func (h *GroupHandler) Join(w http.ResponseWriter, r *http.Request) {
 	response := map[string]interface{}{
 		"user_role":     userRole,
 		"user_group_id": groupID,
+		"name":          groupName,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -222,5 +224,51 @@ func (h *GroupHandler) RemoveMember(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
 		"message": "Member removed successfully",
+	})
+}
+
+func (h *GroupHandler) UpdateMemberRole(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPut {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	pathParts := strings.Split(r.URL.Path, "/")
+	groupID, err := strconv.ParseUint(pathParts[len(pathParts)-3], 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid group ID", http.StatusBadRequest)
+		return
+	}
+
+	userID, err := strconv.ParseUint(pathParts[len(pathParts)-2], 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	requesterID, err := strconv.ParseUint(pathParts[len(pathParts)-1], 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid requester ID", http.StatusBadRequest)
+		return
+	}
+
+	var request struct {
+		NewRole string `json:"new_role"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	err = h.groupUsecase.UpdateMemberRole(uint(groupID), uint(userID), uint(requesterID), request.NewRole)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Role updated successfully",
 	})
 }

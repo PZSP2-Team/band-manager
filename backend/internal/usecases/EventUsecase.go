@@ -3,7 +3,9 @@ package usecases
 import (
 	"band-manager-backend/internal/model"
 	"band-manager-backend/internal/repositories"
+	"band-manager-backend/internal/services"
 	"errors"
+	"log"
 	"time"
 )
 
@@ -11,22 +13,24 @@ type EventUsecase struct {
 	eventRepo *repositories.EventRepository
 	groupRepo *repositories.GroupRepository
 	trackRepo *repositories.TrackRepository
+	gcService *services.GoogleCalendarService
 }
 
-func NewEventUsecase() *EventUsecase {
+func NewEventUsecase(gcService *services.GoogleCalendarService) *EventUsecase {
 	return &EventUsecase{
 		eventRepo: repositories.NewEventRepository(),
 		groupRepo: repositories.NewGroupRepository(),
 		trackRepo: repositories.NewTrackRepository(),
+		gcService: gcService,
 	}
 }
 
-func (u *EventUsecase) CreateEvent(title, description, location string, date time.Time, groupID uint, trackIDs []uint, userID uint) (*model.Event, error) {
+func (u *EventUsecase) CreateEvent(title, description, location string, date time.Time,
+	groupID uint, trackIDs []uint, userIDs []uint, userID uint) (*model.Event, error) {
 	role, err := u.groupRepo.GetUserRole(userID, groupID)
 	if err != nil {
 		return nil, errors.New("user not in group")
 	}
-
 	if role != "manager" && role != "moderator" {
 		return nil, errors.New("insufficient permissions")
 	}
@@ -53,13 +57,44 @@ func (u *EventUsecase) CreateEvent(title, description, location string, date tim
 				return event, errors.New("track does not belong to this group")
 			}
 		}
-
 		err = u.eventRepo.AddTracksToEvent(event.ID, trackIDs)
 		if err != nil {
 			return event, err
 		}
 	}
 
+	if len(userIDs) > 0 {
+		for _, assignedUserID := range userIDs {
+			_, err := u.groupRepo.GetUserRole(assignedUserID, groupID)
+			if err != nil {
+				return event, errors.New("some users are not in the group")
+			}
+		}
+		err = u.eventRepo.AddUsersToEvent(event.ID, userIDs)
+		if err != nil {
+			return event, err
+		}
+	} else {
+		// Jeśli lista userów jest pusta, dodaj wszystkich użytkowników z grupy
+		groupUsers, err := u.groupRepo.GetGroupMembers(groupID)
+		if err != nil {
+			return event, err
+		}
+		var allUserIDs []uint
+		for _, user := range groupUsers {
+			allUserIDs = append(allUserIDs, user.ID)
+		}
+		err = u.eventRepo.AddUsersToEvent(event.ID, allUserIDs)
+		if err != nil {
+			return event, err
+		}
+	}
+
+	if u.gcService != nil {
+		if err := u.gcService.CreateCalendarEvent(event); err != nil {
+			log.Printf("Failed to sync with Google Calendar: %v", err)
+		}
+	}
 	return event, nil
 }
 
@@ -77,7 +112,8 @@ func (u *EventUsecase) GetEvent(eventID uint, userID uint) (*model.Event, error)
 	return event, nil
 }
 
-func (u *EventUsecase) UpdateEvent(id uint, title, description, location string, date time.Time, trackIDs []uint, userID uint) error {
+func (u *EventUsecase) UpdateEvent(id uint, title, description, location string,
+	date time.Time, trackIDs []uint, userIDs []uint, userID uint) error {
 	event, err := u.eventRepo.GetEventByID(id)
 	if err != nil {
 		return err
@@ -87,7 +123,6 @@ func (u *EventUsecase) UpdateEvent(id uint, title, description, location string,
 	if err != nil {
 		return errors.New("access denied")
 	}
-
 	if role != "manager" && role != "moderator" {
 		return errors.New("insufficient permissions")
 	}
@@ -111,13 +146,44 @@ func (u *EventUsecase) UpdateEvent(id uint, title, description, location string,
 				return errors.New("track does not belong to this group")
 			}
 		}
+		err = u.eventRepo.AddTracksToEvent(event.ID, trackIDs)
+		if err != nil {
+			return err
+		}
+	}
 
-		return u.eventRepo.AddTracksToEvent(event.ID, trackIDs)
+	if userIDs != nil {
+		if len(userIDs) > 0 {
+			// Sprawdź czy wszyscy użytkownicy są w grupie
+			for _, assignedUserID := range userIDs {
+				_, err := u.groupRepo.GetUserRole(assignedUserID, event.GroupID)
+				if err != nil {
+					return errors.New("some users are not in the group")
+				}
+			}
+			err = u.eventRepo.AddUsersToEvent(event.ID, userIDs)
+			if err != nil {
+				return err
+			}
+		} else {
+			// Dodaj wszystkich użytkowników z grupy
+			groupUsers, err := u.groupRepo.GetGroupMembers(event.GroupID)
+			if err != nil {
+				return err
+			}
+			var allUserIDs []uint
+			for _, user := range groupUsers {
+				allUserIDs = append(allUserIDs, user.ID)
+			}
+			err = u.eventRepo.AddUsersToEvent(event.ID, allUserIDs)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil
 }
-
 func (u *EventUsecase) DeleteEvent(id uint, userID uint) error {
 	event, err := u.eventRepo.GetEventByID(id)
 	if err != nil {

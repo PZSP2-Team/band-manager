@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { useGroup } from "../../contexts/GroupContext";
 import LoadingScreen from "@/src/app/components/LoadingScreen";
+import { RequireGroup } from "@/src/app/components/RequireGroup";
 
 type RenderState =
   | { status: "loading" }
@@ -12,15 +13,14 @@ type RenderState =
 
 type Event = {
   id: number;
-  name: string;
+  title: string;
+  description: string;
+  location: string;
   date: string;
-  type: "concert" | "rehearsal";
-  time: string;
-  materials: string[];
 };
 
 export default function EventsPage() {
-  const { userRole } = useGroup();
+  const { groupId, userRole } = useGroup();
   const router = useRouter();
   const { data: session, status: sessionStatus } = useSession();
   const [renderState, setRenderState] = useState<RenderState>({
@@ -32,68 +32,58 @@ export default function EventsPage() {
     if (sessionStatus === "loading") return;
 
     const fetchEvents = async () => {
+      setRenderState({ status: "loading" });
+
       try {
-        console.log("User role:", userRole);
+        const response = await fetch(
+          `/api/event/group/${groupId}/${session?.user?.id}`,
+        );
 
-        const mockEvents: Event[] = [
-          {
-            id: 1,
-            name: "Rock Festival",
-            date: "2025-01-15",
-            type: "concert",
-            time: "18:00",
-            materials: ["Guitar", "Drums", "Microphone"],
-          },
-          {
-            id: 2,
-            name: "Jazz Night",
-            date: "2025-01-20",
-            type: "concert",
-            time: "20:00",
-            materials: ["Saxophone", "Piano", "Bass"],
-          },
-          {
-            id: 3,
-            name: "Classical Evening",
-            date: "2025-02-01",
-            type: "rehearsal",
-            time: "15:00",
-            materials: ["Sheet Music", "Violin", "Conductor's Baton"],
-          },
-        ];
+        if (!response.ok) {
+          throw new Error("Failed to fetch events");
+        }
 
-        const filteredEvents =
-          userRole === "manager" ? mockEvents : mockEvents.slice(0, 2);
-
-        setTimeout(() => {
-          setEvents(filteredEvents);
-          setRenderState({ status: "loaded" });
-        }, 1000);
+        const data = await response.json();
+        setEvents(data.events);
+        setRenderState({ status: "loaded" });
       } catch (error) {
         console.error("Error fetching events:", error);
         setRenderState({ status: "error" });
       }
     };
 
-    fetchEvents();
-  }, [sessionStatus, userRole]);
-
+    if (session?.user?.id) {
+      fetchEvents();
+    }
+  }, [sessionStatus, groupId, session?.user?.id]);
   if (sessionStatus === "loading" || renderState.status === "loading") {
     return <LoadingScreen />;
   }
 
   if (renderState.status === "error") {
     return (
-      <div className="text-center mt-10">
-        Failed to load events. Please try again later.
-      </div>
+      <RequireGroup>
+        <div className="text-center mt-10">
+          Failed to load events. Please try again later.
+        </div>
+      </RequireGroup>
     );
   }
 
   return (
-    <div className="flex flex-col mt-10 p-6">
-      <div className="w-1/4">
-        <h1 className="text-3xl font-bold mb-6 text-left">Upcoming Events</h1>
+    <RequireGroup>
+      <div className="flex flex-col p-10">
+        <div className="flex flex-row items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold text-left">Upcoming Events</h1>
+          {userRole === "manager" && (
+            <button
+              className="px-6 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-500 transition"
+              onClick={() => router.push("/events/create")}
+            >
+              Create New Event
+            </button>
+          )}
+        </div>
         <ul className="space-y-4 text-left">
           {events.map((event, index) => (
             <li
@@ -103,7 +93,7 @@ export default function EventsPage() {
               style={{ opacity: 0.8 }}
             >
               <h2 className="text-lg font-semibold">
-                {index + 1}. {event.name}
+                {index + 1}. {event.title}
               </h2>
               <p className="text-gray-600">
                 {new Date(event.date).toLocaleDateString()}
@@ -111,16 +101,7 @@ export default function EventsPage() {
             </li>
           ))}
         </ul>
-
-        {userRole === "manager" && (
-          <button
-            className="mt-6 px-6 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-500 transition"
-            onClick={() => router.push("/events/create")}
-          >
-            Create New Event
-          </button>
-        )}
       </div>
-    </div>
+    </RequireGroup>
   );
 }

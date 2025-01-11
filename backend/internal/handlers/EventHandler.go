@@ -2,8 +2,10 @@ package handlers
 
 import (
 	"band-manager-backend/internal/model"
+	"band-manager-backend/internal/services"
 	"band-manager-backend/internal/usecases"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -12,11 +14,13 @@ import (
 
 type EventHandler struct {
 	eventUsecase *usecases.EventUsecase
+	gcService    *services.GoogleCalendarService
 }
 
-func NewEventHandler() *EventHandler {
+func NewEventHandler(gcService *services.GoogleCalendarService) *EventHandler {
 	return &EventHandler{
-		eventUsecase: usecases.NewEventUsecase(),
+		eventUsecase: usecases.NewEventUsecase(gcService),
+		gcService:    gcService,
 	}
 }
 
@@ -33,7 +37,8 @@ func (h *EventHandler) Create(w http.ResponseWriter, r *http.Request) {
 		Date        time.Time `json:"date"`
 		GroupID     uint      `json:"group_id"`
 		TrackIDs    []uint    `json:"track_ids"`
-		UserID      uint      `json:"user_id"` // Tymczasowo, później z JWT
+		UserIDs     []uint    `json:"user_ids"`
+		UserID      uint      `json:"user_id"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -48,6 +53,7 @@ func (h *EventHandler) Create(w http.ResponseWriter, r *http.Request) {
 		request.Date,
 		request.GroupID,
 		request.TrackIDs,
+		request.UserIDs,
 		request.UserID,
 	)
 	if err != nil {
@@ -114,6 +120,7 @@ func (h *EventHandler) Update(w http.ResponseWriter, r *http.Request) {
 		Location    string    `json:"location"`
 		Date        time.Time `json:"date"`
 		TrackIDs    []uint    `json:"track_ids"`
+		UserIDs     []uint    `json:"user_ids"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -128,6 +135,7 @@ func (h *EventHandler) Update(w http.ResponseWriter, r *http.Request) {
 		request.Location,
 		request.Date,
 		request.TrackIDs,
+		request.UserIDs,
 		uint(userID),
 	)
 	if err != nil {
@@ -257,4 +265,28 @@ func (h *EventHandler) GetEventTracks(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string][]*model.Track{
 		"tracks": tracks,
 	})
+}
+
+func (h *EventHandler) GoogleCalendarAuth(w http.ResponseWriter, r *http.Request) {
+	authURL := h.gcService.GetAuthURL()
+	http.Redirect(w, r, authURL, http.StatusTemporaryRedirect)
+}
+
+func (h *EventHandler) GoogleCalendarCallback(w http.ResponseWriter, r *http.Request) {
+	code := r.URL.Query().Get("code")
+	if code == "" {
+		http.Error(w, "Authorization code not found", http.StatusBadRequest)
+		return
+	}
+
+	fmt.Println("Authorization code received:", code) // DEBUG
+
+	err := h.gcService.SaveToken(code)
+	if err != nil {
+		fmt.Println("Error saving token:", err) // DEBUG
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	fmt.Println("Token successfully saved!") // DEBUG
+	w.Write([]byte("Successfully authorized!"))
 }

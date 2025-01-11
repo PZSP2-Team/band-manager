@@ -70,29 +70,29 @@ func (u *GroupUsecase) CreateGroup(name, description string, userID uint) (strin
 	return "manager", group.ID, nil
 }
 
-func (u *GroupUsecase) JoinGroup(userID uint, accessToken string) (string, uint, error) {
+func (u *GroupUsecase) JoinGroup(userID uint, accessToken string) (string, uint, string, error) {
 	group, err := u.groupRepo.GetGroupByAccessToken(accessToken)
 	if err != nil {
-		return "", 0, errors.New("invalid access token")
+		return "", 0, "", errors.New("invalid access token")
 	}
 
 	user, err := u.userRepo.GetUserByID(userID)
 	if err != nil {
-		return "", 0, errors.New("user not found")
+		return "", 0, "", errors.New("user not found")
 	}
 
 	for _, g := range user.Groups {
 		if g.ID == group.ID {
-			return "", 0, errors.New("user already in group")
+			return "", 0, "", errors.New("user already in group")
 		}
 	}
 
 	err = u.groupRepo.AddUserToGroup(userID, group.ID, "member")
 	if err != nil {
-		return "", 0, errors.New("failed to join group")
+		return "", 0, "", errors.New("failed to join group")
 	}
 
-	return "member", group.ID, nil
+	return "member", group.ID, group.Name, nil
 }
 
 func (u *GroupUsecase) GetGroupInfo(userID uint, groupID uint) (string, string, string, error) {
@@ -187,4 +187,35 @@ func (u *GroupUsecase) RemoveMember(groupID, userToRemoveID, requestingUserID ui
 	}
 
 	return u.groupRepo.RemoveUserFromGroup(userToRemoveID, groupID)
+}
+
+func (u *GroupUsecase) UpdateMemberRole(groupID uint, userToUpdateID uint, requestingUserID uint, newRole string) error {
+	requesterRole, err := u.groupRepo.GetUserRole(requestingUserID, groupID)
+	if err != nil {
+		return errors.New("requesting user not in group")
+	}
+
+	if requesterRole != "manager" {
+		return errors.New("insufficient permissions - only managers can change roles")
+	}
+
+	if userToUpdateID == requestingUserID {
+		return errors.New("cannot change your own role")
+	}
+
+	if !isValidRole(newRole) {
+		return errors.New("invalid role - must be 'manager', 'moderator', or 'member'")
+	}
+
+	return u.groupRepo.UpdateUserRole(userToUpdateID, groupID, newRole)
+}
+
+func isValidRole(role string) bool {
+	validRoles := []string{"manager", "moderator", "member"}
+	for _, r := range validRoles {
+		if r == role {
+			return true
+		}
+	}
+	return false
 }

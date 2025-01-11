@@ -123,9 +123,18 @@ func (u *SubgroupUsecase) RemoveMember(subgroupID uint, userID uint, requestingU
 		return errors.New("access denied")
 	}
 
-	if role != "manager" && role != "moderator" {
+	if role != "manager" {
 		return errors.New("insufficient permissions")
 	}
 
 	return u.subgroupRepo.RemoveMember(subgroupID, userID)
+}
+
+func (u *SubgroupUsecase) GetGroupSubgroups(groupID uint, userID uint) ([]*model.Subgroup, error) {
+	_, err := u.groupRepo.GetUserRole(userID, groupID)
+	if err != nil {
+		return nil, errors.New("access denied")
+	}
+
+	return u.subgroupRepo.GetGroupSubgroups(groupID)
 }

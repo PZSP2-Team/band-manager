@@ -4,14 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { PlusCircle } from "lucide-react";
 
-type Song = {
-  name: string;
-  subgroups: string[];
-};
-
 export default function CreateEvent() {
   const router = useRouter();
-  const [eventName, setEventName] = useState("");
+  const [eventTitle, setEventTitle] = useState("");
   const [eventDate, setEventDate] = useState("");
   const [eventType, setEventType] = useState("concert");
   const [eventTime, setEventTime] = useState("");
@@ -54,7 +49,7 @@ export default function CreateEvent() {
 
   const handleSubmit = () => {
     const newEvent = {
-      name: eventName,
+      title: eventTitle,
       date: eventDate,
       type: eventType,
       time: eventTime,
@@ -74,11 +69,11 @@ export default function CreateEvent() {
       {/* Event Details */}
       <div className="space-y-4">
         <div>
-          <label className="block font-medium mb-1">Event Name</label>
+          <label className="block font-medium mb-1">Event Title</label>
           <input
             type="text"
-            value={eventName}
-            onChange={(e) => setEventName(e.target.value)}
+            value={eventTitle}
+            onChange={(e) => setEventTitle(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
@@ -118,7 +113,7 @@ export default function CreateEvent() {
 
       {/* Songs Section */}
       <div className="mt-8">
-        <h2 className="text-2xl font-semibold mb-4">Songs</h2>
+        <h2 className="text-2xl font-semibold mb-4">Tracks</h2>
         {songs.map((song, index) => (
           <div
             key={index}

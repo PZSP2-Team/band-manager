@@ -16,6 +16,21 @@ func NewEventRepository() *EventRepository {
 		db: db.GetDB(),
 	}
 }
+func (r *EventRepository) GetEventUsers(eventID uint) ([]*model.User, error) {
+	var event model.Event
+	err := r.db.Preload("Users").First(&event, eventID).Error
+	if err != nil {
+		return nil, err
+	}
+	return event.Users, nil
+}
+func (r *EventRepository) AddUsersToEvent(eventID uint, userIDs []uint) error {
+	var users []*model.User
+	if err := r.db.Find(&users, userIDs).Error; err != nil {
+		return err
+	}
+	return r.db.Model(&model.Event{ID: eventID}).Association("Users").Append(users)
+}
 
 func (r *EventRepository) CreateEvent(event *model.Event) error {
 	return r.db.Create(event).Error
@@ -23,7 +38,7 @@ func (r *EventRepository) CreateEvent(event *model.Event) error {
 
 func (r *EventRepository) GetEventByID(id uint) (*model.Event, error) {
 	var event model.Event
-	if err := r.db.Preload("Group").First(&event, id).Error; err != nil {
+	if err := r.db.Preload("Group").Preload("Users").Preload("Tracks").Preload("Tracks.Notesheets").First(&event, id).Error; err != nil {
 		return nil, err
 	}
 	return &event, nil
@@ -39,7 +54,7 @@ func (r *EventRepository) DeleteEvent(id uint) error {
 
 func (r *EventRepository) GetGroupEvents(groupID uint) ([]*model.Event, error) {
 	var events []*model.Event
-	if err := r.db.Where("group_id = ?", groupID).Find(&events).Error; err != nil {
+	if err := r.db.Preload("Users").Where("group_id = ?", groupID).Find(&events).Error; err != nil {
 		return nil, err
 	}
 	return events, nil
@@ -47,13 +62,11 @@ func (r *EventRepository) GetGroupEvents(groupID uint) ([]*model.Event, error) {
 
 func (r *EventRepository) GetUserEvents(userID uint) ([]*model.Event, error) {
 	var events []*model.Event
-	err := r.db.Joins("JOIN user_group_roles ON user_group_roles.group_id = events.group_id").
-		Where("user_group_roles.user_id = ?", userID).
+	err := r.db.Preload("Users").
+		Joins("JOIN event_users ON event_users.event_id = events.id").
+		Where("event_users.user_id = ?", userID).
 		Find(&events).Error
-	if err != nil {
-		return nil, err
-	}
-	return events, nil
+	return events, err
 }
 
 func (r *EventRepository) AddTracksToEvent(eventID uint, trackIDs []uint) error {

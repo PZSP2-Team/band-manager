@@ -14,7 +14,6 @@ import (
 var db *gorm.DB
 
 func dropDB() {
-	// Usuwamy wszystkie tabele
 	db.Migrator().DropTable(
 		&model.Group{},
 		&model.User{},
@@ -24,7 +23,12 @@ func dropDB() {
 		&model.Event{},
 		&model.Track{},
 		&model.Notesheet{},
-		"user_group", // tabela łącząca dla relacji many-to-many
+		"user_group",
+		"subgroup_user",
+		"notesheet_subgroup",
+		"announcement_subgroup",
+		"event_tracks",
+		"event_users",
 	)
 	fmt.Println("all tables dropped successfully")
 }
@@ -39,6 +43,8 @@ func createDB() {
 		&model.Event{},
 		&model.Track{},
 		&model.Notesheet{},
+		&model.GoogleToken{},
+		&model.GoogleCalendarEvent{},
 	)
 	if err != nil {
 		log.Fatal("migrations failed: ", err)
@@ -69,7 +75,7 @@ func InitDB() {
 	db = database
 
 	// Najpierw usuwamy wszystkie tabele
-	// dropDB()
+	//dropDB()
 	// Potem tworzymy je od nowa
 	createDB()
 

@@ -7,12 +7,13 @@ import { useGroup } from "../contexts/GroupContext";
 import { useRouter } from "next/navigation";
 
 type Group = {
-  id: string;
+  id: number;
   name: string;
+  role: string;
 };
 
 export default function Sidebar() {
-  const { setGroupId } = useGroup();
+  const { setGroupId, setUserRole } = useGroup();
   const router = useRouter();
   const [groupList, setGroupList] = useState<Group[]>([]);
   const { data: session } = useSession();
@@ -24,14 +25,32 @@ export default function Sidebar() {
   const [errorMessage, setErrorMessage] = useState("");
   const [success, setSuccess] = useState(false);
 
-  const handleGroupSelect = (groupId: number) => {
+  const handleGroupSelect = (groupId: number, userRole: string) => {
     setGroupId(groupId);
+    setUserRole(userRole);
     router.push("/events");
   };
 
   useEffect(() => {
-    // tutaj fetch żeby otrzymać wszystkie grupy
-  }, []);
+    const fetchGroups = async () => {
+      try {
+        const response = await fetch(`/api/group/user/${session?.user?.id}`);
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch groups");
+        }
+
+        const data = await response.json();
+        setGroupList(data.groups);
+      } catch (error) {
+        console.error("Error fetching groups:", error);
+      }
+    };
+
+    if (session?.user?.id) {
+      fetchGroups();
+    }
+  }, [session?.user?.id]);
 
   const handleJoinGroup = async () => {
     setErrorMessage("");
@@ -55,7 +74,12 @@ export default function Sidebar() {
 
       const data = await response.json();
 
-      setGroupList((prevGroups) => [...prevGroups, data]);
+      if (groupList) {
+        setGroupList((prevGroups) => [...prevGroups, data]);
+      } else {
+        setGroupList([data]);
+      }
+
       setSuccess(true);
     } catch (err) {
       console.error("Error joining group:", err);
@@ -89,7 +113,11 @@ export default function Sidebar() {
       }
 
       const data = await response.json();
-      setGroupList((prevGroups) => [...prevGroups, data]);
+      if (groupList) {
+        setGroupList((prevGroups) => [...prevGroups, data]);
+      } else {
+        setGroupList([data]);
+      }
       setSuccess(true);
     } catch (err) {
       console.error("Error creating group:", err);
@@ -102,17 +130,17 @@ export default function Sidebar() {
           My groups
         </h2>
         <div className="flex-1 overflow-y-auto mb-4">
-          {groupList.length > 0 ? (
+          {groupList?.length > 0 ? (
             <div className="space-y-2">
               {groupList.map((group) => (
-                <Link
+                <button
                   key={group.id}
-                  href={`/groups/${group.id}`}
-                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-headerHoverGray transition-colors text-customGray"
+                  onClick={() => handleGroupSelect(group.id, group.role)}
+                  className="flex w-full items-center gap-3 p-2 rounded-lg hover:bg-headerHoverGray transition-colors text-customGray"
                 >
                   <LucideUsers className="h-5 w-5 flex-shrink-0 min-w-[20px] min-h-[20px]" />
                   <span className="truncate">{group.name}</span>
-                </Link>
+                </button>
               ))}
             </div>
           ) : (

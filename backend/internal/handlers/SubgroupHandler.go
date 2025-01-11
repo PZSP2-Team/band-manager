@@ -248,3 +248,69 @@ func (h *SubgroupHandler) RemoveMember(w http.ResponseWriter, r *http.Request) {
 		"message": "Member removed successfully",
 	})
 }
+
+func (h *SubgroupHandler) GetGroupSubgroups(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	pathParts := strings.Split(r.URL.Path, "/")
+	groupID, err := strconv.ParseUint(pathParts[len(pathParts)-2], 10, 64)
+	userID, err := strconv.ParseUint(pathParts[len(pathParts)-1], 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		return
+	}
+
+	subgroups, err := h.subgroupUsecase.GetGroupSubgroups(uint(groupID), uint(userID))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Struktura do odpowiedzi
+	type SubgroupResponse struct {
+		ID            uint   `json:"id"`
+		GroupID       uint   `json:"group_id"`
+		Name          string `json:"name"`
+		Description   string `json:"description"`
+		Users         []uint `json:"users"`
+		Notesheets    []uint `json:"notesheets"`
+		Announcements []uint `json:"announcements"`
+	}
+
+	response := make([]SubgroupResponse, 0, len(subgroups))
+	for _, subgroup := range subgroups {
+
+		userIDs := make([]uint, 0, len(subgroup.Users))
+		for _, user := range subgroup.Users {
+			userIDs = append(userIDs, user.ID)
+		}
+
+		notesheetIDs := make([]uint, 0, len(subgroup.Notesheets))
+		for _, notesheet := range subgroup.Notesheets {
+			notesheetIDs = append(notesheetIDs, notesheet.ID)
+		}
+
+		announcementIDs := make([]uint, 0, len(subgroup.Announcements))
+		for _, announcement := range subgroup.Announcements {
+			announcementIDs = append(announcementIDs, announcement.ID)
+		}
+
+		response = append(response, SubgroupResponse{
+			ID:            subgroup.ID,
+			GroupID:       subgroup.GroupID,
+			Name:          subgroup.Name,
+			Description:   subgroup.Description,
+			Users:         userIDs,
+			Notesheets:    notesheetIDs,
+			Announcements: announcementIDs,
+		})
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string][]SubgroupResponse{
+		"subgroups": response,
+	})
+}

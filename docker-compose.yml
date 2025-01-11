@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   db:
@@ -31,24 +31,26 @@ services:
       FRONTEND_PORT: ${FRONTEND_PORT}
     ports:
       - "${BACKEND_PORT}:${BACKEND_PORT}"
+    volumes:
+      - notesheet_files:/app/uploads
     depends_on:
       db:
         condition: service_healthy
 
-  frontend:
-    build: 
-      context: ./frontend
-      dockerfile: ${NODE_ENV:-development}.Dockerfile
-    environment:
-      NODE_ENV: ${NODE_ENV:-development}
-      PORT: ${FRONTEND_PORT}
-    ports:
-      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - /app/.next
-
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: ${NODE_ENV:-development}.Dockerfile
+  #   environment:
+  #     NODE_ENV: ${NODE_ENV:-development}
+  #     PORT: ${FRONTEND_PORT}
+  #   ports:
+  #     - "${FRONTEND_PORT}:${FRONTEND_PORT}"
+  #   volumes:
+  #     - ./frontend:/app
+  #     - /app/node_modules
+  #     - /app/.next
 
 volumes:
   postgres_data:
+  notesheet_files:
