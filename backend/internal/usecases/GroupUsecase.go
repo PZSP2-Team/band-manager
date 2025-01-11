@@ -70,29 +70,29 @@ func (u *GroupUsecase) CreateGroup(name, description string, userID uint) (strin
 	return "manager", group.ID, nil
 }
 
-func (u *GroupUsecase) JoinGroup(userID uint, accessToken string) (string, uint, error) {
+func (u *GroupUsecase) JoinGroup(userID uint, accessToken string) (string, uint, string, error) {
 	group, err := u.groupRepo.GetGroupByAccessToken(accessToken)
 	if err != nil {
-		return "", 0, errors.New("invalid access token")
+		return "", 0, "", errors.New("invalid access token")
 	}
 
 	user, err := u.userRepo.GetUserByID(userID)
 	if err != nil {
-		return "", 0, errors.New("user not found")
+		return "", 0, "", errors.New("user not found")
 	}
 
 	for _, g := range user.Groups {
 		if g.ID == group.ID {
-			return "", 0, errors.New("user already in group")
+			return "", 0, "", errors.New("user already in group")
 		}
 	}
 
 	err = u.groupRepo.AddUserToGroup(userID, group.ID, "member")
 	if err != nil {
-		return "", 0, errors.New("failed to join group")
+		return "", 0, "", errors.New("failed to join group")
 	}
 
-	return "member", group.ID, nil
+	return "member", group.ID, group.Name, nil
 }
 
 func (u *GroupUsecase) GetGroupInfo(userID uint, groupID uint) (string, string, string, error) {

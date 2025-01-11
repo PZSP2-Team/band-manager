@@ -72,7 +72,7 @@ func (h *GroupHandler) Join(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userRole, groupID, err := h.groupUsecase.JoinGroup(request.UserID, request.AccessToken)
+	userRole, groupID, groupName, err := h.groupUsecase.JoinGroup(request.UserID, request.AccessToken)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -81,6 +81,7 @@ func (h *GroupHandler) Join(w http.ResponseWriter, r *http.Request) {
 	response := map[string]interface{}{
 		"user_role":     userRole,
 		"user_group_id": groupID,
+		"group_name":    groupName,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
