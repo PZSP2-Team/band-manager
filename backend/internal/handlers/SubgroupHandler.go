@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"band-manager-backend/internal/model"
 	"band-manager-backend/internal/usecases"
 	"encoding/json"
 	"net/http"
@@ -270,8 +269,48 @@ func (h *SubgroupHandler) GetGroupSubgroups(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	// Struktura do odpowiedzi
+	type SubgroupResponse struct {
+		ID            uint   `json:"id"`
+		GroupID       uint   `json:"group_id"`
+		Name          string `json:"name"`
+		Description   string `json:"description"`
+		Users         []uint `json:"users"`
+		Notesheets    []uint `json:"notesheets"`
+		Announcements []uint `json:"announcements"`
+	}
+
+	response := make([]SubgroupResponse, 0, len(subgroups))
+	for _, subgroup := range subgroups {
+
+		userIDs := make([]uint, 0, len(subgroup.Users))
+		for _, user := range subgroup.Users {
+			userIDs = append(userIDs, user.ID)
+		}
+
+		notesheetIDs := make([]uint, 0, len(subgroup.Notesheets))
+		for _, notesheet := range subgroup.Notesheets {
+			notesheetIDs = append(notesheetIDs, notesheet.ID)
+		}
+
+		announcementIDs := make([]uint, 0, len(subgroup.Announcements))
+		for _, announcement := range subgroup.Announcements {
+			announcementIDs = append(announcementIDs, announcement.ID)
+		}
+
+		response = append(response, SubgroupResponse{
+			ID:            subgroup.ID,
+			GroupID:       subgroup.GroupID,
+			Name:          subgroup.Name,
+			Description:   subgroup.Description,
+			Users:         userIDs,
+			Notesheets:    notesheetIDs,
+			Announcements: announcementIDs,
+		})
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string][]*model.Subgroup{
-		"subgroups": subgroups,
+	json.NewEncoder(w).Encode(map[string][]SubgroupResponse{
+		"subgroups": response,
 	})
 }
