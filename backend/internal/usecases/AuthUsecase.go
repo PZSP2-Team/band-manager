@@ -4,8 +4,6 @@ import (
 	"band-manager-backend/internal/model"
 	"band-manager-backend/internal/repositories"
 	"errors"
-	"fmt"
-
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -29,41 +27,17 @@ type AuthGroupInfo struct {
 	Role string
 }
 
-func (u *AuthUsecase) Login(email, password string) (*model.User, []AuthGroupInfo, error) {
-	// Najpierw sprawdzamy czy użytkownik istnieje
+func (u *AuthUsecase) Login(email, password string) (*model.User, error) {
 	user, err := u.userRepo.GetUserByEmail(email)
 	if err != nil {
-		return nil, nil, errors.New("user not found")
+		return nil, errors.New("invalid credentials")
 	}
 
-	// Sprawdzamy hasło
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
-		return nil, nil, errors.New("invalid credentials")
+		return nil, errors.New("invalid credentials")
 	}
 
-	// Pobieramy informacje o grupach użytkownika i jego rolach w nich
-	var userGroups []AuthGroupInfo
-
-	// Pobieramy grupy i role użytkownika
-	roles, err := u.userRepo.GetUserGroupRoles(user.ID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to get user roles: %v", err)
-	}
-
-	for _, role := range roles {
-		group, err := u.groupRepo.GetGroupByID(role.GroupID)
-		if err != nil {
-			continue // Pomijamy grupę jeśli wystąpił błąd
-		}
-
-		userGroups = append(userGroups, AuthGroupInfo{
-			ID:   group.ID,
-			Name: group.Name,
-			Role: role.Role,
-		})
-	}
-
-	return user, userGroups, nil
+	return user, nil
 }
 
 func (u *AuthUsecase) Register(firstName, lastName, email, password string) error {
