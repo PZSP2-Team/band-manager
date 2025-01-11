@@ -21,12 +21,6 @@ func NewAuthUsecase() *AuthUsecase {
 	}
 }
 
-type AuthGroupInfo struct {
-	ID   uint
-	Name string
-	Role string
-}
-
 func (u *AuthUsecase) Login(email, password string) (*model.User, error) {
 	user, err := u.userRepo.GetUserByEmail(email)
 	if err != nil {
@@ -41,14 +35,17 @@ func (u *AuthUsecase) Login(email, password string) (*model.User, error) {
 }
 
 func (u *AuthUsecase) Register(firstName, lastName, email, password string) error {
-	_, err := u.userRepo.GetUserByEmail(email)
-	if err == nil {
+	user, err := u.userRepo.GetUserByEmail(email)
+	if err != nil {
+		return err
+	}
+	if user != nil {
 		return errors.New("email already registered")
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return errors.New("failed to hash password")
+		return errors.New("incorrect password")
 	}
 
 	newUser := &model.User{
