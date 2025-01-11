@@ -108,7 +108,7 @@ func main() {
 	http.HandleFunc("/api/track/notesheet/upload/", enableCORS(trackHandler.UploadNotesheetFile))
 	http.HandleFunc("/api/track/notesheet/file/", enableCORS(trackHandler.DownloadNotesheetFile))
 	http.HandleFunc("/api/track/notesheet/create/", enableCORS(trackHandler.CreateNotesheetWithFile))
-	http.HandleFunc("/track/delete/", trackHandler.DeleteTrack)
+	http.HandleFunc("/api/track/delete/", trackHandler.DeleteTrack)
 
 	http.HandleFunc("/api/calendar/auth", enableCORS(eventHandler.GoogleCalendarAuth))
 	http.HandleFunc("/api/calendar/callback", enableCORS(eventHandler.GoogleCalendarCallback))
