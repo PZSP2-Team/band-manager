@@ -24,7 +24,9 @@ func enableCORS(next http.HandlerFunc) http.HandlerFunc {
 		allowedOrigin := fmt.Sprintf("http://%s:%s", frontendHost, frontendPort)
 		w.Header().Set("Access-Control-Allow-Origin", allowedOrigin)
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept, X-Requested-With")
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+		w.Header().Set("Access-Control-Expose-Headers", "Content-Length, Content-Type")
 
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusOK)
