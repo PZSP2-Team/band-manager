@@ -363,3 +363,35 @@ func (h *TrackHandler) CreateNotesheetWithFile(w http.ResponseWriter, r *http.Re
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(notesheet)
 }
+
+func (h *TrackHandler) DeleteTrack(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	pathParts := strings.Split(r.URL.Path, "/")
+	trackID, err := strconv.ParseUint(pathParts[len(pathParts)-2], 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid track ID", http.StatusBadRequest)
+		return
+	}
+
+	userID, err := strconv.ParseUint(pathParts[len(pathParts)-1], 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	err = h.trackUsecase.DeleteTrack(uint(trackID), uint(userID))
+	if err != nil {
+		if err.Error() == "access denied" || err.Error() == "insufficient permissions" {
+			http.Error(w, err.Error(), http.StatusForbidden)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
