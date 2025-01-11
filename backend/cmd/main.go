@@ -49,6 +49,7 @@ func main() {
 	trackHandler := handlers.NewTrackHandler()
 	eventHandler := handlers.NewEventHandler()
 	announcementHandler := handlers.NewAnnouncementHandler()
+	adminHandler := handlers.NewAdminHandler()
 
 	http.HandleFunc("/", enableCORS(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Hello World!")
@@ -89,6 +90,11 @@ func main() {
 	http.HandleFunc("/api/announcement/delete/", enableCORS(announcementHandler.Delete))
 	http.HandleFunc("/api/announcement/user/", enableCORS(announcementHandler.GetUserAnnouncements))
 	http.HandleFunc("/api/announcement/group/", enableCORS(announcementHandler.GetGroupAnnouncements))
+
+	http.HandleFunc("/api/admin/users/reset-password/", enableCORS(adminHandler.ResetUserPassword))
+	http.HandleFunc("/api/admin/stats", enableCORS(adminHandler.GetSystemStats))
+	http.HandleFunc("/api/track/notesheet/upload/", enableCORS(trackHandler.UploadNotesheetFile))
+	http.HandleFunc("/api/track/notesheet/file/", enableCORS(trackHandler.DownloadNotesheetFile))
 	fmt.Printf("Server starting on http://localhost:%s\n", port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatal(err)
