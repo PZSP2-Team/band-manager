@@ -18,11 +18,6 @@ func (u *AdminUsecase) ResetUserPassword(userID uint, newPassword string) error 
 	return u.userRepo.ResetPassword(userID, newPassword)
 }
 
-type SystemStats struct {
-	TotalUsers  int64 `json:"total_users"`
-	TotalGroups int64 `json:"total_groups"`
-}
-
 func (u *AdminUsecase) GetSystemStats() (SystemStats, error) {
 	totalUsers, err := u.userRepo.GetTotalUsers()
 	if err != nil {
