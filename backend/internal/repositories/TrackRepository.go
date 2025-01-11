@@ -62,12 +62,18 @@ func (r *TrackRepository) AddNotesheetToTrack(notesheet *model.Notesheet, subgro
 	return nil
 }
 
-func (r *TrackRepository) GetUserNotesheets(userID uint) ([]*model.Notesheet, error) {
+func (r *TrackRepository) GetUserNotesheets(trackID, userID uint) ([]*model.Notesheet, error) {
 	var notesheets []*model.Notesheet
 	err := r.db.Joins("JOIN notesheet_subgroup ON notesheets.id = notesheet_subgroup.notesheet_id").
 		Joins("JOIN subgroup_user ON notesheet_subgroup.subgroup_id = subgroup_user.subgroup_id").
-		Where("subgroup_user.user_id = ?", userID).
+		Where("subgroup_user.user_id = ? AND notesheets.track_id = ?", userID, trackID).
 		Distinct().
 		Find(&notesheets).Error
+	return notesheets, err
+}
+
+func (r *TrackRepository) GetTrackNotesheets(trackID uint) ([]*model.Notesheet, error) {
+	var notesheets []*model.Notesheet
+	err := r.db.Where("track_id = ?", trackID).Find(&notesheets).Error
 	return notesheets, err
 }

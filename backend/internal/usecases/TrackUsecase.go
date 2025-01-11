@@ -145,6 +145,21 @@ func (u *TrackUsecase) AddNotesheet(trackID uint, instrument string, filepath st
 	return notesheet, nil
 }
 
-func (u *TrackUsecase) GetUserNotesheets(userID uint) ([]*model.Notesheet, error) {
-	return u.trackRepo.GetUserNotesheets(userID)
+func (u *TrackUsecase) GetUserNotesheets(trackID, userID uint) ([]*model.Notesheet, error) {
+	return u.trackRepo.GetUserNotesheets(trackID, userID)
+}
+
+func (u *TrackUsecase) GetTrackNotesheets(trackID uint, userID uint) ([]*model.Notesheet, error) {
+	track, err := u.trackRepo.GetTrackByID(trackID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Sprawdź czy użytkownik ma dostęp do grupy
+	_, err = u.groupRepo.GetUserRole(userID, track.GroupID)
+	if err != nil {
+		return nil, errors.New("access denied")
+	}
+
+	return u.trackRepo.GetTrackNotesheets(trackID)
 }

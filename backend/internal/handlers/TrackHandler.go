@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"band-manager-backend/internal/model"
 	"band-manager-backend/internal/usecases"
 	"encoding/json"
 	"net/http"
@@ -95,13 +96,19 @@ func (h *TrackHandler) GetUserNotesheets(w http.ResponseWriter, r *http.Request)
 	}
 
 	pathParts := strings.Split(r.URL.Path, "/")
+	trackID, err := strconv.ParseUint(pathParts[len(pathParts)-2], 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid track ID", http.StatusBadRequest)
+		return
+	}
+
 	userID, err := strconv.ParseUint(pathParts[len(pathParts)-1], 10, 64)
 	if err != nil {
 		http.Error(w, "Invalid user ID", http.StatusBadRequest)
 		return
 	}
 
-	notesheets, err := h.trackUsecase.GetUserNotesheets(uint(userID))
+	notesheets, err := h.trackUsecase.GetUserNotesheets(uint(trackID), uint(userID))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -137,5 +144,36 @@ func (h *TrackHandler) GetGroupTracks(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"tracks": tracks,
+	})
+}
+
+func (h *TrackHandler) GetTrackNotesheets(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	pathParts := strings.Split(r.URL.Path, "/")
+	trackID, err := strconv.ParseUint(pathParts[len(pathParts)-2], 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid track ID", http.StatusBadRequest)
+		return
+	}
+
+	userID, err := strconv.ParseUint(pathParts[len(pathParts)-1], 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	notesheets, err := h.trackUsecase.GetTrackNotesheets(uint(trackID), uint(userID))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string][]*model.Notesheet{
+		"notesheets": notesheets,
 	})
 }
