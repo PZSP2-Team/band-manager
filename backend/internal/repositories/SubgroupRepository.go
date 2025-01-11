@@ -67,7 +67,7 @@ func (r *SubgroupRepository) RemoveMember(subgroupID uint, userID uint) error {
 
 func (r *SubgroupRepository) GetGroupSubgroups(groupID uint) ([]*model.Subgroup, error) {
 	var subgroups []*model.Subgroup
-	if err := r.db.Where("group_id = ?", groupID).Find(&subgroups).Error; err != nil {
+	if err := r.db.Preload("Users").Where("group_id = ?", groupID).Find(&subgroups).Error; err != nil {
 		return nil, err
 	}
 	return subgroups, nil
