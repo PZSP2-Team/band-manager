@@ -82,7 +82,7 @@ func (h *TrackHandler) AddNotesheet(w http.ResponseWriter, r *http.Request) {
 
 	notesheet, err := h.trackUsecase.AddNotesheet(
 		request.TrackID,
-		request.Instrument,
+		"default",
 		request.Filepath,
 		request.SubgroupIDs,
 		request.UserID,
