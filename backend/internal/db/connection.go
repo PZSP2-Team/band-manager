@@ -43,6 +43,8 @@ func createDB() {
 		&model.Event{},
 		&model.Track{},
 		&model.Notesheet{},
+		&model.GoogleToken{},
+		&model.GoogleCalendarEvent{},
 	)
 	if err != nil {
 		log.Fatal("migrations failed: ", err)
