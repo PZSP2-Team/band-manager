@@ -67,7 +67,6 @@ func (u *AuthUsecase) Login(email, password string) (*model.User, []AuthGroupInf
 }
 
 func (u *AuthUsecase) Register(firstName, lastName, email, password string) error {
-	// Check if the email is already taken
 	_, err := u.userRepo.GetUserByEmail(email)
 	if err == nil {
 		return errors.New("email already registered")
