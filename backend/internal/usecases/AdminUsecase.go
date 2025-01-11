@@ -18,19 +18,24 @@ func (u *AdminUsecase) ResetUserPassword(userID uint, newPassword string) error 
 	return u.userRepo.ResetPassword(userID, newPassword)
 }
 
-func (u *AdminUsecase) GetSystemStats() (map[string]interface{}, error) {
+type SystemStats struct {
+	TotalUsers  int64 `json:"total_users"`
+	TotalGroups int64 `json:"total_groups"`
+}
+
+func (u *AdminUsecase) GetSystemStats() (SystemStats, error) {
 	totalUsers, err := u.userRepo.GetTotalUsers()
 	if err != nil {
-		return nil, err
+		return SystemStats{}, err
 	}
 
 	totalGroups, err := u.groupRepo.GetTotalGroups()
 	if err != nil {
-		return nil, err
+		return SystemStats{}, err
 	}
 
-	return map[string]interface{}{
-		"total_users":  totalUsers,
-		"total_groups": totalGroups,
+	return SystemStats{
+		TotalUsers:  totalUsers,
+		TotalGroups: totalGroups,
 	}, nil
 }
