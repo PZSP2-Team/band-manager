@@ -1,9 +1,9 @@
 package usecases
 
 import (
-	"band-manager-backend/internal/infrastructure/email"
 	"band-manager-backend/internal/model"
 	"band-manager-backend/internal/repositories"
+	"band-manager-backend/internal/services"
 	"band-manager-backend/internal/usecases/helpers"
 	"errors"
 	"log"
@@ -15,10 +15,10 @@ type EventUsecase struct {
 	groupRepo    *repositories.GroupRepository
 	trackRepo    *repositories.TrackRepository
 	userRepo     *repositories.UserRepository
-	emailService *email.EmailService
+	emailService *services.EmailService
 }
 
-func NewEventUsecase(emailService *email.EmailService) *EventUsecase {
+func NewEventUsecase(emailService *services.EmailService) *EventUsecase {
 	return &EventUsecase{
 		eventRepo:    repositories.NewEventRepository(),
 		groupRepo:    repositories.NewGroupRepository(),
