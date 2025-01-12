@@ -40,6 +40,7 @@ func enableCORS(next http.HandlerFunc) http.HandlerFunc {
 }
 
 func main() {
+
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
@@ -50,9 +51,10 @@ func main() {
 	}
 
 	gcService, err := services.NewGoogleCalendarService(cfg)
+	emailService := services.NewEmailService()
 	if err != nil {
 		log.Printf("Warning: Failed to initialize Google Calendar service: %v", err)
-		// Nie przerywamy działania aplikacji, ale logujemy ostrzeżenie
+
 	}
 
 	db.InitDB()
@@ -61,7 +63,7 @@ func main() {
 	groupHandler := handlers.NewGroupHandler()
 	subgroupHandler := handlers.NewSubgroupHandler()
 	trackHandler := handlers.NewTrackHandler()
-	eventHandler := handlers.NewEventHandler(gcService)
+	eventHandler := handlers.NewEventHandler(gcService, emailService)
 	announcementHandler := handlers.NewAnnouncementHandler()
 	adminHandler := handlers.NewAdminHandler()
 

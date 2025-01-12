@@ -15,12 +15,14 @@ import (
 type EventHandler struct {
 	eventUsecase *usecases.EventUsecase
 	gcService    *services.GoogleCalendarService
+	emailService *services.EmailService
 }
 
-func NewEventHandler(gcService *services.GoogleCalendarService) *EventHandler {
+func NewEventHandler(gcService *services.GoogleCalendarService, emailService *services.EmailService) *EventHandler {
 	return &EventHandler{
-		eventUsecase: usecases.NewEventUsecase(gcService),
+		eventUsecase: usecases.NewEventUsecase(gcService, emailService),
 		gcService:    gcService,
+		emailService: emailService,
 	}
 }
 

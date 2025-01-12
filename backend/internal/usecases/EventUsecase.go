@@ -10,18 +10,22 @@ import (
 )
 
 type EventUsecase struct {
-	eventRepo *repositories.EventRepository
-	groupRepo *repositories.GroupRepository
-	trackRepo *repositories.TrackRepository
-	gcService *services.GoogleCalendarService
+	eventRepo    *repositories.EventRepository
+	groupRepo    *repositories.GroupRepository
+	trackRepo    *repositories.TrackRepository
+	userRepo     *repositories.UserRepository
+	gcService    *services.GoogleCalendarService
+	emailService *services.EmailService
 }
 
-func NewEventUsecase(gcService *services.GoogleCalendarService) *EventUsecase {
+func NewEventUsecase(gcService *services.GoogleCalendarService, emailService *services.EmailService) *EventUsecase {
 	return &EventUsecase{
-		eventRepo: repositories.NewEventRepository(),
-		groupRepo: repositories.NewGroupRepository(),
-		trackRepo: repositories.NewTrackRepository(),
-		gcService: gcService,
+		eventRepo:    repositories.NewEventRepository(),
+		groupRepo:    repositories.NewGroupRepository(),
+		trackRepo:    repositories.NewTrackRepository(),
+		userRepo:     repositories.NewUserRepository(),
+		gcService:    gcService,
+		emailService: emailService,
 	}
 }
 
@@ -75,7 +79,7 @@ func (u *EventUsecase) CreateEvent(title, description, location string, date tim
 			return event, err
 		}
 	} else {
-		// Jeśli lista userów jest pusta, dodaj wszystkich użytkowników z grupy
+
 		groupUsers, err := u.groupRepo.GetGroupMembers(groupID)
 		if err != nil {
 			return event, err
@@ -95,6 +99,27 @@ func (u *EventUsecase) CreateEvent(title, description, location string, date tim
 			log.Printf("Failed to sync with Google Calendar: %v", err)
 		}
 	}
+	var recipients []*model.User
+
+	if len(userIDs) > 0 {
+		for _, id := range userIDs {
+			user, err := u.userRepo.GetUserByID(id)
+			if err != nil {
+				continue
+			}
+			recipients = append(recipients, user)
+		}
+	} else {
+		recipients, err = u.groupRepo.GetGroupMembers(groupID)
+		if err != nil {
+			log.Printf("Failed to get group members: %v", err)
+		}
+	}
+
+	if len(recipients) > 0 {
+		go u.emailService.SendEventEmail(event, recipients)
+	}
+
 	return event, nil
 }
 
@@ -154,7 +179,7 @@ func (u *EventUsecase) UpdateEvent(id uint, title, description, location string,
 
 	if userIDs != nil {
 		if len(userIDs) > 0 {
-			// Sprawdź czy wszyscy użytkownicy są w grupie
+
 			for _, assignedUserID := range userIDs {
 				_, err := u.groupRepo.GetUserRole(assignedUserID, event.GroupID)
 				if err != nil {
@@ -166,7 +191,7 @@ func (u *EventUsecase) UpdateEvent(id uint, title, description, location string,
 				return err
 			}
 		} else {
-			// Dodaj wszystkich użytkowników z grupy
+
 			groupUsers, err := u.groupRepo.GetGroupMembers(event.GroupID)
 			if err != nil {
 				return err
