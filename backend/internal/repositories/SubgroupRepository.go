@@ -1,8 +1,8 @@
 package repositories
 
 import (
-	"band-manager-backend/internal/infrastructure/db"
 	"band-manager-backend/internal/model"
+	"band-manager-backend/internal/services/db"
 
 	"gorm.io/gorm"
 )
