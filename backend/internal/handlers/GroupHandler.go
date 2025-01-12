@@ -79,9 +79,9 @@ func (h *GroupHandler) Join(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := map[string]interface{}{
-		"user_role":     userRole,
-		"user_group_id": groupID,
-		"name":          groupName,
+		"role":     userRole,
+		"group_id": groupID,
+		"name":     groupName,
 	}
 
 	w.Header().Set("Content-Type", "application/json")

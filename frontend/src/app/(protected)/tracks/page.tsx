@@ -28,27 +28,6 @@ export default function TracksPage() {
   });
   const [tracks, setTracks] = useState<Track[]>([]);
 
-  const removeTrack = async (trackId: number) => {
-    try {
-      const response = await fetch(
-        `/api/track/delete/${trackId}/${session?.user?.id}`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to delete track");
-      }
-
-      setTracks(tracks.filter((track) => track.id !== trackId));
-    } catch (error) {
-      console.error("Error deleting track:", error);
-    }
-  };
   useEffect(() => {
     if (sessionStatus === "loading") return;
 
@@ -77,6 +56,28 @@ export default function TracksPage() {
       fetchTracks();
     }
   }, [sessionStatus, groupId, session?.user?.id]);
+
+  const removeTrack = async (trackId: number) => {
+    try {
+      const response = await fetch(
+        `/api/track/delete/${trackId}/${session?.user?.id}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to delete track");
+      }
+
+      setTracks((prev) => prev.filter((track) => track.id !== trackId));
+    } catch (error) {
+      console.error("Error deleting track:", error);
+    }
+  };
   if (sessionStatus === "loading" || renderState.status === "loading") {
     return <LoadingScreen />;
   }
@@ -106,7 +107,7 @@ export default function TracksPage() {
           </div>
           <ul className="space-y-4 text-left">
             {tracks.length > 0 ? (
-              tracks.map((track, index) => (
+              tracks.map((track) => (
                 <li
                   key={track.id}
                   className="flex flex-row p-4 border border-customGray items-center justify-between rounded shadow transition"
@@ -116,7 +117,7 @@ export default function TracksPage() {
                     <h2 className="font-semibold">{track.name}</h2>
                   </div>
                   <button
-                    onClick={() => removeTrack(index)}
+                    onClick={() => removeTrack(track.id)}
                     className="p-2 text-red-500 hover:bg-red-100 rounded-full transition"
                   >
                     <X className="h-5 w-5" />
