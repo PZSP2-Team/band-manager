@@ -140,7 +140,8 @@ func (u *EventUsecase) UpdateEvent(id uint, title, description, location string,
 	return nil
 }
 func (u *EventUsecase) validateUserPermissions(userID, groupID uint) error {
-	if !u.isUserInGroup(userID, groupID) {
+	role, err := u.groupRepo.GetUserRole(userID, groupID)
+	if err != nil {
 		return errors.New("User not in group")
 	}
 	if !helpers.IsManagerOrModeratorRole(role) {
