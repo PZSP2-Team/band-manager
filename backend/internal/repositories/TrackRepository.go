@@ -34,9 +34,17 @@ func (r *TrackRepository) UpdateTrack(track *model.Track) error {
 }
 
 func (r *TrackRepository) DeleteTrack(id uint) error {
-	return r.db.Delete(&model.Track{}, id).Error
-}
+	var track model.Track
+	if err := r.db.First(&track, id).Error; err != nil {
+		return err
+	}
 
+	if err := r.db.Model(&track).Association("Events").Clear(); err != nil {
+		return err
+	}
+
+	return r.db.Delete(&track).Error
+}
 func (r *TrackRepository) GetGroupTracks(groupID uint) ([]*model.Track, error) {
 	var tracks []*model.Track
 	if err := r.db.Where("group_id = ?", groupID).
