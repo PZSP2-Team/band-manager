@@ -19,10 +19,30 @@ func NewAnnouncementUsecase() *AnnouncementUsecase {
 	}
 }
 
-func (u *AnnouncementUsecase) CreateAnnouncement(title, description string, priority, groupID, senderID uint, subgroupIDs []uint) (*model.Announcement, error) {
+func (u *AnnouncementUsecase) CreateAnnouncement(title, description string, priority, groupID, senderID uint, recipientIDs []uint) (*model.Announcement, error) {
 	role, err := u.groupRepo.GetUserRole(senderID, groupID)
-	if err != nil || (role != "manager" && role != "moderator") {
+	if err != nil {
+		return nil, errors.New("could not get user role")
+	}
+	if role != "manager" && role != "moderator" {
 		return nil, errors.New("insufficient permissions")
+	}
+
+	if len(recipientIDs) == 0 {
+		groupUsers, err := u.groupRepo.GetGroupMembers(groupID)
+		if err != nil {
+			return nil, err
+		}
+		for _, user := range groupUsers {
+			recipientIDs = append(recipientIDs, user.ID)
+		}
+	} else {
+		for _, recipientID := range recipientIDs {
+			_, err := u.groupRepo.GetUserRole(recipientID, groupID)
+			if err != nil {
+				return nil, errors.New("one or more recipients do not belong to the group")
+			}
+		}
 	}
 
 	announcement := &model.Announcement{
@@ -37,8 +57,8 @@ func (u *AnnouncementUsecase) CreateAnnouncement(title, description string, prio
 		return nil, err
 	}
 
-	if len(subgroupIDs) > 0 {
-		if err := u.announcementRepo.AddToSubgroups(announcement.ID, subgroupIDs); err != nil {
+	if len(recipientIDs) > 0 {
+		if err := u.announcementRepo.AddRecipients(announcement.ID, recipientIDs); err != nil {
 			return nil, err
 		}
 	}
