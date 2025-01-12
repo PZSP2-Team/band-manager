@@ -1,4 +1,4 @@
-package services
+package email
 
 import (
 	"band-manager-backend/internal/model"
