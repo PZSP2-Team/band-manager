@@ -45,7 +45,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, groups, err := h.authUsecase.Login(request.Email, request.Password)
+	user, err := h.authUsecase.Login(request.Email, request.Password)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
@@ -56,23 +56,6 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
 		Email:     user.Email,
-		Groups: make([]struct {
-			ID   uint   `json:"id"`
-			Name string `json:"name"`
-			Role string `json:"role"`
-		}, len(groups)),
-	}
-
-	for i, group := range groups {
-		response.Groups[i] = struct {
-			ID   uint   `json:"id"`
-			Name string `json:"name"`
-			Role string `json:"role"`
-		}{
-			ID:   group.ID,
-			Name: group.Name,
-			Role: group.Role,
-		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")

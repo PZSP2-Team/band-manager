@@ -3,6 +3,7 @@ package usecases
 import (
 	"band-manager-backend/internal/model"
 	"band-manager-backend/internal/repositories"
+	"band-manager-backend/internal/usecases/helpers"
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
@@ -37,7 +38,6 @@ type GroupInfo struct {
 	MembersCount int    `json:"members_count"`
 }
 
-// generateAccessToken creates a random hex string for group access
 func generateAccessToken() string {
 	bytes := make([]byte, 16)
 	rand.Read(bytes)
@@ -48,7 +48,7 @@ func (u *GroupUsecase) CreateGroup(name, description string, userID uint) (strin
 	_, err := u.userRepo.GetUserByID(userID)
 
 	if err != nil {
-		return "", 0, fmt.Errorf("użytkownik nie znaleziony: %v", err)
+		return "", 0, fmt.Errorf("User not found: %v", err)
 	}
 
 	group := &model.Group{
@@ -59,15 +59,15 @@ func (u *GroupUsecase) CreateGroup(name, description string, userID uint) (strin
 
 	err = u.groupRepo.CreateGroup(group)
 	if err != nil {
-		return "", 0, fmt.Errorf("nie udało się utworzyć grupy: %v", err)
+		return "", 0, fmt.Errorf("Could not create group: %v", err)
 	}
 
-	err = u.groupRepo.AddUserToGroup(userID, group.ID, "manager")
+	err = u.groupRepo.AddUserToGroup(userID, group.ID, helpers.RoleManager)
 	if err != nil {
-		return "", 0, fmt.Errorf("nie udało się dodać użytkownika do grupy: %v", err)
+		return "", 0, fmt.Errorf("Could not add user to group: %v", err)
 	}
 
-	return "manager", group.ID, nil
+	return helpers.RoleManager, group.ID, nil
 }
 
 func (u *GroupUsecase) JoinGroup(userID uint, accessToken string) (string, uint, string, error) {
@@ -87,27 +87,27 @@ func (u *GroupUsecase) JoinGroup(userID uint, accessToken string) (string, uint,
 		}
 	}
 
-	err = u.groupRepo.AddUserToGroup(userID, group.ID, "member")
+	err = u.groupRepo.AddUserToGroup(userID, group.ID, helpers.RoleMember)
 	if err != nil {
 		return "", 0, "", errors.New("failed to join group")
 	}
 
-	return "member", group.ID, group.Name, nil
+	return helpers.RoleMember, group.ID, group.Name, nil
 }
 
 func (u *GroupUsecase) GetGroupInfo(userID uint, groupID uint) (string, string, string, error) {
 	role, err := u.groupRepo.GetUserRole(userID, groupID)
 	if err != nil {
-		return "", "", "", fmt.Errorf("użytkownik nie należy do tej grupy")
+		return "", "", "", errors.New("user not in group")
 	}
 
 	group, err := u.groupRepo.GetGroupByID(groupID)
 	if err != nil {
-		return "", "", "", fmt.Errorf("nie znaleziono grupy")
+		return "", "", "", errors.New("could not find group")
 	}
 
 	accessToken := ""
-	if role == "manager" {
+	if role == helpers.RoleManager {
 		accessToken = group.AccessToken
 	}
 
@@ -115,7 +115,6 @@ func (u *GroupUsecase) GetGroupInfo(userID uint, groupID uint) (string, string, 
 }
 
 func (u *GroupUsecase) GetGroupMembers(groupID, requestingUserID uint) ([]MemberInfo, error) {
-
 	_, err := u.groupRepo.GetUserRole(requestingUserID, groupID)
 	if err != nil {
 		return nil, errors.New("user not authorized to view this group")
@@ -178,7 +177,7 @@ func (u *GroupUsecase) RemoveMember(groupID, userToRemoveID, requestingUserID ui
 		return errors.New("requesting user not in group")
 	}
 
-	if requesterRole != "manager" && requesterRole != "moderator" {
+	if !helpers.IsManagerOrModeratorRole(requesterRole) {
 		return errors.New("insufficient permissions")
 	}
 
@@ -195,7 +194,7 @@ func (u *GroupUsecase) UpdateMemberRole(groupID uint, userToUpdateID uint, reque
 		return errors.New("requesting user not in group")
 	}
 
-	if requesterRole != "manager" {
+	if requesterRole != helpers.RoleManager {
 		return errors.New("insufficient permissions - only managers can change roles")
 	}
 
@@ -211,7 +210,7 @@ func (u *GroupUsecase) UpdateMemberRole(groupID uint, userToUpdateID uint, reque
 }
 
 func isValidRole(role string) bool {
-	validRoles := []string{"manager", "moderator", "member"}
+	validRoles := []string{helpers.RoleManager, helpers.RoleModerator, helpers.RoleMember}
 	for _, r := range validRoles {
 		if r == role {
 			return true
