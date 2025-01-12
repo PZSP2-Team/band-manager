@@ -2,6 +2,7 @@ package helpers
 
 const (
 	RoleManager   = "manager"
+	RoleMember    = "member"
 	RoleModerator = "moderator"
 )
 
