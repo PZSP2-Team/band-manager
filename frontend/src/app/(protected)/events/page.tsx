@@ -5,7 +5,6 @@ import { useState, useEffect } from "react";
 import { useGroup } from "../../contexts/GroupContext";
 import LoadingScreen from "@/src/app/components/LoadingScreen";
 import { RequireGroup } from "@/src/app/components/RequireGroup";
-import { RequireManager } from "../../components/RequireManager";
 import { Calendar, X } from "lucide-react";
 
 type RenderState =
@@ -53,7 +52,7 @@ export default function EventsPage() {
         setRenderState({ status: "error" });
       }
     };
-    if (groupId && session?.user?.id) {
+    if (groupId) {
       fetchEvents();
     }
   }, [sessionStatus, groupId, session?.user?.id]);
@@ -79,7 +78,7 @@ export default function EventsPage() {
     }
   };
 
-  if (sessionStatus === "loading" || renderState.status === "loading") {
+  if (renderState.status === "loading") {
     return <LoadingScreen />;
   }
 
