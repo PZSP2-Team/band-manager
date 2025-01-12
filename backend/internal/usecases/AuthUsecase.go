@@ -4,25 +4,27 @@ import (
 	"band-manager-backend/internal/model"
 	"band-manager-backend/internal/repositories"
 	"errors"
-
 	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthUsecase struct {
-	userRepo *repositories.UserRepository
+	userRepo  *repositories.UserRepository
+	groupRepo *repositories.GroupRepository
 }
 
 func NewAuthUsecase() *AuthUsecase {
 	userRepo := repositories.NewUserRepository()
+	groupRepo := repositories.NewGroupRepository()
 	return &AuthUsecase{
-		userRepo: userRepo,
+		userRepo:  userRepo,
+		groupRepo: groupRepo,
 	}
 }
 
 func (u *AuthUsecase) Login(email, password string) (*model.User, error) {
 	user, err := u.userRepo.GetUserByEmail(email)
 	if err != nil {
-		return nil, errors.New("user not found")
+		return nil, errors.New("invalid credentials")
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
@@ -33,15 +35,17 @@ func (u *AuthUsecase) Login(email, password string) (*model.User, error) {
 }
 
 func (u *AuthUsecase) Register(firstName, lastName, email, password string) error {
-	// Check if the email is already taken
-	_, err := u.userRepo.GetUserByEmail(email)
-	if err == nil {
+	user, err := u.userRepo.GetUserByEmail(email)
+	if err != nil {
+		return err
+	}
+	if user != nil {
 		return errors.New("email already registered")
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return errors.New("failed to hash password")
+		return errors.New("incorrect password")
 	}
 
 	newUser := &model.User{

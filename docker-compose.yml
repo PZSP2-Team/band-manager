@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   db:
@@ -8,7 +8,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+      - "5435:${POSTGRES_PORT}"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -29,26 +29,32 @@ services:
       POSTGRES_PORT: ${POSTGRES_PORT}
       FRONTEND_HOST: ${FRONTEND_HOST}
       FRONTEND_PORT: ${FRONTEND_PORT}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      EMAIL_FROM: ${EMAIL_FROM}
+      APP_PASSWORD: ${APP_PASSWORD}
     ports:
       - "${BACKEND_PORT}:${BACKEND_PORT}"
+    volumes:
+      - notesheet_files:/app/uploads
     depends_on:
       db:
         condition: service_healthy
 
-  frontend:
-    build: 
-      context: ./frontend
-      dockerfile: ${NODE_ENV:-development}.Dockerfile
-    environment:
-      NODE_ENV: ${NODE_ENV:-development}
-      PORT: ${FRONTEND_PORT}
-    ports:
-      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - /app/.next
-
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: ${NODE_ENV:-development}.Dockerfile
+  #   environment:
+  #     NODE_ENV: ${NODE_ENV:-development}
+  #     PORT: ${FRONTEND_PORT}
+  #   ports:
+  #     - "${FRONTEND_PORT}:${FRONTEND_PORT}"
+  #   volumes:
+  #     - ./frontend:/app
+  #     - /app/node_modules
+  #     - /app/.next
 
 volumes:
   postgres_data:
+  notesheet_files:

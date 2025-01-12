@@ -17,16 +17,17 @@ func NewAuthHandler() *AuthHandler {
 	}
 }
 
-// Login handles the /api/auth/login endpoint
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
-
 	type LoginResponse struct {
 		ID        uint   `json:"id"`
 		FirstName string `json:"first_name"`
 		LastName  string `json:"last_name"`
 		Email     string `json:"email"`
-		Role      string `json:"role"`
-		GroupID   *uint  `json:"group_id"`
+		Groups    []struct {
+			ID   uint   `json:"id"`
+			Name string `json:"name"`
+			Role string `json:"role"`
+		} `json:"groups"`
 	}
 
 	if r.Method != http.MethodPost {
@@ -38,6 +39,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		Email    string `json:"email"`
 		Password string `json:"password"`
 	}
+
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
@@ -54,15 +56,12 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
 		Email:     user.Email,
-		Role:      user.Role,
-		GroupID:   user.GroupID,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
 
-// Register handles the /api/auth/register endpoint
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)

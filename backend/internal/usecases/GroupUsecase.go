@@ -3,6 +3,7 @@ package usecases
 import (
 	"band-manager-backend/internal/model"
 	"band-manager-backend/internal/repositories"
+	"band-manager-backend/internal/usecases/helpers"
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
@@ -21,7 +22,22 @@ func NewGroupUsecase() *GroupUsecase {
 	}
 }
 
-// generateAccessToken creates a random hex string for group access
+type MemberInfo struct {
+	ID        uint   `json:"id"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Email     string `json:"email"`
+	Role      string `json:"role"`
+}
+
+type GroupInfo struct {
+	ID           uint   `json:"id"`
+	Name         string `json:"name"`
+	Description  string `json:"description"`
+	Role         string `json:"role"`
+	MembersCount int    `json:"members_count"`
+}
+
 func generateAccessToken() string {
 	bytes := make([]byte, 16)
 	rand.Read(bytes)
@@ -29,88 +45,176 @@ func generateAccessToken() string {
 }
 
 func (u *GroupUsecase) CreateGroup(name, description string, userID uint) (string, uint, error) {
+	_, err := u.userRepo.GetUserByID(userID)
 
-	user, err := u.userRepo.GetUserByID(userID)
 	if err != nil {
-		return "", 0, fmt.Errorf("użytkownik nie znaleziony: %v", err)
+		return "", 0, fmt.Errorf("User not found: %v", err)
 	}
 
-	// Sprawdzamy, czy użytkownik nie należy już do jakiejś grupy
-	if user.GroupID != nil {
-		return "", 0, fmt.Errorf("użytkownik już należy do grupy")
-	}
-
-	// Tworzymy nową grupę
 	group := &model.Group{
 		Name:        name,
 		Description: description,
-		AccessToken: generateAccessToken(), // Zakładam, że ta funkcja już istnieje
+		AccessToken: generateAccessToken(),
 	}
 
-	// Zapisujemy grupę w bazie
 	err = u.groupRepo.CreateGroup(group)
 	if err != nil {
-		return "", 0, fmt.Errorf("nie udało się utworzyć grupy: %v", err)
+		return "", 0, fmt.Errorf("Could not create group: %v", err)
 	}
 
-	// Aktualizujemy użytkownika - ustawiamy GroupID i rolę managera
-	user.GroupID = &group.ID
-	user.Role = "manager"
-
-	err = u.userRepo.UpdateUser(user)
+	err = u.groupRepo.AddUserToGroup(userID, group.ID, helpers.RoleManager)
 	if err != nil {
-		return "", 0, fmt.Errorf("nie udało się zaktualizować użytkownika: %v", err)
+		return "", 0, fmt.Errorf("Could not add user to group: %v", err)
 	}
 
-	return user.Role, group.ID, nil
+	return helpers.RoleManager, group.ID, nil
 }
 
-func (u *GroupUsecase) JoinGroup(userID uint, accessToken string) (string, uint, error) {
+func (u *GroupUsecase) JoinGroup(userID uint, accessToken string) (string, uint, string, error) {
 	group, err := u.groupRepo.GetGroupByAccessToken(accessToken)
 	if err != nil {
-		return "", 0, errors.New("invalid access token")
+		return "", 0, "", errors.New("invalid access token")
 	}
 
 	user, err := u.userRepo.GetUserByID(userID)
 	if err != nil {
-		return "", 0, errors.New("user not found")
+		return "", 0, "", errors.New("user not found")
 	}
 
-	if user.GroupID != nil {
-		return "", 0, errors.New("user already belongs to a group")
+	for _, g := range user.Groups {
+		if g.ID == group.ID {
+			return "", 0, "", errors.New("user already in group")
+		}
 	}
 
-	user.GroupID = &group.ID
-	user.Role = "member"
-
-	err = u.userRepo.UpdateUser(user)
+	err = u.groupRepo.AddUserToGroup(userID, group.ID, helpers.RoleMember)
 	if err != nil {
-		return "", 0, errors.New("failed to join group")
+		return "", 0, "", errors.New("failed to join group")
 	}
 
-	return user.Role, group.ID, nil
+	return helpers.RoleMember, group.ID, group.Name, nil
 }
 
-func (u *GroupUsecase) GetGroupInfo(userID uint) (string, string, string, error) {
-
-	user, err := u.userRepo.GetUserByID(userID)
+func (u *GroupUsecase) GetGroupInfo(userID uint, groupID uint) (string, string, string, error) {
+	role, err := u.groupRepo.GetUserRole(userID, groupID)
 	if err != nil {
-		return "", "", "", fmt.Errorf("użytkownik nie znaleziony")
+		return "", "", "", errors.New("user not in group")
 	}
 
-	if user.GroupID == nil {
-		return "", "", "", fmt.Errorf("użytkownik nie należy do żadnej grupy")
-	}
-
-	group, err := u.groupRepo.GetGroupByID(*user.GroupID)
+	group, err := u.groupRepo.GetGroupByID(groupID)
 	if err != nil {
-		return "", "", "", fmt.Errorf("nie znaleziono grupy")
+		return "", "", "", errors.New("could not find group")
 	}
 
 	accessToken := ""
-	if user.Role == "manager" {
+	if role == helpers.RoleManager {
 		accessToken = group.AccessToken
 	}
 
 	return group.Name, group.Description, accessToken, nil
+}
+
+func (u *GroupUsecase) GetGroupMembers(groupID, requestingUserID uint) ([]MemberInfo, error) {
+	_, err := u.groupRepo.GetUserRole(requestingUserID, groupID)
+	if err != nil {
+		return nil, errors.New("user not authorized to view this group")
+	}
+
+	members, err := u.groupRepo.GetGroupMembers(groupID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get group members: %v", err)
+	}
+
+	var memberInfos []MemberInfo
+	for _, member := range members {
+		role, err := u.groupRepo.GetUserRole(member.ID, groupID)
+		if err != nil {
+			continue
+		}
+		memberInfos = append(memberInfos, MemberInfo{
+			ID:        member.ID,
+			FirstName: member.FirstName,
+			LastName:  member.LastName,
+			Email:     member.Email,
+			Role:      role,
+		})
+	}
+
+	return memberInfos, nil
+}
+
+func (u *GroupUsecase) GetUserGroups(userID uint) ([]GroupInfo, error) {
+	roles, err := u.userRepo.GetUserGroupRoles(userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user roles: %v", err)
+	}
+
+	var groupInfos []GroupInfo
+	for _, role := range roles {
+		group, err := u.groupRepo.GetGroupByID(role.GroupID)
+		if err != nil {
+			continue
+		}
+
+		membersCount := len(group.Users)
+
+		groupInfos = append(groupInfos, GroupInfo{
+			ID:           group.ID,
+			Name:         group.Name,
+			Description:  group.Description,
+			Role:         role.Role,
+			MembersCount: membersCount,
+		})
+	}
+
+	return groupInfos, nil
+}
+
+func (u *GroupUsecase) RemoveMember(groupID, userToRemoveID, requestingUserID uint) error {
+
+	requesterRole, err := u.groupRepo.GetUserRole(requestingUserID, groupID)
+	if err != nil {
+		return errors.New("requesting user not in group")
+	}
+
+	if !helpers.IsManagerOrModeratorRole(requesterRole) {
+		return errors.New("insufficient permissions")
+	}
+
+	if userToRemoveID == requestingUserID {
+		return errors.New("cannot remove yourself from group")
+	}
+
+	return u.groupRepo.RemoveUserFromGroup(userToRemoveID, groupID)
+}
+
+func (u *GroupUsecase) UpdateMemberRole(groupID uint, userToUpdateID uint, requestingUserID uint, newRole string) error {
+	requesterRole, err := u.groupRepo.GetUserRole(requestingUserID, groupID)
+	if err != nil {
+		return errors.New("requesting user not in group")
+	}
+
+	if requesterRole != helpers.RoleManager {
+		return errors.New("insufficient permissions - only managers can change roles")
+	}
+
+	if userToUpdateID == requestingUserID {
+		return errors.New("cannot change your own role")
+	}
+
+	if !isValidRole(newRole) {
+		return errors.New("invalid role - must be 'manager', 'moderator', or 'member'")
+	}
+
+	return u.groupRepo.UpdateUserRole(userToUpdateID, groupID, newRole)
+}
+
+func isValidRole(role string) bool {
+	validRoles := []string{helpers.RoleManager, helpers.RoleModerator, helpers.RoleMember}
+	for _, r := range validRoles {
+		if r == role {
+			return true
+		}
+	}
+	return false
 }
