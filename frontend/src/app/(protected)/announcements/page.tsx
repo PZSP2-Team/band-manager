@@ -2,8 +2,10 @@
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
-// import { useGroup } from "../../contexts/GroupContext";
+import { useGroup } from "../../contexts/GroupContext";
 import LoadingScreen from "@/src/app/components/LoadingScreen";
+import { RequireGroup } from "@/src/app/components/RequireGroup";
+import { Megaphone, X } from "lucide-react";
 
 type RenderState =
   | { status: "loading" }
@@ -14,97 +16,91 @@ type Announcement = {
   id: number;
   title: string;
   description: string;
-  date: string;
+  created_at: string;
   priority: number;
+  sender: Sender;
+};
+
+type Sender = {
+  first_name: string;
+  last_name: string;
 };
 
 export default function AnnouncementsPage() {
-  // const { userRole } = useGroup();
-  const userRole = "manager";
+  const { groupId, userRole } = useGroup();
   const router = useRouter();
   const { data: session, status: sessionStatus } = useSession();
   const [renderState, setRenderState] = useState<RenderState>({
     status: "loading",
   });
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState<number | null>(null); // ID of announcement to delete
 
   useEffect(() => {
     if (sessionStatus === "loading") return;
-
     const fetchAnnouncements = async () => {
+      setRenderState({ status: "loading" });
       try {
-        console.log("User role:", userRole);
-
-        const mockAnnouncements: Announcement[] = [
-          {
-            id: 1,
-            title: "Welcome to the Group!",
-            description: "We are thrilled to have you here. Let’s work together!",
-            date: "2025-01-10",
-            priority: 1,
-          },
-          {
-            id: 2,
-            title: "Meeting Schedule Update",
-            description: "Please check the updated schedule for the monthly meeting.",
-            date: "2025-01-12",
-            priority: 2,
-          },
-          {
-            id: 3,
-            title: "Project Deadline Reminder",
-            description: "Don’t forget to submit your project proposals by the end of the month!",
-            date: "2025-01-15",
-            priority: 3,
-          },
-        ];
-
-        // Uncomment the following lines to use the actual API:
-        // const response = await fetch(`/api/announcement/group/${groupId}/${userId}`);
-        // const data = await response.json();
-        // const announcementsFromAPI = data.announcements;
-
-        const filteredAnnouncements =
-          userRole === "member"
-            ? mockAnnouncements.slice(0, 2) // Show limited announcements for members
-            : mockAnnouncements; // Show all announcements for manager or moderator
-
-        setTimeout(() => {
-          setAnnouncements(filteredAnnouncements);
-          setRenderState({ status: "loaded" });
-        }, 1000);
+        const response = await fetch(
+          `/api/announcement/user/${session?.user?.id}`,
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch announcements");
+        }
+        const data = await response.json();
+        const filteredAnnouncements = data.announcements
+          .filter((announcement) => announcement.group_id === groupId)
+          .sort(
+            (a: Announcement, b: Announcement) =>
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime(),
+          );
+        setAnnouncements(filteredAnnouncements);
+        setRenderState({ status: "loaded" });
       } catch (error) {
         console.error("Error fetching announcements:", error);
         setRenderState({ status: "error" });
       }
     };
+    if (session?.user?.id) {
+      fetchAnnouncements();
+    }
+  }, [groupId, sessionStatus, session?.user?.id]);
 
-    fetchAnnouncements();
-  }, [sessionStatus, userRole]);
-
-  const handleDeleteAnnouncement = async (announcementId: number) => {
+  const removeAnnouncement = async (announcementId: number) => {
     try {
-      console.log(`Deleting announcement with ID: ${announcementId}`);
-      setAnnouncements((prev) =>
-        prev.filter((announcement) => announcement.id !== announcementId)
+      const response = await fetch(`/api/announcements/${announcementId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          groupId: groupId,
+          userId: session?.user?.id,
+        }),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to delete announcement");
+      }
+      setAnnouncements(
+        announcements.filter(
+          (announcement) => announcement.id !== announcementId,
+        ),
       );
-
-      // Uncomment to use actual API:
-      // const userId = session?.user.id; // Replace with actual user ID
-      // const response = await fetch(`/api/announcement/delete/${announcementId}/${userId}`, {
-      //   method: "DELETE",
-      // });
-      // if (!response.ok) {
-      //   throw new Error("Failed to delete announcement");
-      // }
-      // const data = await response.json();
-      // console.log(data.message);
-
-      setShowDeleteConfirmation(null); // Close the dialog
     } catch (error) {
       console.error("Error deleting announcement:", error);
-      alert("Failed to delete the announcement. Please try again.");
+    }
+  };
+
+  const getPriorityColor = (priority: number) => {
+    switch (priority) {
+      case 0:
+        return "text-green-500";
+      case 1:
+        return "text-yellow-500";
+      case 2:
+        return "text-red-500";
+      default:
+        return "text-gray-500";
     }
   };
 
@@ -114,79 +110,73 @@ export default function AnnouncementsPage() {
 
   if (renderState.status === "error") {
     return (
-      <div className="text-center mt-10">
-        Failed to load announcements. Please try again later.
-      </div>
+      <RequireGroup>
+        <div className="text-center mt-10">
+          Failed to load announcements. Please try again later.
+        </div>
+      </RequireGroup>
     );
   }
 
+  const canCreateAnnouncement =
+    userRole === "manager" || userRole === "moderator";
+
   return (
-    <div className="flex flex-col mt-10 p-6">
-      <div className="w-1/4">
-        <h1 className="text-3xl font-bold mb-6 text-left">Announcements</h1>
-        <ul className="space-y-4 text-left">
-          {announcements.map((announcement, index) => (
-            <li
-              key={announcement.id}
-              className="p-4 border border-gray-300 rounded shadow hover:bg-white hover:text-black transition"
-              style={{ opacity: 0.8 }}
+    <RequireGroup>
+      <div className="flex flex-col py-10 px-10">
+        <div className="flex flex-row items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold text-left">Announcements</h1>
+          {canCreateAnnouncement && (
+            <button
+              className="px-6 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-500 transition"
+              onClick={() => router.push("/announcements/create")}
             >
-              <div className="flex justify-between items-center">
-                <div>
-                  <h2 className="text-lg font-semibold">
-                    {index + 1}. {announcement.title}
-                  </h2>
-                  <p className="text-gray-600 text-sm">
-                    {new Date(announcement.date).toLocaleDateString()}
-                  </p>
-                  <p className="text-gray-400 mt-2">{announcement.description}</p>
+              Create new announcement
+            </button>
+          )}
+        </div>
+        <ul className="space-y-4 text-left">
+          {announcements.length > 0 ? (
+            announcements.map((announcement) => (
+              <li
+                key={announcement.id}
+                className="flex flex-row p-4 border border-customGray items-center justify-between rounded shadow transition"
+              >
+                <div
+                  className="text-white flex justify-between items-center cursor-pointer space-x-4"
+                  onClick={() =>
+                    router.push(`/announcements/${announcement.id}`)
+                  }
+                >
+                  <Megaphone
+                    className={`${getPriorityColor(announcement.priority)}`}
+                  />
+                  <div>
+                    <h2 className="font-semibold">{announcement.title}</h2>
+                    <p className="text-sm text-gray-600">
+                      {new Date(announcement.created_at).toLocaleDateString()} -
+                      by {announcement.sender.first_name}{" "}
+                      {announcement.sender.last_name}
+                    </p>
+                  </div>
                 </div>
-                {userRole === "manager" && (
+                {canCreateAnnouncement && (
                   <button
-                    onClick={() => setShowDeleteConfirmation(announcement.id)}
-                    className="text-gray-500 hover:text-red-600 text-xl"
+                    onClick={() => removeAnnouncement(announcement.id)}
+                    className="p-2 text-red-500 hover:bg-red-100 rounded-full transition"
                   >
-                    🗑️
+                    <X className="h-5 w-5" />
                   </button>
                 )}
-              </div>
-            </li>
-          ))}
-        </ul>
-
-        {(userRole === "manager" || userRole === "moderator") && (
-          <button
-            className="mt-6 px-6 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-500 transition"
-            onClick={() => router.push("/announcements/create")}
-          >
-            Create New Announcement
-          </button>
-        )}
-      </div>
-
-      {showDeleteConfirmation !== null && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded shadow">
-            <p className="text-lg font-bold text-gray-800 mb-4">
-              Are you sure you want to delete this announcement?
+              </li>
+            ))
+          ) : (
+            <p className="text-customGray text-xl text-center">
+              You have no announcements.
             </p>
-            <div className="flex justify-end space-x-4">
-              <button
-                onClick={() => setShowDeleteConfirmation(null)}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-200"
-              >
-                No
-              </button>
-              <button
-                onClick={() => handleDeleteAnnouncement(showDeleteConfirmation)}
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500"
-              >
-                Yes
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+          )}
+        </ul>
+      </div>
+    </RequireGroup>
   );
 }
