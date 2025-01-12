@@ -47,11 +47,11 @@ export default function EventsPage() {
         }
         const data = await response.json();
         const filteredEvents = data.events
-        .filter((event: Event) => event.group_id === groupId)
-        .sort(
-          (a: Event, b: Event) =>
-            new Date(a.date).getTime() - new Date(b.date).getTime()
-        );
+          .filter((event: Event) => event.group_id === groupId)
+          .sort(
+            (a: Event, b: Event) =>
+              new Date(a.date).getTime() - new Date(b.date).getTime()
+          );
 
         setEvents(filteredEvents);
         setRenderState(RenderState.LOADED);
@@ -87,10 +87,6 @@ export default function EventsPage() {
     }
   };
 
-  const handleDateClick = (info: { dateStr: string }) => {
-    router.push(`/events/create?date=${info.dateStr}`);
-  };
-
   const handleEventClick = (info: { event: { id: string } }) => {
     router.push(`/events/${info.event.id}`);
   };
@@ -111,7 +107,6 @@ export default function EventsPage() {
 
   return (
     <RequireGroup>
-      
       <div className="flex flex-col py-10 px-10">
         <div className="flex flex-row items-center justify-between mb-6">
           <h1 className="text-3xl font-bold text-left">Upcoming Events</h1>
@@ -186,8 +181,7 @@ export default function EventsPage() {
               title: event.title,
               date: event.date,
             }))}
-            dateClick={handleDateClick}
-            eventClick={handleEventClick}
+            eventClick={(info) => handleEventClick(info)} // Обработчик клика на событие
             themeSystem="dark"
             height="auto"
             contentHeight="auto"
