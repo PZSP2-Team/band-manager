@@ -1,9 +1,9 @@
 package usecases
 
 import (
+	"band-manager-backend/internal/infrastructure/email"
 	"band-manager-backend/internal/model"
 	"band-manager-backend/internal/repositories"
-	"band-manager-backend/internal/services"
 	"band-manager-backend/internal/usecases/helpers"
 	"errors"
 	"log"
@@ -15,17 +15,15 @@ type EventUsecase struct {
 	groupRepo    *repositories.GroupRepository
 	trackRepo    *repositories.TrackRepository
 	userRepo     *repositories.UserRepository
-	gcService    *services.GoogleCalendarService
-	emailService *services.EmailService
+	emailService *email.EmailService
 }
 
-func NewEventUsecase(gcService *services.GoogleCalendarService, emailService *services.EmailService) *EventUsecase {
+func NewEventUsecase(emailService *email.EmailService) *EventUsecase {
 	return &EventUsecase{
 		eventRepo:    repositories.NewEventRepository(),
 		groupRepo:    repositories.NewGroupRepository(),
 		trackRepo:    repositories.NewTrackRepository(),
 		userRepo:     repositories.NewUserRepository(),
-		gcService:    gcService,
 		emailService: emailService,
 	}
 }
@@ -198,12 +196,6 @@ func (u *EventUsecase) addUsersToEvent(event *model.Event, userIDs []uint) error
 }
 
 func (u *EventUsecase) handleExternalIntegrations(event *model.Event, userIDs []uint) {
-	if u.gcService != nil {
-		if err := u.gcService.CreateCalendarEvent(event); err != nil {
-			log.Printf("Failed to sync with Google Calendar: %v", err)
-		}
-	}
-
 	recipients, err := u.getEventRecipients(event.GroupID, userIDs)
 	if err != nil {
 		log.Printf("Failed to get recipients: %v", err)

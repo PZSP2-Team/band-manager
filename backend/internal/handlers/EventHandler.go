@@ -1,11 +1,10 @@
 package handlers
 
 import (
+	"band-manager-backend/internal/infrastructure/email"
 	"band-manager-backend/internal/model"
-	"band-manager-backend/internal/services"
 	"band-manager-backend/internal/usecases"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -14,14 +13,12 @@ import (
 
 type EventHandler struct {
 	eventUsecase *usecases.EventUsecase
-	gcService    *services.GoogleCalendarService
-	emailService *services.EmailService
+	emailService *email.EmailService
 }
 
-func NewEventHandler(gcService *services.GoogleCalendarService, emailService *services.EmailService) *EventHandler {
+func NewEventHandler(emailService *email.EmailService) *EventHandler {
 	return &EventHandler{
-		eventUsecase: usecases.NewEventUsecase(gcService, emailService),
-		gcService:    gcService,
+		eventUsecase: usecases.NewEventUsecase(emailService),
 		emailService: emailService,
 	}
 }
@@ -267,28 +264,4 @@ func (h *EventHandler) GetEventTracks(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string][]*model.Track{
 		"tracks": tracks,
 	})
-}
-
-func (h *EventHandler) GoogleCalendarAuth(w http.ResponseWriter, r *http.Request) {
-	authURL := h.gcService.GetAuthURL()
-	http.Redirect(w, r, authURL, http.StatusTemporaryRedirect)
-}
-
-func (h *EventHandler) GoogleCalendarCallback(w http.ResponseWriter, r *http.Request) {
-	code := r.URL.Query().Get("code")
-	if code == "" {
-		http.Error(w, "Authorization code not found", http.StatusBadRequest)
-		return
-	}
-
-	fmt.Println("Authorization code received:", code) // DEBUG
-
-	err := h.gcService.SaveToken(code)
-	if err != nil {
-		fmt.Println("Error saving token:", err) // DEBUG
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	fmt.Println("Token successfully saved!") // DEBUG
-	w.Write([]byte("Successfully authorized!"))
 }

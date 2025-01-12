@@ -164,7 +164,6 @@ func (h *GroupHandler) GetGroupMembers(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// GetUserGroups handles GET /api/group/user/{userId}
 func (h *GroupHandler) GetUserGroups(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

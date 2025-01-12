@@ -1,7 +1,7 @@
 package repositories
 
 import (
-	"band-manager-backend/internal/db"
+	"band-manager-backend/internal/infrastructure/db"
 	"band-manager-backend/internal/model"
 	"errors"
 	"fmt"
