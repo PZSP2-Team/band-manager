@@ -139,69 +139,79 @@ export default function EventDetailsPage({
 
         <h2 className="text-white text-2xl font-semibold mb-4">Tracks</h2>
         <div className="space-y-4">
-          {event.tracks.map((track) => {
-            const trackNotesheets = track.notesheets;
+          {event.tracks.length > 0 ? (
+            event.tracks.map((track) => {
+              const trackNotesheets = track.notesheets;
 
-            return (
-              <div
-                key={track.id}
-                className="bg-background border border-customGray rounded-lg overflow-hidden"
-              >
-                <button
-                  onClick={() => toggleTrack(track.id)}
-                  className="w-full p-4 flex items-center justify-between text-left hover:bg-headerHoverGray transition-colors"
+              return (
+                <div
+                  key={track.id}
+                  className="bg-background border border-customGray rounded-lg overflow-hidden"
                 >
-                  <div className="flex items-center">
-                    <Music className="h-5 w-5 mr-2" />
-                    <div>
-                      <h3 className="text-lg font-medium">{track.name}</h3>
-                      {track.description && (
-                        <p className="text-gray-400 text-sm">
-                          {track.description}
-                        </p>
+                  <button
+                    onClick={() => toggleTrack(track.id)}
+                    className="w-full p-4 flex items-center justify-between text-left hover:bg-headerHoverGray transition-colors"
+                  >
+                    <div className="flex items-center">
+                      <Music className="h-5 w-5 mr-2" />
+                      <div>
+                        <h3 className="text-lg font-medium">{track.name}</h3>
+                        {track.description && (
+                          <p className="text-gray-400 text-sm">
+                            {track.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    {expandedTracks[track.id] ? (
+                      <ChevronUp className="h-5 w-5 text-gray-400" />
+                    ) : (
+                      <ChevronDown className="h-5 w-5 text-gray-400" />
+                    )}
+                  </button>
+
+                  {expandedTracks[track.id] && (
+                    <div className="border-t border-customGray p-4">
+                      {trackNotesheets.length > 0 ? (
+                        <div className="space-y-2">
+                          {trackNotesheets.map((notesheet) => (
+                            <div
+                              key={notesheet.id}
+                              className="flex items-center justify-between bg-background hover:bg-headerHoverGray p-2 rounded"
+                            >
+                              <span className="text-sm text-gray-300">
+                                {notesheet.filepath}
+                              </span>
+                              <button
+                                onClick={() =>
+                                  handleDownload(
+                                    notesheet.id,
+                                    notesheet.filepath,
+                                  )
+                                }
+                                className="flex items-center text-blue-500 hover:text-blue-400"
+                              >
+                                <Download className="h-4 w-4" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center text-gray-400 py-2">
+                          You do not have access to any notesheets for this
+                          track.
+                        </div>
                       )}
                     </div>
-                  </div>
-                  {expandedTracks[track.id] ? (
-                    <ChevronUp className="h-5 w-5 text-gray-400" />
-                  ) : (
-                    <ChevronDown className="h-5 w-5 text-gray-400" />
                   )}
-                </button>
-
-                {expandedTracks[track.id] && (
-                  <div className="border-t border-customGray p-4">
-                    {trackNotesheets.length > 0 ? (
-                      <div className="space-y-2">
-                        {trackNotesheets.map((notesheet) => (
-                          <div
-                            key={notesheet.id}
-                            className="flex items-center justify-between bg-background hover:bg-headerHoverGray p-2 rounded"
-                          >
-                            <span className="text-sm text-gray-300">
-                              {notesheet.filepath}
-                            </span>
-                            <button
-                              onClick={() =>
-                                handleDownload(notesheet.id, notesheet.filepath)
-                              }
-                              className="flex items-center text-blue-500 hover:text-blue-400"
-                            >
-                              <Download className="h-4 w-4" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center text-gray-400 py-2">
-                        You do not have access to any notesheets for this track.
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                </div>
+              );
+            })
+          ) : (
+            <p className="text-center text-gray-400 py-2">
+              This event has no tracks added.
+            </p>
+          )}
         </div>
       </div>
     </RequireGroup>
