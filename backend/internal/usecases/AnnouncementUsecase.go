@@ -22,7 +22,7 @@ func NewAnnouncementUsecase() *AnnouncementUsecase {
 func (u *AnnouncementUsecase) CreateAnnouncement(title, description string, priority, groupID, senderID uint, subgroupIDs []uint) (*model.Announcement, error) {
 	role, err := u.groupRepo.GetUserRole(senderID, groupID)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("Could not get user role")
 	}
 	if !helpers.HasManagerOrModeratorRole(role) {
 		return nil, errors.New("insufficient permissions")
