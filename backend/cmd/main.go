@@ -2,8 +2,8 @@ package main
 
 import (
 	"band-manager-backend/internal/handlers"
-	"band-manager-backend/internal/infrastructure/db"
-	"band-manager-backend/internal/infrastructure/email"
+	"band-manager-backend/internal/services"
+	"band-manager-backend/internal/services/db"
 	"fmt"
 	"log"
 	"net/http"
@@ -45,7 +45,7 @@ func main() {
 		port = "8080"
 	}
 
-	emailService := email.NewEmailService()
+	emailService := services.NewEmailService()
 
 	db.InitDB()
 
