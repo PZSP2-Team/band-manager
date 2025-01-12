@@ -47,11 +47,12 @@ export default function EventsPage() {
         }
         const data = await response.json();
         const filteredEvents = data.events
-          .filter((event: Event) => event.id === String(groupId))
-          .sort(
-            (a: Event, b: Event) =>
-              new Date(b.date).getTime() - new Date(a.date).getTime()
-          );
+        .filter((event: Event) => event.group_id === groupId)
+        .sort(
+          (a: Event, b: Event) =>
+            new Date(a.date).getTime() - new Date(b.date).getTime()
+        );
+
         setEvents(filteredEvents);
         setRenderState(RenderState.LOADED);
       } catch (error) {
@@ -110,6 +111,7 @@ export default function EventsPage() {
 
   return (
     <RequireGroup>
+      
       <div className="flex flex-col py-10 px-10">
         <div className="flex flex-row items-center justify-between mb-6">
           <h1 className="text-3xl font-bold text-left">Upcoming Events</h1>
