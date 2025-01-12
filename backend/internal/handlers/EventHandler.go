@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"band-manager-backend/internal/infrastructure/email"
 	"band-manager-backend/internal/model"
+	"band-manager-backend/internal/services"
 	"band-manager-backend/internal/usecases"
 	"encoding/json"
 	"net/http"
@@ -13,10 +13,10 @@ import (
 
 type EventHandler struct {
 	eventUsecase *usecases.EventUsecase
-	emailService *email.EmailService
+	emailService *services.EmailService
 }
 
-func NewEventHandler(emailService *email.EmailService) *EventHandler {
+func NewEventHandler(emailService *services.EmailService) *EventHandler {
 	return &EventHandler{
 		eventUsecase: usecases.NewEventUsecase(emailService),
 		emailService: emailService,
