@@ -91,11 +91,6 @@ export default function EventsPage() {
   useEffect(() => {
     const style = document.createElement("style");
     style.innerHTML = `
-      .fc .fc-week-header {
-        background-color: transparent;
-        color: rgb(195, 195, 195);
-      }
-
       .fc .fc-daygrid-day {
         background-color: transparent;
       }
