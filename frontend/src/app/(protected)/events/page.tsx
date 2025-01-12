@@ -88,39 +88,37 @@ export default function EventsPage() {
     router.push(`/events/${info.event.id}`);
   };
 
-  // Стили для кастомизации FullCalendar
   useEffect(() => {
     const style = document.createElement("style");
     style.innerHTML = `
-      .fc .fc-day-header {
-        background-color: #2a2a2a; /* Темный фон для заголовков дней */
-        color: #fff; /* Белый текст */
-      }
-
-      .fc .fc-daygrid-day-number {
-        color: #ff6347; /* Оранжевый цвет для чисел дней */
+      .fc .fc-week-header {
+        background-color: transparent;
+        color: rgb(195, 195, 195);
       }
 
       .fc .fc-daygrid-day {
-        background-color: #444; /* Темный фон для дней */
+        background-color: transparent;
+      }
+
+      .fc .fc-daygrid-day-number {
+        color: rgb(195, 195, 195);
+        font-weight: bold;
       }
 
       .fc .fc-event {
-        background-color: #007bff; /* Синий фон для событий */
-        color: white; /* Белый текст на событии */
+        background-color: #007bff;
+        color: white;
+        cursor: pointer;
       }
 
       .fc .fc-event:hover {
-        background-color: #0056b3; /* Синий фон при наведении */
+        background-color: rgb(0, 56, 116);
       }
 
-      .fc-button {
-        background-color: #007bff; /* Цвет кнопок */
-        color: white;
-      }
-
-      .fc-button:hover {
-        background-color: #0056b3;
+      .fc .fc-toolbar-title {
+        font-size: 2em; 
+        font-weight: bold;
+        color: rgb(195, 195, 195);
       }
     `;
     document.head.appendChild(style);
@@ -220,7 +218,7 @@ export default function EventsPage() {
               title: event.title,
               date: event.date,
             }))}
-            eventClick={(info) => handleEventClick(info)} // Обработчик клика на событие
+            eventClick={(info) => handleEventClick(info)}
             themeSystem="dark"
             height="auto"
             contentHeight="auto"
