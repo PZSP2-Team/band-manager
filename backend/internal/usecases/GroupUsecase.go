@@ -177,7 +177,7 @@ func (u *GroupUsecase) RemoveMember(groupID, userToRemoveID, requestingUserID ui
 		return errors.New("requesting user not in group")
 	}
 
-	if requesterRole != helpers.RoleManager && requesterRole != helpers.RoleModerator {
+	if !helpers.IsManagerOrModeratorRole(requesterRole) {
 		return errors.New("insufficient permissions")
 	}
 

@@ -6,6 +6,6 @@ const (
 	RoleModerator = "moderator"
 )
 
-func HasManagerOrModeratorRole(role string) bool {
+func IsManagerOrModeratorRole(role string) bool {
 	return role == RoleManager || role == RoleModerator
 }

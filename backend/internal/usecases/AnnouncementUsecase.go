@@ -24,7 +24,7 @@ func (u *AnnouncementUsecase) CreateAnnouncement(title, description string, prio
 	if err != nil {
 		return nil, errors.New("Could not get user role")
 	}
-	if !helpers.HasManagerOrModeratorRole(role) {
+	if !helpers.IsManagerOrModeratorRole(role) {
 		return nil, errors.New("insufficient permissions")
 	}
 
@@ -59,7 +59,7 @@ func (u *AnnouncementUsecase) DeleteAnnouncement(announcementID, userID uint) er
 	if err != nil {
 		return err
 	}
-	if !helpers.HasManagerOrModeratorRole(role) && announcement.SenderID != userID {
+	if !helpers.IsManagerOrModeratorRole(role) && announcement.SenderID != userID {
 		return errors.New("insufficient permissions")
 	}
 

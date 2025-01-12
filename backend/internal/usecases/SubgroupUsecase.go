@@ -3,6 +3,7 @@ package usecases
 import (
 	"band-manager-backend/internal/model"
 	"band-manager-backend/internal/repositories"
+	"band-manager-backend/internal/usecases/helpers"
 	"errors"
 )
 
@@ -24,7 +25,7 @@ func (u *SubgroupUsecase) CreateSubgroup(name, description string, groupID uint,
 		return nil, errors.New("user not in group")
 	}
 
-	if role != "manager" && role != "moderator" {
+	if !helpers.IsManagerOrModeratorRole(role) {
 		return nil, errors.New("insufficient permissions")
 	}
 
@@ -66,7 +67,7 @@ func (u *SubgroupUsecase) UpdateSubgroup(id uint, name, description string, user
 		return errors.New("access denied")
 	}
 
-	if role != "manager" && role != "moderator" {
+	if !helpers.IsManagerOrModeratorRole(role) {
 		return errors.New("insufficient permissions")
 	}
 
@@ -87,7 +88,7 @@ func (u *SubgroupUsecase) DeleteSubgroup(id uint, userID uint) error {
 		return errors.New("access denied")
 	}
 
-	if role != "manager" && role != "moderator" {
+	if !helpers.IsManagerOrModeratorRole(role) {
 		return errors.New("insufficient permissions")
 	}
 
@@ -105,7 +106,7 @@ func (u *SubgroupUsecase) AddMembers(id uint, userIDs []uint, requestingUserID u
 		return errors.New("access denied")
 	}
 
-	if role != "manager" && role != "moderator" {
+	if !helpers.IsManagerOrModeratorRole(role) {
 		return errors.New("insufficient permissions")
 	}
 
@@ -123,7 +124,7 @@ func (u *SubgroupUsecase) RemoveMember(subgroupID uint, userID uint, requestingU
 		return errors.New("access denied")
 	}
 
-	if role != "manager" {
+	if role != helpers.RoleManager {
 		return errors.New("insufficient permissions")
 	}
 

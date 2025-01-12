@@ -26,7 +26,7 @@ func (u *TrackUsecase) CreateTrack(title, description string, groupID uint, user
 	if err != nil {
 		return nil, errors.New("user not in group")
 	}
-	if !helpers.HasManagerOrModeratorRole(role) {
+	if !helpers.IsManagerOrModeratorRole(role) {
 		return nil, errors.New("insufficient permissions")
 	}
 
@@ -68,7 +68,7 @@ func (u *TrackUsecase) UpdateTrack(id uint, title string, description string, us
 		return errors.New("access denied")
 	}
 
-	if !helpers.HasManagerOrModeratorRole(role) {
+	if !helpers.IsManagerOrModeratorRole(role) {
 		return errors.New("insufficient permissions")
 	}
 
@@ -89,7 +89,7 @@ func (u *TrackUsecase) DeleteTrack(id uint, userID uint) error {
 		return errors.New("access denied")
 	}
 
-	if !helpers.HasManagerOrModeratorRole(role) {
+	if !helpers.IsManagerOrModeratorRole(role) {
 		return errors.New("insufficient permissions")
 	}
 
@@ -116,7 +116,7 @@ func (u *TrackUsecase) AddNotesheet(trackID uint, instrument string, filepath st
 	if err != nil {
 		return nil, errors.New("user not in group")
 	}
-	if !helpers.HasManagerOrModeratorRole(role) {
+	if !helpers.IsManagerOrModeratorRole(role) {
 		return nil, errors.New("insufficient permissions")
 	}
 
@@ -162,7 +162,6 @@ func (u *TrackUsecase) GetTrackNotesheets(trackID uint, userID uint) ([]*model.N
 }
 
 func (u *TrackUsecase) UpdateNotesheetFilepath(notesheetID uint, userID uint, filepath string) (*model.Notesheet, error) {
-
 	notesheet, err := u.trackRepo.GetNotesheet(notesheetID)
 	if err != nil {
 		return nil, err
@@ -178,7 +177,7 @@ func (u *TrackUsecase) UpdateNotesheetFilepath(notesheetID uint, userID uint, fi
 		return nil, errors.New("user not in group")
 	}
 
-	if !helpers.HasManagerOrModeratorRole(role) {
+	if !helpers.IsManagerOrModeratorRole(role) {
 		return nil, errors.New("insufficient permissions")
 	}
 
@@ -191,7 +190,6 @@ func (u *TrackUsecase) UpdateNotesheetFilepath(notesheetID uint, userID uint, fi
 }
 
 func (u *TrackUsecase) GetNotesheet(notesheetID uint, userID uint) (*model.Notesheet, error) {
-
 	notesheet, err := u.trackRepo.GetNotesheet(notesheetID)
 	if err != nil {
 		return nil, err

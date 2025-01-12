@@ -143,7 +143,7 @@ func (u *EventUsecase) validateUserPermissions(userID, groupID uint) error {
 	if !u.isUserInGroup(userID, groupID) {
 		return errors.New("User not in group")
 	}
-	if !helpers.HasManagerOrModeratorRole(role) {
+	if !helpers.IsManagerOrModeratorRole(role) {
 		return errors.New("insufficient permissions")
 	}
 	return nil
