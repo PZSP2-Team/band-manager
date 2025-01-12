@@ -29,6 +29,10 @@ services:
       POSTGRES_PORT: ${POSTGRES_PORT}
       FRONTEND_HOST: ${FRONTEND_HOST}
       FRONTEND_PORT: ${FRONTEND_PORT}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      EMAIL_FROM: ${EMAIL_FROM}
+      APP_PASSWORD: ${APP_PASSWORD}
     ports:
       - "${BACKEND_PORT}:${BACKEND_PORT}"
     volumes:
