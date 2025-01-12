@@ -101,13 +101,13 @@ export default function ManageGroupPage() {
   ) => {
     try {
       const response = await fetch(
-        `/api/group/role/${groupId}/${session?.user?.id}/${userId}`,
+        `/api/group/role/${groupId}/${userId}/${session?.user?.id}`,
         {
-          method: "PATCH",
+          method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ role: newRole }),
+          body: JSON.stringify({ new_role: newRole }),
         },
       );
 

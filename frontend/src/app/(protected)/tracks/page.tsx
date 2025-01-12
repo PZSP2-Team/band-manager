@@ -15,7 +15,7 @@ type RenderState =
 
 type Track = {
   id: number;
-  title: string;
+  name: string;
   description: string;
 };
 
@@ -30,16 +30,15 @@ export default function TracksPage() {
 
   const removeTrack = async (trackId: number) => {
     try {
-      const response = await fetch(`/api/tracks/${trackId}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `/api/track/delete/${trackId}/${session?.user?.id}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
         },
-        body: JSON.stringify({
-          groupId: groupId,
-          userId: session?.user?.id,
-        }),
-      });
+      );
 
       if (!response.ok) {
         throw new Error("Failed to delete track");
@@ -57,24 +56,16 @@ export default function TracksPage() {
       setRenderState({ status: "loading" });
 
       try {
-        // const response = await fetch(
-        //   `/api//group/${groupId}/${session?.user?.id}`,
-        // );
-        //
-        // if (!response.ok) {
-        //   throw new Error("Failed to fetch events");
-        // }
-        //
-        // const data = await response.json();
-        // setTracks(data.tracks);
-        setTracks([
-          { id: 1, title: "piosenka o marcinie", description: "asshole" },
-          {
-            id: 2,
-            title: "piosenka",
-            description: "asshole",
-          },
-        ]);
+        const response = await fetch(
+          `/api/track/group/${groupId}/${session?.user?.id}`,
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch events");
+        }
+
+        const data = await response.json();
+        setTracks(data.tracks);
         setRenderState({ status: "loaded" });
       } catch (error) {
         console.error("Error fetching events:", error);
@@ -114,24 +105,29 @@ export default function TracksPage() {
             </button>
           </div>
           <ul className="space-y-4 text-left">
-            {tracks.map((track, index) => (
-              <li
-                key={track.id}
-                className="flex flex-row p-4 border border-customGray items-center justify-between rounded shadow transition"
-                style={{ opacity: 0.8 }}
-              >
-                <div className="flex flex-row space-x-4">
-                  <Music4></Music4>
-                  <h2 className="font-semibold">{track.title}</h2>
-                </div>
-                <button
-                  onClick={() => removeTrack(index)}
-                  className="p-2 text-red-500 hover:bg-red-100 rounded-full transition"
+            {tracks.length > 0 ? (
+              tracks.map((track, index) => (
+                <li
+                  key={track.id}
+                  className="flex flex-row p-4 border border-customGray items-center justify-between rounded shadow transition"
                 >
-                  <X className="h-5 w-5" />
-                </button>
-              </li>
-            ))}
+                  <div className="text-white flex flex-row space-x-4">
+                    <Music4></Music4>
+                    <h2 className="font-semibold">{track.name}</h2>
+                  </div>
+                  <button
+                    onClick={() => removeTrack(index)}
+                    className="p-2 text-red-500 hover:bg-red-100 rounded-full transition"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </li>
+              ))
+            ) : (
+              <p className="text-customGray text-xl text-center ">
+                This group does not contain any tracks.
+              </p>
+            )}
           </ul>
         </div>
       </RequireManager>

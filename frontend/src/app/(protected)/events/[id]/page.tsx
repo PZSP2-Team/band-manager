@@ -1,207 +1,209 @@
 "use client";
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import LoadingScreen from "@/src/app/components/LoadingScreen";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { useState, useEffect, use } from "react";
 import { useGroup } from "@/src/app/contexts/GroupContext";
+import { RequireGroup } from "@/src/app/components/RequireGroup";
+import LoadingScreen from "@/src/app/components/LoadingScreen";
+import {
+  Calendar,
+  MapPin,
+  Download,
+  ChevronLeft,
+  ChevronUp,
+  ChevronDown,
+  Music,
+} from "lucide-react";
 
 type Event = {
   id: number;
-  name: string;
+  title: string;
+  description: string;
+  location: string;
   date: string;
-  type: "concert" | "rehearsal";
-  time: string;
-  materials: { name: string; notes: string[] }[];
+  tracks: Track[];
 };
 
 type Track = {
+  id: number;
   name: string;
+  description: string;
+  notesheets: Notesheet[];
 };
 
-export default function EventDetailPage() {
-  const { id } = useParams();
+type Notesheet = {
+  id: number;
+  track_id: number;
+  filepath: string;
+};
+
+export default function EventDetailsPage({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const { id } = use(params);
   const router = useRouter();
-  const { userRole } = useGroup();
+  const { data: session } = useSession();
   const [event, setEvent] = useState<Event | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [expandedTracks, setExpandedTracks] = useState<Record<number, boolean>>(
+    {},
+  );
 
-  const [isAddingSong, setIsAddingSong] = useState(false);
-  const [availableTracks, setAvailableTracks] = useState<Track[]>([]);
-  const [selectedTrack, setSelectedTrack] = useState("");
-
-  const [expandedTracks, setExpandedTracks] = useState<Set<string>>(new Set());
+  const toggleTrack = (trackId: number) => {
+    setExpandedTracks((prev) => ({
+      ...prev,
+      [trackId]: !prev[trackId],
+    }));
+  };
 
   useEffect(() => {
-    const mockEvents: Event[] = [
-      {
-        id: 1,
-        name: "Rock Festival",
-        date: "2025-01-15",
-        type: "concert",
-        time: "18:00",
-        materials: [
-          { name: "Do Elizy", notes: ["Note 1", "Note 2", "Note 3"] },
-          { name: "Song 2", notes: ["Note A", "Note B", "Note C"] },
-          { name: "Song ", notes: ["Sheet 1", "Sheet 2", "Sheet 3"] },
-        ],
-      },
-    ];
-
-    const fetchedEvent = mockEvents.find((e) => e.id === Number(id));
-    if (fetchedEvent) {
-      setEvent(fetchedEvent);
-    } else {
-      setEvent(null);
-    }
-
-    const fetchTracks = async () => {
-      const mockTracks: Track[] = [
-        { name: "New Song 1" },
-        { name: "New Song 2" },
-        { name: "New Song 3" },
-      ];
-      setAvailableTracks(mockTracks);
+    const fetchEventDetails = async () => {
+      try {
+        const eventResponse = await fetch(
+          `/api/event/info/${id}/${session?.user?.id}`,
+        );
+        if (!eventResponse.ok) throw new Error("Failed to fetch event");
+        const eventData = await eventResponse.json();
+        setEvent(eventData);
+      } catch (error) {
+        console.error("Error fetching event details:", error);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    fetchTracks();
-    setIsLoading(false);
-  }, [id]);
+    if (session?.user?.id) {
+      fetchEventDetails();
+    }
+  }, [id, session?.user?.id]);
 
-  const handleAddTrack = () => {
-    if (selectedTrack && event) {
-      const updatedMaterials = [
-        ...event.materials,
-        { name: selectedTrack, notes: [] },
-      ];
-      setEvent({ ...event, materials: updatedMaterials });
-      setIsAddingSong(false);
-      setSelectedTrack("");
+  const handleDownload = async (notesheetId: number, fileName: string) => {
+    try {
+      const response = await fetch(
+        `/api/track/notesheet/file/${notesheetId}/${session?.user?.id}`,
+        { method: "GET" },
+      );
+
+      if (!response.ok) throw new Error("Failed to download file");
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error("Error downloading file:", error);
     }
   };
 
-  const handleDownloadNotes = (note: string) => {
-    alert(`Downloading notes: ${note}`);
-  };
-
-  const toggleTrack = (trackName: string) => {
-    setExpandedTracks((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(trackName)) {
-        newSet.delete(trackName);
-      } else {
-        newSet.add(trackName);
-      }
-      return newSet;
-    });
-  };
-
-  if (isLoading) {
-    return <LoadingScreen />;
-  }
-
-  if (!event) {
-    return <div className="text-center mt-10">Event not found</div>;
-  }
+  if (isLoading) return <LoadingScreen />;
+  if (!event) return <div>Event not found</div>;
 
   return (
-    <div className="p-6 ml-8 mr-8">
-      <h1 className="text-4xl font-bold uppercase mb-4">{event.name}</h1>
-      <p className="text-gray-500 text-lg mb-4">
-        {new Date(event.date).toLocaleDateString()} • {event.time} •{" "}
-        {event.type === "concert" ? "Concert" : "Rehearsal"}
-      </p>
-
-      {userRole === "manager" && (
+    <RequireGroup>
+      <div className="max-w-4xl mx-auto p-6">
         <button
-          className="mb-6 px-6 py-2 bg-yellow-600 text-white rounded-lg shadow hover:bg-yellow-500 transition"
-          onClick={() => router.push(`/events/${id}/edit`)}
+          onClick={() => router.push("/events")}
+          className="flex items-center text-gray-400 hover:text-gray-300 mb-6"
         >
-          Edit Event
+          <ChevronLeft className="h-5 w-5 mr-1" />
+          Back to Events
         </button>
-      )}
 
-      {/* Список материалов */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-semibold uppercase mb-4">Tracks</h2>
-        <div className="space-y-4">
-          {event.materials.map((material, idx) => (
-            <div
-              key={idx}
-              className="p-4 bg-gray-800 border border-gray-600 rounded-lg hover:bg-gray-700 transition"
-            >
-              <div
-                className="text-lg font-medium text-white mb-2 cursor-pointer"
-                onClick={() => toggleTrack(material.name)}
-              >
-                {material.name}
-              </div>
-              {expandedTracks.has(material.name) && (
-                <div className="space-y-2">
-                  {(userRole === "manager"
-                    ? material.notes
-                    : material.notes.slice(0, 1)
-                  ).map((note, noteIdx) => (
-                    <div
-                      key={noteIdx}
-                      className="flex justify-between items-center p-2 bg-gray-700 rounded"
-                    >
-                      <span className="text-white">{note}</span>
-                      <button
-                        className="text-blue-400 hover:underline"
-                        onClick={() => handleDownloadNotes(note)}
-                      >
-                        Download
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+        <div className="text-white bg-background border border-customGray rounded-lg p-6 mb-8">
+          <h1 className="text-3xl font-bold mb-4">{event.title}</h1>
+
+          <div className="space-y-4">
+            <div className="flex items-center text-gray-300">
+              <Calendar className="h-5 w-5 mr-2" />
+              {new Date(event.date).toLocaleDateString()} at{" "}
+              {new Date(event.date).toLocaleTimeString()}
             </div>
-          ))}
+
+            <div className="flex items-center text-gray-300">
+              <MapPin className="h-5 w-5 mr-2" />
+              {event.location}
+            </div>
+
+            {event.description && (
+              <p className="text-gray-300 mt-4">{event.description}</p>
+            )}
+          </div>
+        </div>
+
+        <h2 className="text-white text-2xl font-semibold mb-4">Tracks</h2>
+        <div className="space-y-4">
+          {event.tracks.map((track) => {
+            const trackNotesheets = track.notesheets;
+
+            return (
+              <div
+                key={track.id}
+                className="bg-background border border-customGray rounded-lg overflow-hidden"
+              >
+                <button
+                  onClick={() => toggleTrack(track.id)}
+                  className="w-full p-4 flex items-center justify-between text-left hover:bg-headerHoverGray transition-colors"
+                >
+                  <div className="flex items-center">
+                    <Music className="h-5 w-5 mr-2" />
+                    <div>
+                      <h3 className="text-lg font-medium">{track.name}</h3>
+                      {track.description && (
+                        <p className="text-gray-400 text-sm">
+                          {track.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  {expandedTracks[track.id] ? (
+                    <ChevronUp className="h-5 w-5 text-gray-400" />
+                  ) : (
+                    <ChevronDown className="h-5 w-5 text-gray-400" />
+                  )}
+                </button>
+
+                {expandedTracks[track.id] && (
+                  <div className="border-t border-customGray p-4">
+                    {trackNotesheets.length > 0 ? (
+                      <div className="space-y-2">
+                        {trackNotesheets.map((notesheet) => (
+                          <div
+                            key={notesheet.id}
+                            className="flex items-center justify-between bg-background hover:bg-headerHoverGray p-2 rounded"
+                          >
+                            <span className="text-sm text-gray-300">
+                              {notesheet.filepath}
+                            </span>
+                            <button
+                              onClick={() =>
+                                handleDownload(notesheet.id, notesheet.filepath)
+                              }
+                              className="flex items-center text-blue-500 hover:text-blue-400"
+                            >
+                              <Download className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center text-gray-400 py-2">
+                        You do not have access to any notesheets for this track.
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
-
-      {userRole === "manager" && (
-        <div className="mt-6">
-          {isAddingSong ? (
-            <div className="p-4 bg-gray-800 border border-gray-600 rounded-lg">
-              <h3 className="text-lg font-semibold text-white mb-2">
-                Add New Song
-              </h3>
-              <select
-                value={selectedTrack}
-                onChange={(e) => setSelectedTrack(e.target.value)}
-                className="w-full p-2 bg-gray-700 text-white rounded mb-4"
-              >
-                <option value="">Select a track</option>
-                {availableTracks.map((track, idx) => (
-                  <option key={idx} value={track.name}>
-                    {track.name}
-                  </option>
-                ))}
-              </select>
-              <button
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500 transition"
-                onClick={handleAddTrack}
-              >
-                Add Song
-              </button>
-              <button
-                className="ml-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500 transition"
-                onClick={() => setIsAddingSong(false)}
-              >
-                Cancel
-              </button>
-            </div>
-          ) : (
-            <button
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-500 transition"
-              onClick={() => setIsAddingSong(true)}
-            >
-              Add New Song
-            </button>
-          )}
-        </div>
-      )}
-    </div>
+    </RequireGroup>
   );
 }

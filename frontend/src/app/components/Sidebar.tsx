@@ -1,7 +1,6 @@
 "use client";
 import { useSession } from "next-auth/react";
 import { LucideUsers, UserRoundPlus, UsersRound } from "lucide-react";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useGroup } from "../contexts/GroupContext";
 import { useRouter } from "next/navigation";

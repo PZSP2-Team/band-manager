@@ -15,6 +15,7 @@ export default function NavigationBar() {
   ];
 
   const managerItems = [
+
     { href: "/tracks", label: "Tracks" },
     { href: "/subgroups", label: "Subgroups" },
     { href: "/manage", label: "Manage" },
