@@ -4,6 +4,7 @@ import { LucideUsers, UserRoundPlus, UsersRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useGroup } from "../contexts/GroupContext";
 import { useRouter } from "next/navigation";
+import LoadingScreen from "./LoadingScreen";
 
 type Group = {
   id: number;
@@ -11,11 +12,19 @@ type Group = {
   role: string;
 };
 
+type RenderState =
+  | { status: "loading" }
+  | { status: "loaded" }
+  | { status: "error" };
+
 export default function Sidebar() {
-  const { setGroupId, setUserRole } = useGroup();
+  const { groupId, setGroupId, setUserRole } = useGroup();
   const router = useRouter();
+  const [renderState, setRenderState] = useState<RenderState>({
+    status: "loading",
+  });
   const [groupList, setGroupList] = useState<Group[]>([]);
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [joinToken, setJoinToken] = useState("");
@@ -31,6 +40,7 @@ export default function Sidebar() {
   };
 
   useEffect(() => {
+    if (sessionStatus === "loading") return;
     const fetchGroups = async () => {
       try {
         const response = await fetch(`/api/group/user/${session?.user?.id}`);
@@ -41,6 +51,7 @@ export default function Sidebar() {
 
         const data = await response.json();
         setGroupList(data.groups);
+        setRenderState({ status: "loaded" });
       } catch (error) {
         console.error("Error fetching groups:", error);
       }
@@ -49,7 +60,7 @@ export default function Sidebar() {
     if (session?.user?.id) {
       fetchGroups();
     }
-  }, [session?.user?.id]);
+  }, [sessionStatus, session?.user?.id]);
 
   const handleJoinGroup = async () => {
     setErrorMessage("");
@@ -129,23 +140,32 @@ export default function Sidebar() {
           My groups
         </h2>
         <div className="flex-1 overflow-y-auto mb-4">
-          {groupList?.length > 0 ? (
-            <div className="space-y-2">
-              {groupList.map((group) => (
-                <button
-                  key={group.id}
-                  onClick={() => handleGroupSelect(group.id, group.role)}
-                  className="flex w-full items-center gap-3 p-2 rounded-lg hover:bg-headerHoverGray transition-colors text-customGray"
-                >
-                  <LucideUsers className="h-5 w-5 flex-shrink-0 min-w-[20px] min-h-[20px]" />
-                  <span className="truncate">{group.name}</span>
-                </button>
-              ))}
-            </div>
+          {renderState.status === "loaded" ? (
+            groupList?.length > 0 ? (
+              <div className="space-y-2">
+                {groupList.map((group) => (
+                  <button
+                    key={group.id}
+                    onClick={() => handleGroupSelect(group.id, group.role)}
+                    className={`flex w-full items-center gap-3 p-2 rounded-lg transition-colors text-customGray
+            ${
+              groupId === group.id
+                ? "bg-sidebarButtonYellow text-white"
+                : "hover:bg-headerHoverGray"
+            }`}
+                  >
+                    <LucideUsers className="h-5 w-5 flex-shrink-0 min-w-[20px] min-h-[20px]" />
+                    <span className="truncate">{group.name}</span>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-customGray">
+                <p className="text-sm">You belong to no group.</p>
+              </div>
+            )
           ) : (
-            <div className="flex flex-col items-center justify-center h-full text-customGray">
-              <p className="text-sm">You belong to no group.</p>
-            </div>
+            <LoadingScreen />
           )}
         </div>
         <div className="space-y-4 flex-shrink-0">
@@ -176,8 +196,8 @@ export default function Sidebar() {
         </div>
       </div>
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-gray-900 text-white p-8 rounded-md shadow-lg w-[28rem] relative">
+        <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
+          <div className="bg-background text-white p-8 rounded-lg border border-customGray shadow-lg w-[28rem] relative">
             <button
               onClick={() => {
                 setShowCreateModal(false);
@@ -185,16 +205,16 @@ export default function Sidebar() {
                 setGroupName("");
                 setGroupDescription("");
               }}
-              className="absolute top-2 right-2 text-customGray hover:text-white"
+              className="absolute top-4 right-4 text-customGray hover:text-white transition-colors"
             >
               ✕
             </button>
             {!success ? (
               <>
-                <h2 className="text-2xl font-bold mb-4 text-center">
+                <h2 className="text-2xl font-bold mb-2 text-center">
                   Create New Group
                 </h2>
-                <p className="text-gray-400 mb-4 text-center">
+                <p className="text-customGray mb-6 text-center text-sm">
                   Enter group details
                 </p>
                 <form
@@ -209,34 +229,42 @@ export default function Sidebar() {
                     onChange={(e) => setGroupName(e.target.value)}
                     placeholder="Group name"
                     required
-                    className="px-3 py-2 mb-4 block w-full rounded-md bg-gray-700 border border-customGray text-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                    className="px-4 py-2 mb-4 block w-full rounded bg-background border border-customGray text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <textarea
                     value={groupDescription}
                     onChange={(e) => setGroupDescription(e.target.value)}
                     placeholder="Group description"
                     required
-                    className="px-3 py-2 mb-4 block w-full rounded-md bg-gray-700 border border-customGray text-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                    className="px-4 py-2 mb-6 block w-full rounded bg-background border border-customGray text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <button
                     type="submit"
-                    className="w-full py-2 px-4 rounded bg-cornflowerblue text-white font-bold hover:bg-blue-600 active:bg-blue-700 transition-colors duration-300"
+                    className="w-full px-6 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-500 transition"
                   >
                     Create
                   </button>
                   {errorMessage && (
-                    <p className="mt-2 text-red-500 text-center">
+                    <p className="mt-4 text-red-500 text-center text-sm">
                       {errorMessage}
                     </p>
                   )}
                 </form>
               </>
             ) : (
-              <div className="text-center">
-                <h2 className="text-2xl font-bold mb-4">
+              <div className="text-center py-4">
+                <h2 className="text-2xl font-bold mb-2">
                   Group Created Successfully!
                 </h2>
-                <span className="text-4xl">🎉</span>
+                <button
+                  onClick={() => {
+                    setShowCreateModal(false);
+                    setSuccess(false);
+                  }}
+                  className="mt-6 px-6 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-500 transition"
+                >
+                  Close
+                </button>
               </div>
             )}
           </div>
@@ -244,24 +272,24 @@ export default function Sidebar() {
       )}
 
       {showJoinModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-gray-900 text-white p-8 rounded-md shadow-lg w-[28rem] relative">
+        <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
+          <div className="bg-background text-white p-8 rounded-lg border border-customGray shadow-lg w-[28rem] relative">
             <button
               onClick={() => {
                 setShowJoinModal(false);
                 setErrorMessage("");
                 setJoinToken("");
               }}
-              className="absolute top-2 right-2 text-customGray hover:text-white"
+              className="absolute top-4 right-4 text-customGray hover:text-white transition-colors"
             >
               ✕
             </button>
             {!success ? (
               <>
-                <h2 className="text-2xl font-bold mb-4 text-center">
+                <h2 className="text-2xl font-bold mb-2 text-center">
                   Join group with code
                 </h2>
-                <p className="text-gray-400 mb-4 text-center">
+                <p className="text-customGray mb-6 text-center text-sm">
                   Paste your code
                 </p>
                 <form
@@ -276,27 +304,35 @@ export default function Sidebar() {
                     onChange={(e) => setJoinToken(e.target.value)}
                     placeholder="Enter group code"
                     required
-                    className="px-3 py-2 mb-4 block w-full rounded-md bg-gray-700 border border-customGray text-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                    className="px-4 py-2 mb-6 block w-full rounded bg-background border border-customGray text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <button
                     type="submit"
-                    className="w-full py-2 px-4 rounded bg-cornflowerblue text-white font-bold hover:bg-blue-600 active:bg-blue-700 transition-colors duration-300"
+                    className="w-full px-6 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-500 transition"
                   >
                     Join
                   </button>
                   {errorMessage && (
-                    <p className="mt-2 text-red-500 text-center">
+                    <p className="mt-4 text-red-500 text-center text-sm">
                       Try again or check your code
                     </p>
                   )}
                 </form>
               </>
             ) : (
-              <div className="text-center">
-                <h2 className="text-2xl font-bold mb-4">
+              <div className="text-center py-4">
+                <h2 className="text-2xl font-bold mb-2">
                   Successfully joined!
                 </h2>
-                <span className="text-4xl">🎉</span>
+                <button
+                  onClick={() => {
+                    setShowJoinModal(false);
+                    setSuccess(false);
+                  }}
+                  className="mt-6 px-6 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-500 transition"
+                >
+                  Close
+                </button>
               </div>
             )}
           </div>
