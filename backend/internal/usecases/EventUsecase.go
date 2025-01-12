@@ -61,15 +61,100 @@ func (u *EventUsecase) CreateEvent(title, description, location string, date tim
 	return event, nil
 }
 
-func (u *EventUsecase) validateUserPermissions(userID, groupID uint) error {
-	role, err := u.groupRepo.GetUserRole(userID, groupID)
+func (u *EventUsecase) DeleteEvent(id uint, userID uint) error {
+	event, err := u.eventRepo.GetEventByID(id)
 	if err != nil {
-		return errors.New("user not in group")
+		return errors.New("Could not find event")
+	}
+	if err := u.validateUserPermissions(userID, event.GroupID); err != nil {
+		return err
+	}
+	return u.eventRepo.DeleteEvent(id)
+}
+
+func (u *EventUsecase) GetGroupEvents(groupID uint, userID uint) ([]*model.Event, error) {
+	if !u.isUserInGroup(userID, groupID) {
+		return nil, errors.New("User not in group")
+	}
+	return u.eventRepo.GetGroupEvents(groupID)
+}
+
+func (u *EventUsecase) GetUserEvents(userID uint) ([]*model.Event, error) {
+	return u.eventRepo.GetUserEvents(userID)
+}
+
+func (u *EventUsecase) GetEventTracks(eventID uint, userID uint) ([]*model.Track, error) {
+	event, err := u.eventRepo.GetEventByID(eventID)
+	if err != nil {
+		return nil, err
+	}
+
+	if !u.isUserInGroup(userID, event.GroupID) {
+		return nil, errors.New("User not in group")
+	}
+
+	return u.eventRepo.GetEventTracks(eventID)
+}
+
+func (u *EventUsecase) GetEvent(eventID uint, userID uint) (*model.Event, error) {
+	event, err := u.eventRepo.GetEventByID(eventID)
+	if err != nil {
+		return nil, err
+	}
+
+	if !u.isUserInGroup(userID, event.GroupID) {
+		return nil, errors.New("User not in group")
+	}
+
+	return event, nil
+}
+
+func (u *EventUsecase) UpdateEvent(id uint, title, description, location string,
+	date time.Time, trackIDs []uint, userIDs []uint, userID uint) error {
+
+	event, err := u.eventRepo.GetEventByID(id)
+	if err != nil {
+		return err
+	}
+
+	if err := u.validateUserPermissions(userID, event.GroupID); err != nil {
+		return err
+	}
+
+	if err := u.updateEventBasicInfo(event, title, description, location, date); err != nil {
+		return err
+	}
+
+	if trackIDs != nil {
+		if err := u.addTracksToEvent(event, trackIDs); err != nil {
+			return err
+		}
+	}
+
+	if userIDs != nil {
+		if err := u.addUsersToEvent(event, userIDs); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+func (u *EventUsecase) validateUserPermissions(userID, groupID uint) error {
+	if !u.isUserInGroup(userID, groupID) {
+		return errors.New("User not in group")
 	}
 	if !helpers.HasManagerOrModeratorRole(role) {
 		return errors.New("insufficient permissions")
 	}
 	return nil
+}
+
+func (u *EventUsecase) isUserInGroup(userID, groupID uint) bool {
+	_, err := u.groupRepo.GetUserRole(userID, groupID)
+	if err != nil {
+		return false
+	}
+	return true
 }
 
 func (u *EventUsecase) addTracksToEvent(event *model.Event, trackIDs []uint) error {
@@ -93,9 +178,8 @@ func (u *EventUsecase) addTracksToEvent(event *model.Event, trackIDs []uint) err
 func (u *EventUsecase) addUsersToEvent(event *model.Event, userIDs []uint) error {
 	if len(userIDs) > 0 {
 		for _, assignedUserID := range userIDs {
-			_, err := u.groupRepo.GetUserRole(assignedUserID, event.GroupID)
-			if err != nil {
-				return errors.New("some users are not in the group")
+			if !u.isUserInGroup(assignedUserID, event.GroupID) {
+				return errors.New("Some users not in group")
 			}
 		}
 		return u.eventRepo.AddUsersToEvent(event.ID, userIDs)
@@ -146,51 +230,6 @@ func (u *EventUsecase) getEventRecipients(groupID uint, userIDs []uint) ([]*mode
 	return u.groupRepo.GetGroupMembers(groupID)
 }
 
-func (u *EventUsecase) GetEvent(eventID uint, userID uint) (*model.Event, error) {
-	event, err := u.eventRepo.GetEventByID(eventID)
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = u.groupRepo.GetUserRole(userID, event.GroupID)
-	if err != nil {
-		return nil, errors.New("User not in group")
-	}
-
-	return event, nil
-}
-
-func (u *EventUsecase) UpdateEvent(id uint, title, description, location string,
-	date time.Time, trackIDs []uint, userIDs []uint, userID uint) error {
-
-	event, err := u.eventRepo.GetEventByID(id)
-	if err != nil {
-		return err
-	}
-
-	if err := u.validateUserPermissions(userID, event.GroupID); err != nil {
-		return err
-	}
-
-	if err := u.updateEventBasicInfo(event, title, description, location, date); err != nil {
-		return err
-	}
-
-	if trackIDs != nil {
-		if err := u.addTracksToEvent(event, trackIDs); err != nil {
-			return err
-		}
-	}
-
-	if userIDs != nil {
-		if err := u.addUsersToEvent(event, userIDs); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 func (u *EventUsecase) updateEventBasicInfo(event *model.Event, title, description, location string, date time.Time) error {
 	event.Title = title
 	event.Description = description
@@ -198,44 +237,4 @@ func (u *EventUsecase) updateEventBasicInfo(event *model.Event, title, descripti
 	event.Date = date
 
 	return u.eventRepo.UpdateEvent(event)
-}
-
-func (u *EventUsecase) DeleteEvent(id uint, userID uint) error {
-	event, err := u.eventRepo.GetEventByID(id)
-	if err != nil {
-		return err
-	}
-
-	if err := u.validateUserPermissions(userID, event.GroupID); err != nil {
-		return err
-	}
-
-	return u.eventRepo.DeleteEvent(id)
-}
-
-func (u *EventUsecase) GetGroupEvents(groupID uint, userID uint) ([]*model.Event, error) {
-	_, err := u.groupRepo.GetUserRole(userID, groupID)
-	if err != nil {
-		return nil, errors.New("User not in group")
-	}
-
-	return u.eventRepo.GetGroupEvents(groupID)
-}
-
-func (u *EventUsecase) GetUserEvents(userID uint) ([]*model.Event, error) {
-	return u.eventRepo.GetUserEvents(userID)
-}
-
-func (u *EventUsecase) GetEventTracks(eventID uint, userID uint) ([]*model.Track, error) {
-	event, err := u.eventRepo.GetEventByID(eventID)
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = u.groupRepo.GetUserRole(userID, event.GroupID)
-	if err != nil {
-		return nil, errors.New("User not in group")
-	}
-
-	return u.eventRepo.GetEventTracks(eventID)
 }
