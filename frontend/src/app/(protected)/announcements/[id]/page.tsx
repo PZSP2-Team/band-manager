@@ -1,6 +1,5 @@
 "use client";
-import { useRouter as useNavigationRouter } from "next/navigation";
-import { useRouter as usePagesRouter } from "next/router";
+import { useRouter as useNavigationRouter, useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { RequireGroup } from "@/src/app/components/RequireGroup";
@@ -30,9 +29,9 @@ type Announcement = {
 };
 
 export default function AnnouncementDetailsPage() {
-  const pagRouter = usePagesRouter();
+  const params = useParams();
   const navRouter = useNavigationRouter();
-  const id = pagRouter.query.id;
+  const id = params.id;
   const { data: session, status: sessionStatus } = useSession();
   const [announcement, setAnnouncement] = useState<Announcement>({
     id: -1,
