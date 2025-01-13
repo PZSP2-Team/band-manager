@@ -58,7 +58,7 @@ export default function EventsPage() {
       }
     };
 
-    if (groupId && session?.user?.id) {
+    if (groupId) {
       fetchEvents();
     }
   }, [sessionStatus, groupId, session?.user?.id]);
@@ -123,7 +123,7 @@ export default function EventsPage() {
     };
   }, []);
 
-  if (sessionStatus === "loading" || renderState === RenderState.LOADING) {
+  if (renderState === RenderState.LOADING) {
     return <LoadingScreen />;
   }
 

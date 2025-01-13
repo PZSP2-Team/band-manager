@@ -11,6 +11,11 @@ import {
   AlertCircle,
 } from "lucide-react";
 
+type RenderState =
+  | { status: "loading" }
+  | { status: "loaded" }
+  | { status: "error" };
+
 type Announcement = {
   id: number;
   title: string;
@@ -30,11 +35,14 @@ export default function AnnouncementDetailsPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const [announcement, setAnnouncement] = useState<Announcement | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [renderState, setRenderState] = useState<RenderState>({
+    status: "loading",
+  });
 
   useEffect(() => {
+    if (sessionStatus === "loading") return;
     const fetchAnnouncementDetails = async () => {
       try {
         const response = await fetch(
@@ -48,15 +56,14 @@ export default function AnnouncementDetailsPage({
         setAnnouncement(announcementData);
       } catch (error) {
         console.error("Error fetching announcement details:", error);
+        setRenderState({ status: "error" });
       } finally {
-        setIsLoading(false);
+        setRenderState({ status: "loaded" });
       }
     };
 
-    if (session?.user?.id) {
-      fetchAnnouncementDetails();
-    }
-  }, [id, session?.user?.id]);
+    fetchAnnouncementDetails();
+  }, [id, sessionStatus, session?.user?.id]);
 
   const getPriorityLabel = (priority: number) => {
     switch (priority) {
@@ -84,8 +91,16 @@ export default function AnnouncementDetailsPage({
     }
   };
 
-  if (isLoading) return <LoadingScreen />;
-  if (!announcement) return <div>Announcement not found</div>;
+  if (renderState.status === "loading") return <LoadingScreen />;
+  if (renderState.status === "error") {
+    return (
+      <RequireGroup>
+        <div className="text-center mt-10">
+          Failed to data. Please try again later.
+        </div>
+      </RequireGroup>
+    );
+  }
 
   return (
     <RequireGroup>

@@ -6,6 +6,12 @@ import { ChevronDown, ChevronUp, Check } from "lucide-react";
 import { useGroup } from "@/src/app/contexts/GroupContext";
 import { RequireGroup } from "@/src/app/components/RequireGroup";
 import { RequireManager } from "@/src/app/components/RequireManager";
+import LoadingScreen from "@/src/app/components/LoadingScreen";
+
+type RenderState =
+  | { status: "loading" }
+  | { status: "loaded" }
+  | { status: "error" };
 
 type User = {
   id: number;
@@ -17,14 +23,18 @@ type User = {
 export default function CreateSubgroupPage() {
   const router = useRouter();
   const { groupId } = useGroup();
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [availableUsers, setAvailableUsers] = useState<User[]>([]);
   const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [renderState, setRenderState] = useState<RenderState>({
+    status: "loading",
+  });
 
   useEffect(() => {
+    if (sessionStatus === "loading") return;
     const fetchUsers = async () => {
       try {
         const response = await fetch(
@@ -37,15 +47,17 @@ export default function CreateSubgroupPage() {
 
         const data = await response.json();
         setAvailableUsers(data.members);
+        setRenderState({ status: "loaded" });
       } catch (error) {
         console.error("Error fetching subgroups:", error);
+        setRenderState({ status: "error" });
       }
     };
 
-    if (groupId && session?.user?.id) {
+    if (groupId) {
       fetchUsers();
     }
-  }, [groupId, session?.user?.id]);
+  }, [groupId, sessionStatus, session?.user?.id]);
 
   const handleCreateSubgroup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -101,6 +113,18 @@ export default function CreateSubgroupPage() {
         : [...prev, userId],
     );
   };
+
+  if (renderState.status === "loading") {
+    return <LoadingScreen />;
+  }
+
+  if (renderState.status === "error") {
+    return (
+      <div className="text-center mt-10">
+        Failed to load data. Please try again later.
+      </div>
+    );
+  }
 
   return (
     <RequireGroup>

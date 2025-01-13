@@ -1,11 +1,17 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useGroup } from "@/src/app/contexts/GroupContext";
 import { useRouter } from "next/navigation";
 import { ChevronDown, ChevronUp, Check } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { RequireGroup } from "@/src/app/components/RequireGroup";
 import { RequireManager } from "@/src/app/components/RequireManager";
+import LoadingScreen from "@/src/app/components/LoadingScreen";
+
+type RenderState =
+  | { status: "loading" }
+  | { status: "loaded" }
+  | { status: "error" };
 
 type Track = {
   id: number;
@@ -27,10 +33,16 @@ type EventForm = {
   user_ids: number[];
 };
 
+type Subgroup = {
+  id: number;
+  name: string;
+  users: number[];
+};
+
 export default function AddEvent() {
   const { groupId } = useGroup();
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
 
   const [eventForm, setEventForm] = useState<EventForm>({
     title: "",
@@ -43,10 +55,19 @@ export default function AddEvent() {
 
   const [tracks, setTracks] = useState<Track[]>([]);
   const [availableUsers, setAvailableUsers] = useState<User[]>([]);
+  const [subgroups, setSubgroups] = useState<Subgroup[]>([]);
   const [isTracksDropdownOpen, setIsTracksDropdownOpen] = useState(false);
+  const [isSubgroupsDropdownOpen, setIsSubgroupsDropdownOpen] = useState(false);
   const [isUsersDropdownOpen, setIsUsersDropdownOpen] = useState(false);
+  const tracksDropdownRef = useRef<HTMLDivElement>(null);
+  const usersDropdownRef = useRef<HTMLDivElement>(null);
+  const subgroupsDropdownRef = useRef<HTMLDivElement>(null);
+  const [renderState, setRenderState] = useState<RenderState>({
+    status: "loading",
+  });
 
   useEffect(() => {
+    if (sessionStatus === "loading") return;
     const fetchData = async () => {
       try {
         const tracksResponse = await fetch(
@@ -62,19 +83,36 @@ export default function AddEvent() {
           `/api/group/members/${groupId}/${session?.user?.id}`,
         );
         if (!usersResponse.ok) {
-          throw new Error("Failed to fetch availableUsers");
+          throw new Error("Failed to fetch users");
         }
         const usersData = await usersResponse.json();
         setAvailableUsers(usersData.members);
+
+        const subgroupResponse = await fetch(
+          `/api/subgroup/group/${groupId}/${session?.user?.id}`,
+        );
+        if (!subgroupResponse.ok) {
+          throw new Error("Failed to fetch subgroups");
+        }
+        const subgroupData = await subgroupResponse.json();
+        setSubgroups(subgroupData.subgroups);
+        setRenderState({ status: "loaded" });
       } catch (error) {
         console.error("Error fetching data:", error);
+        setRenderState({ status: "error" });
       }
     };
 
-    if (groupId && session?.user?.id) {
+    if (groupId) {
       fetchData();
     }
-  }, [groupId, session?.user?.id]);
+  }, [groupId, sessionStatus, session?.user?.id]);
+
+  const isSubgroupSelected = (subgroup: Subgroup) => {
+    return subgroup.users.every((userId) =>
+      eventForm.user_ids.includes(userId),
+    );
+  };
 
   const toggleTrack = (trackId: number) => {
     setEventForm((prev) => ({
@@ -92,6 +130,23 @@ export default function AddEvent() {
         ? prev.user_ids.filter((id) => id !== userId)
         : [...prev.user_ids, userId],
     }));
+  };
+
+  const toggleSubgroup = (subgroup: Subgroup) => {
+    setEventForm((prev) => {
+      const newUserIds = new Set(prev.user_ids);
+
+      if (isSubgroupSelected(subgroup)) {
+        subgroup.users.forEach((userId) => newUserIds.delete(userId));
+      } else {
+        subgroup.users.forEach((userId) => newUserIds.add(userId));
+      }
+
+      return {
+        ...prev,
+        user_ids: Array.from(newUserIds),
+      };
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -120,6 +175,49 @@ export default function AddEvent() {
       console.error("Error creating event:", error);
     }
   };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        tracksDropdownRef.current &&
+        !tracksDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsTracksDropdownOpen(false);
+      }
+
+      if (
+        usersDropdownRef.current &&
+        !usersDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsUsersDropdownOpen(false);
+      }
+
+      if (
+        subgroupsDropdownRef.current &&
+        !subgroupsDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsSubgroupsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+  if (renderState.status === "loading") {
+    return <LoadingScreen />;
+  }
+
+  if (renderState.status === "error") {
+    return (
+      <RequireGroup>
+        <div className="text-center mt-10">
+          Failed to load events. Please try again later.
+        </div>
+      </RequireGroup>
+    );
+  }
 
   return (
     <RequireGroup>
@@ -194,7 +292,7 @@ export default function AddEvent() {
               />
             </div>
 
-            <div className="relative">
+            <div className="relative" ref={tracksDropdownRef}>
               <label className="block font-medium mb-1">Select tracks</label>
               <button
                 type="button"
@@ -246,7 +344,58 @@ export default function AddEvent() {
               )}
             </div>
 
-            <div className="relative">
+            <div className="relative" ref={subgroupsDropdownRef}>
+              <label className="block font-medium mb-1">Select subgroups</label>
+              <button
+                type="button"
+                onClick={() =>
+                  setIsSubgroupsDropdownOpen(!isSubgroupsDropdownOpen)
+                }
+                className="w-full px-4 py-2 bg-background border border-customGray rounded flex justify-between items-center hover:bg-headerHoverGray"
+              >
+                <span>
+                  {subgroups.filter((sg) => isSubgroupSelected(sg)).length
+                    ? `Selected subgroups: ${subgroups.filter((sg) => isSubgroupSelected(sg)).length}`
+                    : "Select subgroups"}
+                </span>
+                {isSubgroupsDropdownOpen ? (
+                  <ChevronUp className="h-5 w-5" />
+                ) : (
+                  <ChevronDown className="h-5 w-5" />
+                )}
+              </button>
+
+              {isSubgroupsDropdownOpen && (
+                <div className="absolute z-10 w-full mt-1 bg-background border border-customGray rounded shadow-lg max-h-60 overflow-y-auto">
+                  {subgroups.length > 0 ? (
+                    subgroups.map((subgroup) => (
+                      <button
+                        type="button"
+                        key={subgroup.id}
+                        onClick={() => toggleSubgroup(subgroup)}
+                        className="w-full px-4 py-2 flex items-center justify-between hover:bg-headerHoverGray transition"
+                      >
+                        <span className="truncate">{subgroup.name}</span>
+                        <div
+                          className={`w-5 h-5 border rounded flex items-center justify-center 
+                        ${isSubgroupSelected(subgroup) ? "bg-blue-500 border-blue-500" : "border-customGray"}`}
+                        >
+                          {isSubgroupSelected(subgroup) && (
+                            <Check className="h-4 w-4 text-white" />
+                          )}
+                        </div>
+                      </button>
+                    ))
+                  ) : (
+                    <p className="p-4 text-center text-gray-500">
+                      No subgroups available in this group.
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="relative" ref={usersDropdownRef}>
               <label className="block font-medium mb-1">
                 Select participants
               </label>

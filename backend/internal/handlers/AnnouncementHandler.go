@@ -25,12 +25,12 @@ func (h *AnnouncementHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var request struct {
-		Title       string `json:"title"`
-		Description string `json:"description"`
-		Priority    uint   `json:"priority"`
-		GroupID     uint   `json:"group_id"`
-		SenderID    uint   `json:"sender_id"`
-		SubgroupIDs []uint `json:"subgroup_ids"`
+		Title        string `json:"title"`
+		Description  string `json:"description"`
+		Priority     uint   `json:"priority"`
+		GroupID      uint   `json:"group_id"`
+		SenderID     uint   `json:"sender_id"`
+		RecipientIDs []uint `json:"recipient_ids"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -38,8 +38,15 @@ func (h *AnnouncementHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	announcement, err := h.announcementUsecase.CreateAnnouncement(request.Title, request.Description,
-		request.Priority, request.GroupID, request.SenderID, request.SubgroupIDs)
+	announcement, err := h.announcementUsecase.CreateAnnouncement(
+		request.Title,
+		request.Description,
+		request.Priority,
+		request.GroupID,
+		request.SenderID,
+		request.RecipientIDs,
+	)
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

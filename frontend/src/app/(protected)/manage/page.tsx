@@ -44,7 +44,7 @@ interface GroupMembersResponse {
 
 export default function ManageGroupPage() {
   const { groupId } = useGroup();
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const [renderState, setRenderState] = useState<RenderState>({
     status: "loading",
   });
@@ -52,9 +52,8 @@ export default function ManageGroupPage() {
   const [members, setMembers] = useState<GroupMember[]>([]);
 
   useEffect(() => {
+    if (sessionStatus === "loading") return;
     const fetchData = async () => {
-      setRenderState({ status: "loading" });
-
       try {
         const infoResponse = await fetch(
           `/api/group/${groupId}/${session?.user?.id}`,
@@ -90,10 +89,10 @@ export default function ManageGroupPage() {
       }
     };
 
-    if (groupId && session?.user?.id) {
+    if (groupId) {
       fetchData();
     }
-  }, [groupId, session?.user?.id]);
+  }, [groupId, sessionStatus, session?.user?.id]);
 
   const handleRoleChange = async (
     userId: number,

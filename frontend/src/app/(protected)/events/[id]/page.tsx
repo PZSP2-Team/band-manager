@@ -2,7 +2,6 @@
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useState, useEffect, use } from "react";
-import { useGroup } from "@/src/app/contexts/GroupContext";
 import { RequireGroup } from "@/src/app/components/RequireGroup";
 import LoadingScreen from "@/src/app/components/LoadingScreen";
 import {
@@ -14,6 +13,11 @@ import {
   ChevronDown,
   Music,
 } from "lucide-react";
+
+type RenderState =
+  | { status: "loading" }
+  | { status: "loaded" }
+  | { status: "error" };
 
 type Event = {
   id: number;
@@ -44,12 +48,14 @@ export default function EventDetailsPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const [event, setEvent] = useState<Event | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [expandedTracks, setExpandedTracks] = useState<Record<number, boolean>>(
     {},
   );
+  const [renderState, setRenderState] = useState<RenderState>({
+    status: "loading",
+  });
 
   const toggleTrack = (trackId: number) => {
     setExpandedTracks((prev) => ({
@@ -59,6 +65,7 @@ export default function EventDetailsPage({
   };
 
   useEffect(() => {
+    if (sessionStatus === "loading") return;
     const fetchEventDetails = async () => {
       try {
         const eventResponse = await fetch(
@@ -66,18 +73,47 @@ export default function EventDetailsPage({
         );
         if (!eventResponse.ok) throw new Error("Failed to fetch event");
         const eventData = await eventResponse.json();
-        setEvent(eventData);
+        const updatedTracks = await Promise.all(
+          eventData.tracks.map(async (track: Track) => {
+            try {
+              const notesheetResponse = await fetch(
+                `/api/track/user/notesheets/${track.id}/${session?.user?.id}`,
+              );
+              if (!notesheetResponse.ok) {
+                console.error(
+                  "Failed to fetch notesheets for tracks:",
+                  track.id,
+                );
+                return track;
+              }
+              const notesheetData = await notesheetResponse.json();
+              return {
+                ...track,
+                notesheets: notesheetData.notesheets,
+              };
+            } catch (error) {
+              console.error(
+                "Error fetching notesheets for track",
+                track.id,
+                error,
+              );
+            }
+          }),
+        );
+        setEvent({
+          ...eventData,
+          tracks: updatedTracks,
+        });
       } catch (error) {
         console.error("Error fetching event details:", error);
+        setRenderState({ status: "error" });
       } finally {
-        setIsLoading(false);
+        setRenderState({ status: "loaded" });
       }
     };
 
-    if (session?.user?.id) {
-      fetchEventDetails();
-    }
-  }, [id, session?.user?.id]);
+    fetchEventDetails();
+  }, [id, sessionStatus, session?.user?.id]);
 
   const handleDownload = async (notesheetId: number, fileName: string) => {
     try {
@@ -102,8 +138,16 @@ export default function EventDetailsPage({
     }
   };
 
-  if (isLoading) return <LoadingScreen />;
-  if (!event) return <div>Event not found</div>;
+  if (renderState.status === "loading") return <LoadingScreen />;
+  if (renderState.status === "error") {
+    return (
+      <RequireGroup>
+        <div className="text-center mt-10">
+          Failed to load event data. Please try again later.
+        </div>
+      </RequireGroup>
+    );
+  }
 
   return (
     <RequireGroup>
