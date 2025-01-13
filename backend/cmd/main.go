@@ -94,14 +94,13 @@ func main() {
 	http.HandleFunc("/api/track/user/notesheets/", enableCORS(trackHandler.GetUserNotesheets))
 	http.HandleFunc("/api/track/group/", enableCORS(trackHandler.GetGroupTracks))
 	http.HandleFunc("/api/track/notesheets/", enableCORS(trackHandler.GetTrackNotesheets))
-	// Event endpoints
+
 	http.HandleFunc("/api/event/create", enableCORS(eventHandler.Create))
 	http.HandleFunc("/api/event/info/", enableCORS(eventHandler.GetInfo))
 	http.HandleFunc("/api/event/update/", enableCORS(eventHandler.Update))
 	http.HandleFunc("/api/event/delete/", enableCORS(eventHandler.Delete))
 	http.HandleFunc("/api/event/group/", enableCORS(eventHandler.GetGroupEvents))
 	http.HandleFunc("/api/event/user/", enableCORS(eventHandler.GetUserEvents))
-
 	http.HandleFunc("/api/announcement/create", enableCORS(announcementHandler.Create))
 	http.HandleFunc("/api/announcement/delete/", enableCORS(announcementHandler.Delete))
 	http.HandleFunc("/api/announcement/user/", enableCORS(announcementHandler.GetUserAnnouncements))

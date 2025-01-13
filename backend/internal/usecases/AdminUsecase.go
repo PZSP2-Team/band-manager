@@ -1,6 +1,9 @@
 package usecases
 
-import "band-manager-backend/internal/repositories"
+import (
+	"band-manager-backend/internal/domain"
+	"band-manager-backend/internal/repositories"
+)
 
 type AdminUsecase struct {
 	userRepo  *repositories.UserRepository
@@ -18,19 +21,19 @@ func (u *AdminUsecase) ResetUserPassword(userID uint, newPassword string) error 
 	return u.userRepo.ResetPassword(userID, newPassword)
 }
 
-func (u *AdminUsecase) GetSystemStats() (map[string]interface{}, error) {
+func (u *AdminUsecase) GetSystemStats() (domain.SystemStats, error) {
 	totalUsers, err := u.userRepo.GetTotalUsers()
 	if err != nil {
-		return nil, err
+		return domain.SystemStats{}, err
 	}
 
 	totalGroups, err := u.groupRepo.GetTotalGroups()
 	if err != nil {
-		return nil, err
+		return domain.SystemStats{}, err
 	}
 
-	return map[string]interface{}{
-		"total_users":  totalUsers,
-		"total_groups": totalGroups,
+	return domain.SystemStats{
+		TotalUsers:  totalUsers,
+		TotalGroups: totalGroups,
 	}, nil
 }

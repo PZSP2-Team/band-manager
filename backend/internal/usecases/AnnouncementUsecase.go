@@ -4,10 +4,10 @@ import (
 	"band-manager-backend/internal/model"
 	"band-manager-backend/internal/repositories"
 	"band-manager-backend/internal/services"
+	"band-manager-backend/internal/usecases/helpers"
 	"errors"
 )
 
-// usecases/announcement_usecase.go
 type AnnouncementUsecase struct {
 	announcementRepo *repositories.AnnouncementRepository
 	groupRepo        *repositories.GroupRepository
@@ -27,9 +27,9 @@ func NewAnnouncementUsecase() *AnnouncementUsecase {
 func (u *AnnouncementUsecase) CreateAnnouncement(title, description string, priority, groupID, senderID uint, recipientIDs []uint) (*model.Announcement, error) {
 	role, err := u.groupRepo.GetUserRole(senderID, groupID)
 	if err != nil {
-		return nil, errors.New("could not get user role")
+		return nil, errors.New("Could not get user role")
 	}
-	if role != "manager" && role != "moderator" {
+	if !helpers.IsManagerOrModeratorRole(role) {
 		return nil, errors.New("insufficient permissions")
 	}
 
@@ -89,7 +89,10 @@ func (u *AnnouncementUsecase) DeleteAnnouncement(announcementID, userID uint) er
 	}
 
 	role, err := u.groupRepo.GetUserRole(userID, announcement.GroupID)
-	if err != nil || (role != "manager" && role != "moderator" && announcement.SenderID != userID) {
+	if err != nil {
+		return err
+	}
+	if !helpers.IsManagerOrModeratorRole(role) && announcement.SenderID != userID {
 		return errors.New("insufficient permissions")
 	}
 
@@ -103,7 +106,7 @@ func (u *AnnouncementUsecase) GetUserAnnouncements(userID uint) ([]*model.Announ
 func (u *AnnouncementUsecase) GetGroupAnnouncements(groupID, userID uint) ([]*model.Announcement, error) {
 	_, err := u.groupRepo.GetUserRole(userID, groupID)
 	if err != nil {
-		return nil, errors.New("access denied")
+		return nil, err
 	}
 	return u.announcementRepo.GetGroupAnnouncements(groupID)
 }
