@@ -3,6 +3,7 @@ package usecases
 import (
 	"band-manager-backend/internal/model"
 	"band-manager-backend/internal/repositories"
+	"band-manager-backend/internal/services"
 	"band-manager-backend/internal/usecases/helpers"
 	"errors"
 )
@@ -10,22 +11,54 @@ import (
 type AnnouncementUsecase struct {
 	announcementRepo *repositories.AnnouncementRepository
 	groupRepo        *repositories.GroupRepository
+	emailService     *services.EmailService
+	userRepo         *repositories.UserRepository
 }
 
 func NewAnnouncementUsecase() *AnnouncementUsecase {
 	return &AnnouncementUsecase{
 		announcementRepo: repositories.NewAnnouncementRepository(),
 		groupRepo:        repositories.NewGroupRepository(),
+		emailService:     services.NewEmailService(),
+		userRepo:         repositories.NewUserRepository(),
 	}
 }
 
-func (u *AnnouncementUsecase) CreateAnnouncement(title, description string, priority, groupID, senderID uint, subgroupIDs []uint) (*model.Announcement, error) {
+func (u *AnnouncementUsecase) CreateAnnouncement(title, description string, priority, groupID, senderID uint, recipientIDs []uint) (*model.Announcement, error) {
 	role, err := u.groupRepo.GetUserRole(senderID, groupID)
 	if err != nil {
 		return nil, errors.New("Could not get user role")
 	}
 	if !helpers.IsManagerOrModeratorRole(role) {
 		return nil, errors.New("insufficient permissions")
+	}
+
+	var recipients []*model.User
+	if len(recipientIDs) == 0 {
+
+		groupUsers, err := u.groupRepo.GetGroupMembers(groupID)
+		if err != nil {
+			return nil, err
+		}
+		recipients = groupUsers
+		for _, user := range groupUsers {
+			recipientIDs = append(recipientIDs, user.ID)
+		}
+	} else {
+
+		for _, recipientID := range recipientIDs {
+
+			_, err := u.groupRepo.GetUserRole(recipientID, groupID)
+			if err != nil {
+				return nil, errors.New("one or more recipients do not belong to the group")
+			}
+
+			user, err := u.userRepo.GetUserByID(recipientID)
+			if err != nil {
+				return nil, err
+			}
+			recipients = append(recipients, user)
+		}
 	}
 
 	announcement := &model.Announcement{
@@ -40,11 +73,11 @@ func (u *AnnouncementUsecase) CreateAnnouncement(title, description string, prio
 		return nil, err
 	}
 
-	if len(subgroupIDs) > 0 {
-		if err := u.announcementRepo.AddToSubgroups(announcement.ID, subgroupIDs); err != nil {
-			return nil, err
-		}
+	if err := u.announcementRepo.AddRecipients(announcement.ID, recipientIDs); err != nil {
+		return nil, err
 	}
+
+	go u.emailService.SendAnnouncementEmail(announcement, recipients)
 
 	return announcement, nil
 }

@@ -54,20 +54,25 @@ func (r *AnnouncementRepository) GetGroupAnnouncements(groupID uint) ([]*model.A
 	return announcements, err
 }
 
+func (r *AnnouncementRepository) AddRecipients(announcementID uint, recipientIDs []uint) error {
+	var recipients []*model.User
+	for _, id := range recipientIDs {
+		recipients = append(recipients, &model.User{ID: id})
+	}
+	return r.db.Model(&model.Announcement{ID: announcementID}).
+		Association("Recipients").
+		Append(recipients)
+}
+
 func (r *AnnouncementRepository) GetUserAnnouncements(userID uint) ([]*model.Announcement, error) {
 	var announcements []*model.Announcement
 	err := r.db.Distinct().
-		Where("announcements.id IN (SELECT announcement_id FROM announcement_subgroup asg "+
-			"JOIN subgroup_user su ON asg.subgroup_id = su.subgroup_id "+
-			"WHERE su.user_id = ?)", userID).
+		Joins("JOIN announcement_recipients ar ON announcements.id = ar.announcement_id").
+		Where("ar.user_id = ?", userID).
 		Preload("Sender").
 		Preload("Group").
-		Preload("Subgroups").
+		Preload("Recipients").
 		Order("priority desc").
 		Find(&announcements).Error
-
-	if err != nil {
-		return nil, err
-	}
-	return announcements, nil
+	return announcements, err
 }

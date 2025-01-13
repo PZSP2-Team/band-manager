@@ -29,7 +29,7 @@ type User = {
 export default function SubgroupsPage() {
   const { groupId } = useGroup();
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const [availableUsers, setAvailableUsers] = useState<User[]>([]);
   const [renderState, setRenderState] = useState<RenderState>({
     status: "loading",
@@ -43,6 +43,7 @@ export default function SubgroupsPage() {
   >(null);
 
   useEffect(() => {
+    if (sessionStatus === "loading") return;
     const fetchData = async () => {
       try {
         const membersResponse = await fetch(
@@ -74,8 +75,10 @@ export default function SubgroupsPage() {
       }
     };
 
-    fetchData();
-  }, [groupId, session?.user?.id]);
+    if (groupId) {
+      fetchData();
+    }
+  }, [groupId, sessionStatus, session?.user?.id]);
 
   const handleGroupExpand = (groupId: number) => {
     if (expandedGroup !== groupId) {
