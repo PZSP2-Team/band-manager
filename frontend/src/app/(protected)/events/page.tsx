@@ -5,7 +5,6 @@ import { useState, useEffect } from "react";
 import { useGroup } from "../../contexts/GroupContext";
 import LoadingScreen from "@/src/app/components/LoadingScreen";
 import { RequireGroup } from "@/src/app/components/RequireGroup";
-import { RequireManager } from "../../components/RequireManager";
 import { Calendar, List, X } from "lucide-react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -48,7 +47,7 @@ export default function EventsPage() {
           .filter((event: Event) => event.group_id === groupId)
           .sort(
             (a: Event, b: Event) =>
-              new Date(a.date).getTime() - new Date(b.date).getTime()
+              new Date(a.date).getTime() - new Date(b.date).getTime(),
           );
 
         setEvents(filteredEvents);
