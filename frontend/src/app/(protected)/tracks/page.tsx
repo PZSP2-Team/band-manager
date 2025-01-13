@@ -30,10 +30,7 @@ export default function TracksPage() {
 
   useEffect(() => {
     if (sessionStatus === "loading") return;
-
     const fetchTracks = async () => {
-      setRenderState({ status: "loading" });
-
       try {
         const response = await fetch(
           `/api/track/group/${groupId}/${session?.user?.id}`,
@@ -52,7 +49,7 @@ export default function TracksPage() {
       }
     };
 
-    if (session?.user?.id) {
+    if (groupId) {
       fetchTracks();
     }
   }, [sessionStatus, groupId, session?.user?.id]);
@@ -78,7 +75,7 @@ export default function TracksPage() {
       console.error("Error deleting track:", error);
     }
   };
-  if (sessionStatus === "loading" || renderState.status === "loading") {
+  if (renderState.status === "loading") {
     return <LoadingScreen />;
   }
 

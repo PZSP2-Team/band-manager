@@ -13,6 +13,12 @@ import {
 import { useSession } from "next-auth/react";
 import { RequireGroup } from "@/src/app/components/RequireGroup";
 import { RequireManager } from "@/src/app/components/RequireManager";
+import LoadingScreen from "@/src/app/components/LoadingScreen";
+
+type RenderState =
+  | { status: "loading" }
+  | { status: "loaded" }
+  | { status: "error" };
 
 type Notesheet = {
   file?: File;
@@ -29,12 +35,16 @@ export default function AddTrack() {
   const { groupId } = useGroup();
   const [subgroups, setSubgroups] = useState<Subgroup[]>([]);
   const [trackTitle, setTrackTitle] = useState("");
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const [trackDescription, setTrackDescription] = useState("");
   const [notesheets, setNotesheets] = useState<Notesheet[]>([]);
   const router = useRouter();
+  const [renderState, setRenderState] = useState<RenderState>({
+    status: "loading",
+  });
 
   useEffect(() => {
+    if (sessionStatus === "loading") return;
     const fetchSubgroups = async () => {
       try {
         const response = await fetch(
@@ -47,15 +57,17 @@ export default function AddTrack() {
 
         const data = await response.json();
         setSubgroups(data.subgroups);
+        setRenderState({ status: "loaded" });
       } catch (error) {
         console.error("Error fetching subgroups:", error);
+        setRenderState({ status: "error" });
       }
     };
 
-    if (groupId && session?.user?.id) {
+    if (groupId) {
       fetchSubgroups();
     }
-  }, [groupId, session?.user?.id]);
+  }, [groupId, sessionStatus, session?.user?.id]);
 
   const handleFileSelect = (index: number, file: File) => {
     setNotesheets(
@@ -151,13 +163,11 @@ export default function AddTrack() {
         const subgroupIdsString = JSON.stringify(notesheet.subgroup_ids);
         notesheetFormData.append("subgroup_ids", subgroupIdsString);
 
-        const notesheetResponse = await fetch(
-          `http://${process.env.NEXT_PUBLIC_BACKEND_HOST}:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/track/notesheet/create/`,
-          {
-            method: "POST",
-            body: notesheetFormData,
-          },
-        );
+        const notesheetResponse = await fetch(`/api/track/notesheet/create`, {
+          method: "POST",
+          body: notesheetFormData,
+        });
+
         if (!notesheetResponse.ok) {
           const errorText = await notesheetResponse.text();
           console.error("Error response:", errorText);
@@ -169,6 +179,19 @@ export default function AddTrack() {
       console.error("Error creating track:", error);
     }
   };
+  if (renderState.status === "loading") {
+    return <LoadingScreen />;
+  }
+
+  if (renderState.status === "error") {
+    return (
+      <RequireGroup>
+        <div className="text-center mt-10">
+          Failed to load data. Please try again later.
+        </div>
+      </RequireGroup>
+    );
+  }
 
   return (
     <RequireGroup>

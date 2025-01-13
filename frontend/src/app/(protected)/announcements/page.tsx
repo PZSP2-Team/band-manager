@@ -17,6 +17,7 @@ type Announcement = {
   title: string;
   description: string;
   created_at: string;
+  group_id: number;
   priority: number;
   sender: Sender;
 };
@@ -48,7 +49,9 @@ export default function AnnouncementsPage() {
         }
         const data = await response.json();
         const filteredAnnouncements = data.announcements
-          .filter((announcement) => announcement.group_id === groupId)
+          .filter(
+            (announcement: Announcement) => announcement.group_id === groupId,
+          )
           .sort(
             (a: Announcement, b: Announcement) =>
               new Date(b.created_at).getTime() -
@@ -61,23 +64,20 @@ export default function AnnouncementsPage() {
         setRenderState({ status: "error" });
       }
     };
-    if (session?.user?.id) {
-      fetchAnnouncements();
-    }
+    fetchAnnouncements();
   }, [groupId, sessionStatus, session?.user?.id]);
 
   const removeAnnouncement = async (announcementId: number) => {
     try {
-      const response = await fetch(`/api/announcements/${announcementId}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `/api/announcement/delete/${announcementId}/${session?.user?.id}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
         },
-        body: JSON.stringify({
-          groupId: groupId,
-          userId: session?.user?.id,
-        }),
-      });
+      );
       if (!response.ok) {
         throw new Error("Failed to delete announcement");
       }
@@ -104,7 +104,7 @@ export default function AnnouncementsPage() {
     }
   };
 
-  if (sessionStatus === "loading" || renderState.status === "loading") {
+  if (renderState.status === "loading") {
     return <LoadingScreen />;
   }
 
@@ -160,7 +160,7 @@ export default function AnnouncementsPage() {
                     </p>
                   </div>
                 </div>
-                {canCreateAnnouncement && (
+                {userRole === "manager" && (
                   <button
                     onClick={() => removeAnnouncement(announcement.id)}
                     className="p-2 text-red-500 hover:bg-red-100 rounded-full transition"

@@ -269,7 +269,6 @@ func (h *SubgroupHandler) GetGroupSubgroups(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	// Struktura do odpowiedzi
 	type SubgroupResponse struct {
 		ID            uint   `json:"id"`
 		GroupID       uint   `json:"group_id"`

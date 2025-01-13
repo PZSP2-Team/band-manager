@@ -1,8 +1,7 @@
 "use client";
-import { useRouter } from "next/navigation";
+import { useRouter as useNavigationRouter, useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useState, useEffect, use } from "react";
-import { useGroup } from "@/src/app/contexts/GroupContext";
+import { useState, useEffect } from "react";
 import { RequireGroup } from "@/src/app/components/RequireGroup";
 import LoadingScreen from "@/src/app/components/LoadingScreen";
 import {
@@ -14,6 +13,11 @@ import {
   ChevronDown,
   Music,
 } from "lucide-react";
+
+type RenderState =
+  | { status: "loading" }
+  | { status: "loaded" }
+  | { status: "error" };
 
 type Event = {
   id: number;
@@ -37,19 +41,25 @@ type Notesheet = {
   filepath: string;
 };
 
-export default function EventDetailsPage({
-  params,
-}: {
-  params: { id: string };
-}) {
-  const { id } = use(params);
-  const router = useRouter();
-  const { data: session } = useSession();
-  const [event, setEvent] = useState<Event | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+export default function EventDetailsPage() {
+  const params = useParams();
+  const navRouter = useNavigationRouter();
+  const id = params.id;
+  const { data: session, status: sessionStatus } = useSession();
+  const [event, setEvent] = useState<Event>({
+    id: -1,
+    title: "",
+    description: "",
+    location: "",
+    date: "",
+    tracks: [],
+  });
   const [expandedTracks, setExpandedTracks] = useState<Record<number, boolean>>(
     {},
   );
+  const [renderState, setRenderState] = useState<RenderState>({
+    status: "loading",
+  });
 
   const toggleTrack = (trackId: number) => {
     setExpandedTracks((prev) => ({
@@ -59,6 +69,7 @@ export default function EventDetailsPage({
   };
 
   useEffect(() => {
+    if (sessionStatus === "loading") return;
     const fetchEventDetails = async () => {
       try {
         const eventResponse = await fetch(
@@ -66,18 +77,47 @@ export default function EventDetailsPage({
         );
         if (!eventResponse.ok) throw new Error("Failed to fetch event");
         const eventData = await eventResponse.json();
-        setEvent(eventData);
+        const updatedTracks = await Promise.all(
+          eventData.tracks.map(async (track: Track) => {
+            try {
+              const notesheetResponse = await fetch(
+                `/api/track/user/notesheets/${track.id}/${session?.user?.id}`,
+              );
+              if (!notesheetResponse.ok) {
+                console.error(
+                  "Failed to fetch notesheets for tracks:",
+                  track.id,
+                );
+                return track;
+              }
+              const notesheetData = await notesheetResponse.json();
+              return {
+                ...track,
+                notesheets: notesheetData.notesheets,
+              };
+            } catch (error) {
+              console.error(
+                "Error fetching notesheets for track",
+                track.id,
+                error,
+              );
+            }
+          }),
+        );
+        setEvent({
+          ...eventData,
+          tracks: updatedTracks,
+        });
       } catch (error) {
         console.error("Error fetching event details:", error);
+        setRenderState({ status: "error" });
       } finally {
-        setIsLoading(false);
+        setRenderState({ status: "loaded" });
       }
     };
 
-    if (session?.user?.id) {
-      fetchEventDetails();
-    }
-  }, [id, session?.user?.id]);
+    fetchEventDetails();
+  }, [id, sessionStatus, session?.user?.id]);
 
   const handleDownload = async (notesheetId: number, fileName: string) => {
     try {
@@ -102,14 +142,22 @@ export default function EventDetailsPage({
     }
   };
 
-  if (isLoading) return <LoadingScreen />;
-  if (!event) return <div>Event not found</div>;
+  if (renderState.status === "loading") return <LoadingScreen />;
+  if (renderState.status === "error") {
+    return (
+      <RequireGroup>
+        <div className="text-center mt-10">
+          Failed to load event data. Please try again later.
+        </div>
+      </RequireGroup>
+    );
+  }
 
   return (
     <RequireGroup>
       <div className="max-w-4xl mx-auto p-6">
         <button
-          onClick={() => router.push("/events")}
+          onClick={() => navRouter.push("/events")}
           className="flex items-center text-gray-400 hover:text-gray-300 mb-6"
         >
           <ChevronLeft className="h-5 w-5 mr-1" />

@@ -57,9 +57,7 @@ export default function Sidebar() {
       }
     };
 
-    if (session?.user?.id) {
-      fetchGroups();
-    }
+    fetchGroups();
   }, [sessionStatus, session?.user?.id]);
 
   const handleJoinGroup = async () => {

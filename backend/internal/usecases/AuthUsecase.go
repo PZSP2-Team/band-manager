@@ -36,9 +36,6 @@ func (u *AuthUsecase) Login(email, password string) (*model.User, error) {
 
 func (u *AuthUsecase) Register(firstName, lastName, email, password string) error {
 	user, err := u.userRepo.GetUserByEmail(email)
-	if err != nil {
-		return err
-	}
 	if user != nil {
 		return errors.New("email already registered")
 	}

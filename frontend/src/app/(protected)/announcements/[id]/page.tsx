@@ -1,7 +1,7 @@
 "use client";
-import { useRouter } from "next/navigation";
+import { useRouter as useNavigationRouter, useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 import { RequireGroup } from "@/src/app/components/RequireGroup";
 import LoadingScreen from "@/src/app/components/LoadingScreen";
 import {
@@ -10,6 +10,11 @@ import {
   Calendar,
   AlertCircle,
 } from "lucide-react";
+
+type RenderState =
+  | { status: "loading" }
+  | { status: "loaded" }
+  | { status: "error" };
 
 type Announcement = {
   id: number;
@@ -23,18 +28,25 @@ type Announcement = {
   priority: number;
 };
 
-export default function AnnouncementDetailsPage({
-  params,
-}: {
-  params: { id: string };
-}) {
-  const { id } = use(params);
-  const router = useRouter();
-  const { data: session } = useSession();
-  const [announcement, setAnnouncement] = useState<Announcement | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+export default function AnnouncementDetailsPage() {
+  const params = useParams();
+  const navRouter = useNavigationRouter();
+  const id = params.id;
+  const { data: session, status: sessionStatus } = useSession();
+  const [announcement, setAnnouncement] = useState<Announcement>({
+    id: -1,
+    title: "",
+    description: "",
+    created_at: "",
+    sender: { first_name: "", last_name: "" },
+    priority: -1,
+  });
+  const [renderState, setRenderState] = useState<RenderState>({
+    status: "loading",
+  });
 
   useEffect(() => {
+    if (sessionStatus === "loading") return;
     const fetchAnnouncementDetails = async () => {
       try {
         const response = await fetch(
@@ -43,20 +55,20 @@ export default function AnnouncementDetailsPage({
         if (!response.ok) throw new Error("Failed to fetch announcement");
         const data = await response.json();
         const announcementData = data.announcements.filter(
-          (announcement) => announcement.id === parseInt(id),
+          (announcement: Announcement) =>
+            announcement.id === parseInt(id as string),
         )[0];
         setAnnouncement(announcementData);
       } catch (error) {
         console.error("Error fetching announcement details:", error);
+        setRenderState({ status: "error" });
       } finally {
-        setIsLoading(false);
+        setRenderState({ status: "loaded" });
       }
     };
 
-    if (session?.user?.id) {
-      fetchAnnouncementDetails();
-    }
-  }, [id, session?.user?.id]);
+    fetchAnnouncementDetails();
+  }, [id, sessionStatus, session?.user?.id]);
 
   const getPriorityLabel = (priority: number) => {
     switch (priority) {
@@ -84,14 +96,22 @@ export default function AnnouncementDetailsPage({
     }
   };
 
-  if (isLoading) return <LoadingScreen />;
-  if (!announcement) return <div>Announcement not found</div>;
+  if (renderState.status === "loading") return <LoadingScreen />;
+  if (renderState.status === "error") {
+    return (
+      <RequireGroup>
+        <div className="text-center mt-10">
+          Failed to data. Please try again later.
+        </div>
+      </RequireGroup>
+    );
+  }
 
   return (
     <RequireGroup>
       <div className="max-w-4xl mx-auto p-6">
         <button
-          onClick={() => router.push("/announcements")}
+          onClick={() => navRouter.push("/announcements")}
           className="flex items-center text-gray-400 hover:text-gray-300 mb-6"
         >
           <ChevronLeft className="h-5 w-5 mr-1" />
