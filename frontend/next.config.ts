@@ -2,8 +2,19 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   ...(process.env.NODE_ENV === "production" ? { output: "standalone" } : {}),
+  trailingSlash: false,
   async rewrites() {
     return [
+      {
+        source: "/api/track/notesheet/create",
+        destination: "/api/track/notesheet/create",
+        has: [
+          {
+            type: "header",
+            key: "user-id",
+          },
+        ],
+      },
       {
         source: "/api/auth/:auth*",
         destination: "/api/auth/:auth*",
