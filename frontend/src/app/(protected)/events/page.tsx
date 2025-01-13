@@ -16,6 +16,7 @@ type Event = {
   id: number;
   title: string;
   location: string;
+  group_id: number;
   description: string;
   date: string;
 };
@@ -40,7 +41,7 @@ export default function EventsPage() {
         }
         const data = await response.json();
         const filteredEvents = data.events
-          .filter((event) => event.group_id === groupId)
+          .filter((event: Event) => event.group_id === groupId)
           .sort(
             (a: Event, b: Event) =>
               new Date(b.date).getTime() - new Date(a.date).getTime(),

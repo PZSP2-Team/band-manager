@@ -17,6 +17,7 @@ type Announcement = {
   title: string;
   description: string;
   created_at: string;
+  group_id: number;
   priority: number;
   sender: Sender;
 };
@@ -48,7 +49,9 @@ export default function AnnouncementsPage() {
         }
         const data = await response.json();
         const filteredAnnouncements = data.announcements
-          .filter((announcement) => announcement.group_id === groupId)
+          .filter(
+            (announcement: Announcement) => announcement.group_id === groupId,
+          )
           .sort(
             (a: Announcement, b: Announcement) =>
               new Date(b.created_at).getTime() -
