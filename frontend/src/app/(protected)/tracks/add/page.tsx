@@ -163,13 +163,11 @@ export default function AddTrack() {
         const subgroupIdsString = JSON.stringify(notesheet.subgroup_ids);
         notesheetFormData.append("subgroup_ids", subgroupIdsString);
 
-        const notesheetResponse = await fetch(
-          `http://${process.env.NEXT_PUBLIC_BACKEND_HOST}:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/track/notesheet/create/`,
-          {
-            method: "POST",
-            body: notesheetFormData,
-          },
-        );
+        const notesheetResponse = await fetch(`/api/track/notesheet/create`, {
+          method: "POST",
+          body: notesheetFormData,
+        });
+
         if (!notesheetResponse.ok) {
           const errorText = await notesheetResponse.text();
           console.error("Error response:", errorText);
