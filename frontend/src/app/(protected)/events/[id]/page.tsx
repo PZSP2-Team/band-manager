@@ -1,7 +1,8 @@
 "use client";
-import { useRouter } from "next/navigation";
+import { useRouter as useNavigationRouter } from "next/navigation";
+import { useRouter as usePagesRouter } from "next/router";
 import { useSession } from "next-auth/react";
-import { useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 import { RequireGroup } from "@/src/app/components/RequireGroup";
 import LoadingScreen from "@/src/app/components/LoadingScreen";
 import {
@@ -41,15 +42,19 @@ type Notesheet = {
   filepath: string;
 };
 
-export default function EventDetailsPage({
-  params,
-}: {
-  params: { id: string };
-}) {
-  const { id } = use(params);
-  const router = useRouter();
+export default function EventDetailsPage() {
+  const pagRouter = usePagesRouter();
+  const navRouter = useNavigationRouter();
+  const id = pagRouter.query.id;
   const { data: session, status: sessionStatus } = useSession();
-  const [event, setEvent] = useState<Event | null>(null);
+  const [event, setEvent] = useState<Event>({
+    id: -1,
+    title: "",
+    description: "",
+    location: "",
+    date: "",
+    tracks: [],
+  });
   const [expandedTracks, setExpandedTracks] = useState<Record<number, boolean>>(
     {},
   );
@@ -153,7 +158,7 @@ export default function EventDetailsPage({
     <RequireGroup>
       <div className="max-w-4xl mx-auto p-6">
         <button
-          onClick={() => router.push("/events")}
+          onClick={() => navRouter.push("/events")}
           className="flex items-center text-gray-400 hover:text-gray-300 mb-6"
         >
           <ChevronLeft className="h-5 w-5 mr-1" />

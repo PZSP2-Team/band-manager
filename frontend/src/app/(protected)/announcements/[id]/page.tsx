@@ -1,7 +1,8 @@
 "use client";
-import { useRouter } from "next/navigation";
+import { useRouter as useNavigationRouter } from "next/navigation";
+import { useRouter as usePagesRouter } from "next/router";
 import { useSession } from "next-auth/react";
-import { useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 import { RequireGroup } from "@/src/app/components/RequireGroup";
 import LoadingScreen from "@/src/app/components/LoadingScreen";
 import {
@@ -28,15 +29,19 @@ type Announcement = {
   priority: number;
 };
 
-export default function AnnouncementDetailsPage({
-  params,
-}: {
-  params: { id: string };
-}) {
-  const { id } = use(params);
-  const router = useRouter();
+export default function AnnouncementDetailsPage() {
+  const pagRouter = usePagesRouter();
+  const navRouter = useNavigationRouter();
+  const id = pagRouter.query.id;
   const { data: session, status: sessionStatus } = useSession();
-  const [announcement, setAnnouncement] = useState<Announcement | null>(null);
+  const [announcement, setAnnouncement] = useState<Announcement>({
+    id: -1,
+    title: "",
+    description: "",
+    created_at: "",
+    sender: { first_name: "", last_name: "" },
+    priority: -1,
+  });
   const [renderState, setRenderState] = useState<RenderState>({
     status: "loading",
   });
@@ -51,7 +56,8 @@ export default function AnnouncementDetailsPage({
         if (!response.ok) throw new Error("Failed to fetch announcement");
         const data = await response.json();
         const announcementData = data.announcements.filter(
-          (announcement) => announcement.id === parseInt(id),
+          (announcement: Announcement) =>
+            announcement.id === parseInt(id as string),
         )[0];
         setAnnouncement(announcementData);
       } catch (error) {
@@ -106,7 +112,7 @@ export default function AnnouncementDetailsPage({
     <RequireGroup>
       <div className="max-w-4xl mx-auto p-6">
         <button
-          onClick={() => router.push("/announcements")}
+          onClick={() => navRouter.push("/announcements")}
           className="flex items-center text-gray-400 hover:text-gray-300 mb-6"
         >
           <ChevronLeft className="h-5 w-5 mr-1" />
