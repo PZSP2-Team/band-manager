@@ -95,10 +95,10 @@ The application uses two Docker volumes:
 
 ## Authors
 
-- Mikołaj Rożek ([@mikorozek]https://github.com/mikorozek) - Full Stack Developer
-- Marcin Lisowski ([@mnlisows]https://github.com/mnlisows) - Backend Developer
-- Maksymilian Bilski ([@maksbilski]https://github.com/maksbilski) - Backend Developer
-- Sofiya Nasiakalia ([@nasekajlo]https://github.com/nasekajlo) - Frontend Developer
+- Mikołaj Rożek [@mikorozek](https://github.com/mikorozek) - Full Stack Developer
+- Marcin Lisowski [@mnlisows](https://github.com/mnlisows) - Backend Developer
+- Maksymilian Bilski [@maksbilski](https://github.com/maksbilski) - Backend Developer
+- Sofiya Nasiakalia [@nasekajlo](https://github.com/nasekajlo) - Frontend Developer
 
 ## License
 
