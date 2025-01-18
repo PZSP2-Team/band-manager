@@ -11,11 +11,17 @@ import {
   AlertCircle,
 } from "lucide-react";
 
+/**
+ * Represents the component's render state
+ */
 type RenderState =
   | { status: "loading" }
   | { status: "loaded" }
   | { status: "error" };
 
+/**
+ * Represents the announcement data structure
+ */
 type Announcement = {
   id: number;
   title: string;
@@ -28,6 +34,10 @@ type Announcement = {
   priority: number;
 };
 
+/**
+ * Announcement details page that displays full information about a single announcement.
+ * Requires authenticated user (uses next-auth session).
+ */
 export default function AnnouncementDetailsPage() {
   const params = useParams();
   const navRouter = useNavigationRouter();
@@ -45,6 +55,16 @@ export default function AnnouncementDetailsPage() {
     status: "loading",
   });
 
+  /**
+   * Fetches announcement details when component mounts or dependencies change
+   * Skips fetching if session is still loading
+   * Updates announcement state with fetched data and handles loading/error states
+   *
+   * @sideEffects
+   * - Sets announcement state with fetched data
+   * - Updates renderState to "error" on fetch failure
+   * - Updates renderState to "loaded" when complete
+   */
   useEffect(() => {
     if (sessionStatus === "loading") return;
     const fetchAnnouncementDetails = async () => {
@@ -70,6 +90,9 @@ export default function AnnouncementDetailsPage() {
     fetchAnnouncementDetails();
   }, [id, sessionStatus, session?.user?.id]);
 
+  /**
+   * Converts numeric priority to user-friendly text label
+   */
   const getPriorityLabel = (priority: number) => {
     switch (priority) {
       case 0:
@@ -83,6 +106,9 @@ export default function AnnouncementDetailsPage() {
     }
   };
 
+  /**
+   * Returns CSS color class corresponding to the priority level
+   */
   const getPriorityColor = (priority: number) => {
     switch (priority) {
       case 0:

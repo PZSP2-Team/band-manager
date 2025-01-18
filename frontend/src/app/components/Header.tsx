@@ -4,11 +4,27 @@ import Image from "next/image";
 import { LogOut } from "lucide-react";
 import { signOut, SignOutParams } from "next-auth/react";
 
+/**
+ * Custom sign out function that clears local storage before signing out.
+ * Extends NextAuth's signOut functionality.
+ *
+ * Side effects:
+ * - Clears all items from localStorage
+ * - Triggers NextAuth sign out process
+ */
 const customSignOut = async (options?: SignOutParams) => {
   localStorage.clear();
   await signOut(options);
 };
 
+/**
+ * Header component for the application.
+ * Displays logo, app name and logout button.
+ *
+ * Features:
+ * - Brand identity (logo and name)
+ * - Logout functionality with localStorage cleanup
+ */
 export default function Header() {
   return (
     <header className="bg-headerGray p-4 shadow-xl">

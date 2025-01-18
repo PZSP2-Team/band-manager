@@ -7,11 +7,17 @@ import LoadingScreen from "@/src/app/components/LoadingScreen";
 import { RequireGroup } from "@/src/app/components/RequireGroup";
 import { Megaphone, X } from "lucide-react";
 
+/**
+ * Represents the component's render state
+ */
 type RenderState =
   | { status: "loading" }
   | { status: "loaded" }
   | { status: "error" };
 
+/**
+ * Represents an announcement data structure
+ */
 type Announcement = {
   id: number;
   title: string;
@@ -22,11 +28,19 @@ type Announcement = {
   sender: Sender;
 };
 
+/**
+ * Represents the sender of an announcement
+ */
 type Sender = {
   first_name: string;
   last_name: string;
 };
 
+/**
+ * Page component displaying list of announcements for a group.
+ * Allows managers to delete announcements and moderators/managers to create new ones.
+ * Requires group membership to access.
+ */
 export default function AnnouncementsPage() {
   const { groupId, userRole } = useGroup();
   const router = useRouter();
@@ -36,6 +50,15 @@ export default function AnnouncementsPage() {
   });
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
 
+  /**
+   * Fetches and filters announcements for the current group.
+   * Dependencies: groupId, sessionStatus, session?.user?.id
+   *
+   * Side effects:
+   * - Updates announcements state with fetched and filtered data
+   * - Updates renderState based on fetch result
+   * - Sorts announcements by creation date (newest first)
+   */
   useEffect(() => {
     if (sessionStatus === "loading") return;
     const fetchAnnouncements = async () => {
@@ -67,6 +90,12 @@ export default function AnnouncementsPage() {
     fetchAnnouncements();
   }, [groupId, sessionStatus, session?.user?.id]);
 
+  /**
+   * Deletes an announcement and updates the UI.
+   * Only available to managers.
+   *
+   * Side effect: Removes announcement from the announcements state
+   */
   const removeAnnouncement = async (announcementId: number) => {
     try {
       const response = await fetch(
@@ -91,6 +120,10 @@ export default function AnnouncementsPage() {
     }
   };
 
+  /**
+   * Returns CSS class for priority-based text color
+   * Green for low (0), Yellow for medium (1), Red for high (2)
+   */
   const getPriorityColor = (priority: number) => {
     switch (priority) {
       case 0:

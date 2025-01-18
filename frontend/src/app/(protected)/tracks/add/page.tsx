@@ -15,22 +15,36 @@ import { RequireGroup } from "@/src/app/components/RequireGroup";
 import { RequireManager } from "@/src/app/components/RequireManager";
 import LoadingScreen from "@/src/app/components/LoadingScreen";
 
+/**
+ * Represents the component's render state
+ */
 type RenderState =
   | { status: "loading" }
   | { status: "loaded" }
   | { status: "error" };
 
+/**
+ * Represents a notesheet with its file and associated subgroups
+ */
 type Notesheet = {
   file?: File;
   subgroup_ids: number[];
   isDropdownOpen?: boolean;
 };
 
+/**
+ * Represents a subgroup that can be assigned to notesheets
+ */
 type Subgroup = {
   id: number;
   name: string;
 };
 
+/**
+ * Page component for adding new tracks with notesheets.
+ * Allows managers to create tracks and assign notesheets to subgroups.
+ * Requires manager role and group membership to access.
+ */
 export default function AddTrack() {
   const { groupId } = useGroup();
   const [subgroups, setSubgroups] = useState<Subgroup[]>([]);
@@ -43,6 +57,14 @@ export default function AddTrack() {
     status: "loading",
   });
 
+  /**
+   * Fetches available subgroups for the current group
+   * Dependencies: groupId, sessionStatus, session?.user?.id
+   *
+   * Side effects:
+   * - Updates subgroups state with fetched data
+   * - Updates renderState based on fetch result
+   */
   useEffect(() => {
     if (sessionStatus === "loading") return;
     const fetchSubgroups = async () => {
@@ -69,6 +91,10 @@ export default function AddTrack() {
     }
   }, [groupId, sessionStatus, session?.user?.id]);
 
+  /**
+   * Updates file for specific notesheet
+   * Side effect: Updates notesheets state with new file
+   */
   const handleFileSelect = (index: number, file: File) => {
     setNotesheets(
       notesheets.map((sheet, i) => {
@@ -83,6 +109,10 @@ export default function AddTrack() {
     );
   };
 
+  /**
+   * Adds new empty notesheet to the list
+   * Side effect: Adds new notesheet to notesheets state
+   */
   const addNotesheet = () => {
     setNotesheets([
       ...notesheets,
@@ -93,6 +123,10 @@ export default function AddTrack() {
     ]);
   };
 
+  /**
+   * Toggles dropdown state for specific notesheet
+   * Side effect: Updates isDropdownOpen state for notesheet
+   */
   const toggleDropdown = (index: number) => {
     setNotesheets(
       notesheets.map((sheet, i) =>
@@ -103,6 +137,10 @@ export default function AddTrack() {
     );
   };
 
+  /**
+   * Toggles subgroup selection for specific notesheet
+   * Side effect: Updates subgroup_ids for notesheet
+   */
   const toggleSubgroup = (notesheetIndex: number, subgroupId: number) => {
     setNotesheets(
       notesheets.map((sheet, i) => {
@@ -120,10 +158,24 @@ export default function AddTrack() {
     );
   };
 
+  /**
+   * Removes notesheet from the list
+   * Side effect: Removes notesheet from notesheets state
+   */
   const removeNotesheet = (index: number) => {
     setNotesheets(notesheets.filter((_, i) => i !== index));
   };
 
+  /**
+   * Handles form submission to create track and upload notesheets
+   * Creates track first, then uploads notesheets with subgroup assignments
+   *
+   * Side effects:
+   * - Creates new track via API
+   * - Uploads notesheet files
+   * - Assigns notesheets to subgroups
+   * - Redirects to tracks page on success
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {

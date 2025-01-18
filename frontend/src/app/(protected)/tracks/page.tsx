@@ -8,17 +8,28 @@ import { RequireGroup } from "@/src/app/components/RequireGroup";
 import { RequireManager } from "../../components/RequireManager";
 import { Music4, X } from "lucide-react";
 
+/**
+ * Represents the component's render state
+ */
 type RenderState =
   | { status: "loading" }
   | { status: "loaded" }
   | { status: "error" };
 
+/**
+ * Represents a musical track in the system
+ */
 type Track = {
   id: number;
   name: string;
   description: string;
 };
 
+/**
+ * Page component for managing tracks.
+ * Displays list of available tracks and allows managers to add/remove them.
+ * Requires manager role and group membership to access.
+ */
 export default function TracksPage() {
   const { groupId } = useGroup();
   const router = useRouter();
@@ -28,6 +39,14 @@ export default function TracksPage() {
   });
   const [tracks, setTracks] = useState<Track[]>([]);
 
+  /**
+   * Fetches tracks for the current group
+   * Dependencies: sessionStatus, groupId, session?.user?.id
+   *
+   * Side effects:
+   * - Updates tracks state with fetched data
+   * - Updates renderState based on fetch result
+   */
   useEffect(() => {
     if (sessionStatus === "loading") return;
     const fetchTracks = async () => {
@@ -54,6 +73,10 @@ export default function TracksPage() {
     }
   }, [sessionStatus, groupId, session?.user?.id]);
 
+  /**
+   * Removes a track from the system
+   * Side effect: Updates tracks state by removing specified track
+   */
   const removeTrack = async (trackId: number) => {
     try {
       const response = await fetch(
