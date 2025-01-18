@@ -8,7 +8,6 @@ Band Manager is a web application for music band management, built with Next.js 
 - **Backend**: Go
 - **Database**: PostgreSQL 16
 - **Containerization**: Docker
-- **SMTP**: Email notifications via Gmail
 
 ## Requirements
 
@@ -75,8 +74,8 @@ Backend is only available through frontend, because next.js uses proxy pass to b
 
 ```
 band-manager/
-├── frontend/           # Next.js application
-├── backend/           # Go server
+├── [frontend/](frontend)           # Next.js application
+├── [backend/](backend)           # Go server
 ├── docker-compose.yml # Docker Compose configuration
 └── .env              # Environment variables
 ```
@@ -96,10 +95,10 @@ The application uses two Docker volumes:
 
 ## Authors
 
-- Mikołaj Rożek (@mikorozek) - Full Stack Developer
-- Marcin Lisowski (@mnlisows) - Backend Developer
-- Maksymilian Bilski (@maksbilski) - Backend Developer
-- Sofiya Nasiakalia (@nasekajlo) - Frontend Developer
+- Mikołaj Rożek ([@mikorozek]https://github.com/mikorozek) - Full Stack Developer
+- Marcin Lisowski ([@mnlisows]https://github.com/mnlisows) - Backend Developer
+- Maksymilian Bilski ([@maksbilski]https://github.com/maksbilski) - Backend Developer
+- Sofiya Nasiakalia ([@nasekajlo]https://github.com/nasekajlo) - Frontend Developer
 
 ## License
 
