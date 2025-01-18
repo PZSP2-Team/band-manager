@@ -74,8 +74,8 @@ Backend is only available through frontend, because next.js uses proxy pass to b
 
 ```
 band-manager/
-├── [frontend/](https://github.com/PZSP2-Team/band-manager/tree/main/frontend)           # Next.js application
-├── [backend/](https://github.com/PZSP2-Team/band-manager/tree/main/backend)           # Go server
+├── [frontend/](frontend)           # Next.js application
+├── [backend/](backend)           # Go server
 ├── docker-compose.yml # Docker Compose configuration
 └── .env              # Environment variables
 ```
