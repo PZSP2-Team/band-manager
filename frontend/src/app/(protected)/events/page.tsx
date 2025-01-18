@@ -9,12 +9,18 @@ import { Calendar, List, X } from "lucide-react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 
+/**
+ * Represents the component's render state
+ */
 const RenderState = {
   LOADING: "loading",
   LOADED: "loaded",
   ERROR: "error",
 };
 
+/**
+ * Represents a musical event
+ */
 type Event = {
   id: string;
   title: string;
@@ -24,6 +30,11 @@ type Event = {
   date: string;
 };
 
+/**
+ * Page component displaying events in either list or calendar view.
+ * Allows managers to create and delete events.
+ * Requires group membership to access.
+ */
 export default function EventsPage() {
   const { groupId, userRole } = useGroup();
   const router = useRouter();
@@ -32,6 +43,15 @@ export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [viewMode, setViewMode] = useState("list");
 
+  /**
+   * Fetches and filters events for the current group
+   * Dependencies: sessionStatus, groupId, session?.user?.id
+   *
+   * Side effects:
+   * - Updates events state with fetched and filtered data
+   * - Updates renderState based on fetch result
+   * - Sorts events by date
+   */
   useEffect(() => {
     if (sessionStatus === "loading") return;
 
@@ -63,6 +83,10 @@ export default function EventsPage() {
     }
   }, [sessionStatus, groupId, session?.user?.id]);
 
+  /**
+   * Deletes an event and updates the UI
+   * Side effect: Removes event from events state
+   */
   const removeEvent = async (eventId: string) => {
     try {
       const response = await fetch(`/api/events/${eventId}`, {
@@ -84,10 +108,21 @@ export default function EventsPage() {
     }
   };
 
+  /**
+   * Handles calendar event click by navigating to event details
+   */
   const handleEventClick = (info: { event: { id: string } }) => {
     router.push(`/events/${info.event.id}`);
   };
 
+  /**
+   * Applies custom styles to FullCalendar component
+   * Dependencies: none
+   *
+   * Side effects:
+   * - Injects custom CSS into document head
+   * - Removes CSS on component unmount
+   */
   useEffect(() => {
     const style = document.createElement("style");
     style.innerHTML = `

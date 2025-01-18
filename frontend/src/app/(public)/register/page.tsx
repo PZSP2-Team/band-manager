@@ -1,10 +1,13 @@
 "use client";
-
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+/**
+ * Registration page component for new user sign up.
+ * Collects user information and handles account creation through API.
+ */
 export default function Register() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -14,6 +17,13 @@ export default function Register() {
   const [errorMessage, setErrorMessage] = useState("");
   const router = useRouter();
 
+  /**
+   * Handles form submission for user registration
+   * Side effects:
+   * - Sends registration data to API
+   * - Updates success/error message states based on response
+   * - Redirects to login page after successful registration
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage("");

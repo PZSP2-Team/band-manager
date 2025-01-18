@@ -1,5 +1,15 @@
 "use client";
 
+/**
+ * Loading spinner component displayed during data fetching or processing.
+ * Renders a centered, animated spinner with "Loading..." text.
+ *
+ * Features:
+ * - Fullscreen centered layout
+ * - Animated circular spinner
+ * - Loading text indicator
+ * - Custom color scheme matching app theme
+ */
 export default function LoadingScreen() {
   return (
     <div className="h-full flex items-center justify-center">

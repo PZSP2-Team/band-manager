@@ -1,16 +1,28 @@
 "use client";
-
 import { useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 
+/**
+ * Login page component providing user authentication.
+ * Features email/password sign in with error handling
+ * and navigation to registration for new users.
+ */
 export default function Login() {
   const [errorMessage, setErrorMessage] = useState("");
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
 
+  /**
+   * Handles form submission for user authentication
+   * Side effects:
+   * - Attempts login via NextAuth credentials provider
+   * - Updates error message state on failure
+   * - Redirects to dashboard on success
+   * - Refreshes router to update navigation state
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage("");

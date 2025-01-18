@@ -5,11 +5,17 @@ import LoadingScreen from "@/src/app/components/LoadingScreen";
 import { useSession } from "next-auth/react";
 import { User } from "lucide-react";
 
+/**
+ * Represents the component's render state
+ */
 type RenderState =
   | { status: "loading" }
   | { status: "loaded" }
   | { status: "error" };
 
+/**
+ * Represents a member of the group with their basic information and role
+ */
 type GroupMember = {
   id: number;
   firstName: string;
@@ -18,18 +24,27 @@ type GroupMember = {
   role: "manager" | "moderator" | "member";
 };
 
+/**
+ * Basic information about a group
+ */
 type GroupInfo = {
   name: string;
   description: string;
   access_token: string;
 };
 
+/**
+ * API response structure for group information
+ */
 interface GroupInfoResponse {
   name: string;
   description: string;
   access_token: string;
 }
 
+/**
+ * API response structure for individual group member data
+ */
 interface GroupMemberResponse {
   id: number;
   first_name: string;
@@ -38,10 +53,18 @@ interface GroupMemberResponse {
   role: "manager" | "moderator" | "member";
 }
 
+/**
+ * API response structure containing array of group members
+ */
 interface GroupMembersResponse {
   members: GroupMemberResponse[];
 }
 
+/**
+ * Page component for managing group members and their roles
+ * Provides interface for viewing group information, managing member roles,
+ * and removing members from the group
+ */
 export default function ManageGroupPage() {
   const { groupId } = useGroup();
   const { data: session, status: sessionStatus } = useSession();
@@ -51,6 +74,15 @@ export default function ManageGroupPage() {
   const [groupInfo, setGroupInfo] = useState<GroupInfo | null>(null);
   const [members, setMembers] = useState<GroupMember[]>([]);
 
+  /**
+   * Fetches group information and member data simultaneously
+   * Dependencies: groupId, sessionStatus, session?.user?.id
+   *
+   * Side effects:
+   * - Sets groupInfo state with group details (name, description, access token)
+   * - Sets members state with mapped member data from API response
+   * - Updates renderState to "loaded" on success or "error" on failure
+   */
   useEffect(() => {
     if (sessionStatus === "loading") return;
     const fetchData = async () => {
@@ -94,6 +126,10 @@ export default function ManageGroupPage() {
     }
   }, [groupId, sessionStatus, session?.user?.id]);
 
+  /**
+   * Updates a member's role in the group
+   * Side effect: Updates members state with new role
+   */
   const handleRoleChange = async (
     userId: number,
     newRole: GroupMember["role"],
@@ -125,6 +161,10 @@ export default function ManageGroupPage() {
     }
   };
 
+  /**
+   * Removes a member from the group
+   * Side effect: Removes member from members state
+   */
   const handleRemoveMember = async (userId: number) => {
     try {
       const response = await fetch(
@@ -144,6 +184,10 @@ export default function ManageGroupPage() {
     }
   };
 
+  /**
+   * Copies group access token to clipboard
+   * Side effect: Triggers system clipboard and shows alert
+   */
   const handleCopyToken = () => {
     if (groupInfo?.access_token) {
       navigator.clipboard.writeText(groupInfo.access_token);

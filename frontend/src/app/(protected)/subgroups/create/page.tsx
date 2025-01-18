@@ -8,11 +8,17 @@ import { RequireGroup } from "@/src/app/components/RequireGroup";
 import { RequireManager } from "@/src/app/components/RequireManager";
 import LoadingScreen from "@/src/app/components/LoadingScreen";
 
+/**
+ * Represents the component's render state
+ */
 type RenderState =
   | { status: "loading" }
   | { status: "loaded" }
   | { status: "error" };
 
+/**
+ * Represents a user that can be added to a subgroup
+ */
 type User = {
   id: number;
   first_name: string;
@@ -20,6 +26,11 @@ type User = {
   email: string;
 };
 
+/**
+ * Page component for creating new subgroups.
+ * Allows managers to create subgroups and assign members.
+ * Requires manager role and group membership to access.
+ */
 export default function CreateSubgroupPage() {
   const router = useRouter();
   const { groupId } = useGroup();
@@ -33,6 +44,14 @@ export default function CreateSubgroupPage() {
     status: "loading",
   });
 
+  /**
+   * Fetches available group members that can be added to subgroup
+   * Dependencies: groupId, sessionStatus, session?.user?.id
+   *
+   * Side effects:
+   * - Updates availableUsers state with fetched members
+   * - Updates renderState based on fetch result
+   */
   useEffect(() => {
     if (sessionStatus === "loading") return;
     const fetchUsers = async () => {
@@ -59,6 +78,16 @@ export default function CreateSubgroupPage() {
     }
   }, [groupId, sessionStatus, session?.user?.id]);
 
+  /**
+   * Handles subgroup creation form submission
+   * Creates subgroup and adds selected members in two API calls
+   *
+   * Side effects:
+   * - Creates new subgroup via API
+   * - Adds selected members to created subgroup
+   * - Redirects to subgroups page on success
+   * - Shows alert on error
+   */
   const handleCreateSubgroup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -106,6 +135,10 @@ export default function CreateSubgroupPage() {
     }
   };
 
+  /**
+   * Toggles selection state of a user for the subgroup
+   * Side effect: Updates selectedUsers state
+   */
   const toggleUserSelection = (userId: number) => {
     setSelectedUsers((prev) =>
       prev.includes(userId)

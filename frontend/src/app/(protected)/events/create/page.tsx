@@ -8,22 +8,34 @@ import { RequireGroup } from "@/src/app/components/RequireGroup";
 import { RequireManager } from "@/src/app/components/RequireManager";
 import LoadingScreen from "@/src/app/components/LoadingScreen";
 
+/**
+ * Represents the component's render state
+ */
 type RenderState =
   | { status: "loading" }
   | { status: "loaded" }
   | { status: "error" };
 
+/**
+ * Represents a track that can be assigned to an event
+ */
 type Track = {
   id: number;
   name: string;
 };
 
+/**
+ * Represents a user who can be assigned to an event
+ */
 type User = {
   id: number;
   first_name: string;
   last_name: string;
 };
 
+/**
+ * Form data structure for creating a new event
+ */
 type EventForm = {
   title: string;
   description: string;
@@ -33,13 +45,21 @@ type EventForm = {
   user_ids: number[];
 };
 
+/**
+ * Represents a group of users that can be collectively assigned to an event
+ */
 type Subgroup = {
   id: number;
   name: string;
   users: number[];
 };
 
-export default function AddEvent() {
+/**
+ * Page component for creating new events.
+ * Allows managers to create events with tracks and participants.
+ * Requires manager role and group membership to access.
+ */
+export default function CreateEvent() {
   const { groupId } = useGroup();
   const router = useRouter();
   const { data: session, status: sessionStatus } = useSession();
@@ -66,6 +86,14 @@ export default function AddEvent() {
     status: "loading",
   });
 
+  /**
+   * Fetches tracks, users, and subgroups data when component mounts
+   * Dependencies: groupId, sessionStatus, session?.user?.id
+   *
+   * Side effects:
+   * - Updates tracks, availableUsers, and subgroups states
+   * - Updates renderState based on fetch results
+   */
   useEffect(() => {
     if (sessionStatus === "loading") return;
     const fetchData = async () => {
@@ -108,12 +136,19 @@ export default function AddEvent() {
     }
   }, [groupId, sessionStatus, session?.user?.id]);
 
+  /**
+   * Checks if all users in a subgroup are selected for the event
+   */
   const isSubgroupSelected = (subgroup: Subgroup) => {
     return subgroup.users.every((userId) =>
       eventForm.user_ids.includes(userId),
     );
   };
 
+  /**
+   * Toggles selection state of a track for the event
+   * Side effect: Updates eventForm.track_ids state
+   */
   const toggleTrack = (trackId: number) => {
     setEventForm((prev) => ({
       ...prev,
@@ -123,6 +158,10 @@ export default function AddEvent() {
     }));
   };
 
+  /**
+   * Toggles selection state of a user for the event
+   * Side effect: Updates eventForm.user_ids state
+   */
   const toggleUser = (userId: number) => {
     setEventForm((prev) => ({
       ...prev,
@@ -132,6 +171,10 @@ export default function AddEvent() {
     }));
   };
 
+  /**
+   * Toggles selection state for all users in a subgroup
+   * Side effect: Updates eventForm.user_ids state
+   */
   const toggleSubgroup = (subgroup: Subgroup) => {
     setEventForm((prev) => {
       const newUserIds = new Set(prev.user_ids);
@@ -149,6 +192,14 @@ export default function AddEvent() {
     });
   };
 
+  /**
+   * Handles form submission to create a new event
+   * Formats date and sends data to API
+   *
+   * Side effects:
+   * - Creates new event via API
+   * - Redirects to events page on success
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -176,6 +227,13 @@ export default function AddEvent() {
     }
   };
 
+  /**
+   * Handles clicking outside of dropdowns to close them
+   * Dependencies: none
+   *
+   * Side effects:
+   * - Closes track, user, and subgroup dropdowns when clicking outside
+   */
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
