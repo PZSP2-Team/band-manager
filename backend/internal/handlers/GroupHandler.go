@@ -9,6 +9,7 @@ import (
 	"strings"
 )
 
+// GroupHandler manages band group operations.
 type GroupHandler struct {
 	groupUsecase *usecases.GroupUsecase
 }
@@ -20,6 +21,8 @@ func NewGroupHandler() *GroupHandler {
 	}
 }
 
+// Create handles POST /api/group/create
+// Creates a new band group and assigns creator as manager.
 func (h *GroupHandler) Create(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Received request to /api/group/create")
 
@@ -56,6 +59,8 @@ func (h *GroupHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// Join handles POST /api/group/join
+// Processes user requests to join a group using access token.
 func (h *GroupHandler) Join(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -88,6 +93,8 @@ func (h *GroupHandler) Join(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
+// GetGroupInfo handles GET /api/group/{groupId}/{userId}
+// Retrieves group details including access token for managers.
 func (h *GroupHandler) GetGroupInfo(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -128,6 +135,8 @@ func (h *GroupHandler) GetGroupInfo(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
+// GetGroupMembers handles GET /api/group/members/{groupId}/{userId}
+// Returns list of group members with their roles.
 func (h *GroupHandler) GetGroupMembers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -165,6 +174,7 @@ func (h *GroupHandler) GetGroupMembers(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetUserGroups handles GET /api/group/user/{userId}
+// Returns all groups a user belongs to.
 func (h *GroupHandler) GetUserGroups(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -190,6 +200,8 @@ func (h *GroupHandler) GetUserGroups(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// RemoveMember handles DELETE /api/group/remove/{groupId}/{userId}/{requesterId}
+// Removes a member from the group if requester has permissions.
 func (h *GroupHandler) RemoveMember(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -227,6 +239,8 @@ func (h *GroupHandler) RemoveMember(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// UpdateMemberRole handles PUT /api/group/role/{groupId}/{userId}/{requesterId}
+// Updates a member's role in the group.
 func (h *GroupHandler) UpdateMemberRole(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPut {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

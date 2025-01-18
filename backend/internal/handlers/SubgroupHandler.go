@@ -8,6 +8,7 @@ import (
 	"strings"
 )
 
+// SubgroupHandler manages operations for subgroups within band groups.
 type SubgroupHandler struct {
 	subgroupUsecase *usecases.SubgroupUsecase
 }
@@ -18,6 +19,8 @@ func NewSubgroupHandler() *SubgroupHandler {
 	}
 }
 
+// Create handles POST /api/subgroup/create
+// Creates a new subgroup within a band group.
 func (h *SubgroupHandler) Create(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -46,6 +49,8 @@ func (h *SubgroupHandler) Create(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(subgroup)
 }
 
+// GetInfo handles GET /api/subgroup/info/{subgroupId}/{userId}
+// Retrieves detailed information about a specific subgroup.
 func (h *SubgroupHandler) GetInfo(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -80,6 +85,8 @@ func (h *SubgroupHandler) GetInfo(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(subgroup)
 }
 
+// Update handles PUT /api/subgroup/update/{subgroupId}/{userId}
+// Updates subgroup details if user has proper permissions.
 func (h *SubgroupHandler) Update(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPut {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -126,6 +133,8 @@ func (h *SubgroupHandler) Update(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// Delete handles DELETE /api/subgroup/delete/{subgroupId}/{userId}
+// Removes a subgroup if user has proper permissions.
 func (h *SubgroupHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -162,6 +171,8 @@ func (h *SubgroupHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// AddMembers handles POST /api/subgroup/members/add/{subgroupId}/{userId}
+// Adds specified users to the subgroup.
 func (h *SubgroupHandler) AddMembers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -207,6 +218,8 @@ func (h *SubgroupHandler) AddMembers(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// RemoveMember handles DELETE /api/subgroup/members/remove/{subgroupId}/{memberId}/{requesterId}
+// Removes a member from the subgroup.
 func (h *SubgroupHandler) RemoveMember(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -249,6 +262,8 @@ func (h *SubgroupHandler) RemoveMember(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// GetGroupSubgroups handles GET /api/subgroup/group/{groupId}/{userId}
+// Returns all subgroups in a specific group.
 func (h *SubgroupHandler) GetGroupSubgroups(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

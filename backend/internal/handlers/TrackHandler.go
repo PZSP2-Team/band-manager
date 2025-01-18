@@ -16,6 +16,7 @@ import (
 
 const UPLOAD_DIR = "/app/uploads"
 
+// TrackHandler manages musical track operations.
 type TrackHandler struct {
 	trackUsecase *usecases.TrackUsecase
 }
@@ -26,6 +27,8 @@ func NewTrackHandler() *TrackHandler {
 	}
 }
 
+// Create handles POST /api/track/create
+// Creates a new track in the specified group.
 func (h *TrackHandler) Create(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -60,6 +63,8 @@ func (h *TrackHandler) Create(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(track)
 }
 
+// AddNotesheet handles POST /api/track/notesheet
+// Adds a new notesheet to a track for specific subgroups.
 func (h *TrackHandler) AddNotesheet(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -97,6 +102,8 @@ func (h *TrackHandler) AddNotesheet(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(notesheet)
 }
 
+// GetUserNotesheets handles GET /api/track/user/notesheets/{trackId}/{userId}
+// Returns notesheets available to a specific user.
 func (h *TrackHandler) GetUserNotesheets(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -128,6 +135,8 @@ func (h *TrackHandler) GetUserNotesheets(w http.ResponseWriter, r *http.Request)
 	})
 }
 
+// GetGroupTracks handles GET /api/track/group/{groupId}/{userId}
+// Returns all tracks in a group.
 func (h *TrackHandler) GetGroupTracks(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -155,6 +164,8 @@ func (h *TrackHandler) GetGroupTracks(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// GetTrackNotesheets handles GET /api/track/notesheets/{trackId}/{userId}
+// Returns all notesheets for a track.
 func (h *TrackHandler) GetTrackNotesheets(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -186,6 +197,8 @@ func (h *TrackHandler) GetTrackNotesheets(w http.ResponseWriter, r *http.Request
 	})
 }
 
+// UploadNotesheetFile handles POST /api/track/notesheet/upload/{notesheetId}/{userId}
+// Handles file upload for a notesheet.
 func (h *TrackHandler) UploadNotesheetFile(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -246,6 +259,8 @@ func (h *TrackHandler) UploadNotesheetFile(w http.ResponseWriter, r *http.Reques
 	json.NewEncoder(w).Encode(notesheet)
 }
 
+// DownloadNotesheetFile handles GET /api/track/notesheet/file/{notesheetId}/{userId}
+// Serves notesheet file download.
 func (h *TrackHandler) DownloadNotesheetFile(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -286,6 +301,8 @@ func (h *TrackHandler) DownloadNotesheetFile(w http.ResponseWriter, r *http.Requ
 	http.ServeFile(w, r, filepath)
 }
 
+// CreateNotesheetWithFile handles POST /api/track/notesheet/create
+// Creates a new notesheet with file upload in one operation.
 func (h *TrackHandler) CreateNotesheetWithFile(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -364,6 +381,8 @@ func (h *TrackHandler) CreateNotesheetWithFile(w http.ResponseWriter, r *http.Re
 	json.NewEncoder(w).Encode(notesheet)
 }
 
+// DeleteTrack handles DELETE /api/track/delete/{trackId}/{userId}
+// Removes a track and its associated resources.
 func (h *TrackHandler) DeleteTrack(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
