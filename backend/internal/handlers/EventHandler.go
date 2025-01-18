@@ -12,6 +12,7 @@ import (
 	"time"
 )
 
+// EventHandler manages musical event operations.
 type EventHandler struct {
 	eventUsecase *usecases.EventUsecase
 	gcService    *services.GoogleCalendarService
@@ -26,6 +27,8 @@ func NewEventHandler(gcService *services.GoogleCalendarService, emailService *se
 	}
 }
 
+// Create handles POST /api/event/create
+// Creates a new event with specified details, tracks, and participants.
 func (h *EventHandler) Create(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -68,6 +71,8 @@ func (h *EventHandler) Create(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(event)
 }
 
+// GetInfo handles GET /api/event/info/{eventId}/{userId}
+// Retrieves detailed information about a specific event.
 func (h *EventHandler) GetInfo(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -97,6 +102,8 @@ func (h *EventHandler) GetInfo(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(event)
 }
 
+// Update handles PUT /api/event/update/{eventId}/{userId}
+// Updates event details including tracks and participants.
 func (h *EventHandler) Update(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPut {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -151,6 +158,8 @@ func (h *EventHandler) Update(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// Delete handles DELETE /api/event/delete/{eventId}/{userId}
+// Removes an event if user has proper permissions.
 func (h *EventHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -182,6 +191,8 @@ func (h *EventHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// GetGroupEvents handles GET /api/event/group/{groupId}/{userId}
+// Returns all events for a specific group.
 func (h *EventHandler) GetGroupEvents(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -213,6 +224,8 @@ func (h *EventHandler) GetGroupEvents(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// GetUserEvents handles GET /api/event/user/{userId}
+// Returns all events a user is participating in.
 func (h *EventHandler) GetUserEvents(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -238,6 +251,8 @@ func (h *EventHandler) GetUserEvents(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// GetEventTracks handles GET /api/event/tracks/{eventId}/{userId}
+// Returns all tracks associated with an event.
 func (h *EventHandler) GetEventTracks(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -269,11 +284,15 @@ func (h *EventHandler) GetEventTracks(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// GoogleCalendarAuth handles GET /api/calendar/auth
+// Initiates Google Calendar authentication flow.
 func (h *EventHandler) GoogleCalendarAuth(w http.ResponseWriter, r *http.Request) {
 	authURL := h.gcService.GetAuthURL()
 	http.Redirect(w, r, authURL, http.StatusTemporaryRedirect)
 }
 
+// GoogleCalendarCallback handles GET /api/calendar/callback
+// Processes Google Calendar authentication callback.
 func (h *EventHandler) GoogleCalendarCallback(w http.ResponseWriter, r *http.Request) {
 	code := r.URL.Query().Get("code")
 	if code == "" {

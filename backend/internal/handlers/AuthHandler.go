@@ -1,3 +1,6 @@
+// Package handlers provides HTTP request handlers for the band management application.
+// It implements the presentation layer, handling incoming HTTP requests,
+// request validation, and response formatting.
 package handlers
 
 import (
@@ -6,6 +9,7 @@ import (
 	"net/http"
 )
 
+// AuthHandler manages user authentication and registration.
 type AuthHandler struct {
 	authUsecase *usecases.AuthUsecase
 }
@@ -17,6 +21,8 @@ func NewAuthHandler() *AuthHandler {
 	}
 }
 
+// Login handles POST /api/verify/login
+// Authenticates user and returns user details with group memberships.
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	type LoginResponse struct {
 		ID        uint   `json:"id"`
@@ -62,6 +68,8 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
+// Register handles POST /api/verify/register
+// Creates a new user account with provided details.
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)

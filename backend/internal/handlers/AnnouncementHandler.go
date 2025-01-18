@@ -9,6 +9,7 @@ import (
 	"strings"
 )
 
+// AnnouncementHandler processes HTTP requests related to announcements.
 type AnnouncementHandler struct {
 	announcementUsecase *usecases.AnnouncementUsecase
 }
@@ -18,6 +19,9 @@ func NewAnnouncementHandler() *AnnouncementHandler {
 		announcementUsecase: usecases.NewAnnouncementUsecase(),
 	}
 }
+
+// Create handles POST /api/announcement/create
+// Creates a new announcement with specified details and recipients.
 func (h *AnnouncementHandler) Create(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -56,6 +60,8 @@ func (h *AnnouncementHandler) Create(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(announcement)
 }
 
+// Delete handles DELETE /api/announcement/{id}/{userId}
+// Deletes an existing announcement if user has proper permissions.
 func (h *AnnouncementHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -83,6 +89,8 @@ func (h *AnnouncementHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// GetUserAnnouncements handles GET /api/announcement/user/{userId}
+// Returns all announcements available to the specified user.
 func (h *AnnouncementHandler) GetUserAnnouncements(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -107,6 +115,8 @@ func (h *AnnouncementHandler) GetUserAnnouncements(w http.ResponseWriter, r *htt
 	})
 }
 
+// GetGroupAnnouncements handles GET /api/announcement/group/{groupId}/{userId}
+// Returns all announcements for the specified group if user is a member.
 func (h *AnnouncementHandler) GetGroupAnnouncements(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
