@@ -4,9 +4,11 @@ import (
 	"band-manager-backend/internal/model"
 	"band-manager-backend/internal/repositories"
 	"errors"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
+// AuthUsecase implements authentication and user management logic.
 type AuthUsecase struct {
 	userRepo  *repositories.UserRepository
 	groupRepo *repositories.GroupRepository
@@ -21,6 +23,7 @@ func NewAuthUsecase() *AuthUsecase {
 	}
 }
 
+// Login authenticates a user and returns their profile with group memberships.
 func (u *AuthUsecase) Login(email, password string) (*model.User, error) {
 	user, err := u.userRepo.GetUserByEmail(email)
 	if err != nil {
@@ -34,6 +37,7 @@ func (u *AuthUsecase) Login(email, password string) (*model.User, error) {
 	return user, nil
 }
 
+// Register creates a new user account with the provided details.
 func (u *AuthUsecase) Register(firstName, lastName, email, password string) error {
 	user, err := u.userRepo.GetUserByEmail(email)
 	if user != nil {

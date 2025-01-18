@@ -7,6 +7,7 @@ import (
 	"errors"
 )
 
+// TrackUsecase implements music track management logic.
 type TrackUsecase struct {
 	trackRepo    *repositories.TrackRepository
 	groupRepo    *repositories.GroupRepository
@@ -21,6 +22,7 @@ func NewTrackUsecase() *TrackUsecase {
 	}
 }
 
+// CreateTrack creates a new track in a specified group.
 func (u *TrackUsecase) CreateTrack(title, description string, groupID uint, userID uint) (*model.Track, error) {
 	role, err := u.groupRepo.GetUserRole(userID, groupID)
 	if err != nil {
@@ -43,6 +45,7 @@ func (u *TrackUsecase) CreateTrack(title, description string, groupID uint, user
 	return track, nil
 }
 
+// GetTrack retrieves track details if user has access.
 func (u *TrackUsecase) GetTrack(id uint, userID uint) (*model.Track, error) {
 	track, err := u.trackRepo.GetTrackByID(id)
 	if err != nil {
@@ -57,6 +60,7 @@ func (u *TrackUsecase) GetTrack(id uint, userID uint) (*model.Track, error) {
 	return track, nil
 }
 
+// UpdateTrack modifies track details if user has permissions.
 func (u *TrackUsecase) UpdateTrack(id uint, title string, description string, userID uint) error {
 	track, err := u.trackRepo.GetTrackByID(id)
 	if err != nil {
@@ -78,6 +82,7 @@ func (u *TrackUsecase) UpdateTrack(id uint, title string, description string, us
 	return u.trackRepo.UpdateTrack(track)
 }
 
+// DeleteTrack removes a track and associated resources.
 func (u *TrackUsecase) DeleteTrack(id uint, userID uint) error {
 	track, err := u.trackRepo.GetTrackByID(id)
 	if err != nil {
@@ -96,6 +101,7 @@ func (u *TrackUsecase) DeleteTrack(id uint, userID uint) error {
 	return u.trackRepo.DeleteTrack(id)
 }
 
+// GetGroupTracks retrieves all tracks in a specific group.
 func (u *TrackUsecase) GetGroupTracks(groupID uint, userID uint) ([]*model.Track, error) {
 
 	_, err := u.groupRepo.GetUserRole(userID, groupID)
@@ -106,6 +112,7 @@ func (u *TrackUsecase) GetGroupTracks(groupID uint, userID uint) ([]*model.Track
 	return u.trackRepo.GetGroupTracks(groupID)
 }
 
+// AddNotesheet adds a new notesheet to a track for specific subgroups.
 func (u *TrackUsecase) AddNotesheet(trackID uint, instrument string, filepath string, subgroupIDs []uint, userID uint) (*model.Notesheet, error) {
 	track, err := u.trackRepo.GetTrackByID(trackID)
 	if err != nil {
@@ -143,10 +150,12 @@ func (u *TrackUsecase) AddNotesheet(trackID uint, instrument string, filepath st
 	return notesheet, nil
 }
 
+// GetUserNotesheets retrieves notesheets available to a specific user.
 func (u *TrackUsecase) GetUserNotesheets(trackID, userID uint) ([]*model.Notesheet, error) {
 	return u.trackRepo.GetUserNotesheets(trackID, userID)
 }
 
+// GetTrackNotesheets retrieves all notesheets for a track.
 func (u *TrackUsecase) GetTrackNotesheets(trackID uint, userID uint) ([]*model.Notesheet, error) {
 	track, err := u.trackRepo.GetTrackByID(trackID)
 	if err != nil {
@@ -161,6 +170,7 @@ func (u *TrackUsecase) GetTrackNotesheets(trackID uint, userID uint) ([]*model.N
 	return u.trackRepo.GetTrackNotesheets(trackID)
 }
 
+// UpdateNotesheetFilepath updates the file path for a notesheet.
 func (u *TrackUsecase) UpdateNotesheetFilepath(notesheetID uint, userID uint, filepath string) (*model.Notesheet, error) {
 	notesheet, err := u.trackRepo.GetNotesheet(notesheetID)
 	if err != nil {
@@ -189,6 +199,7 @@ func (u *TrackUsecase) UpdateNotesheetFilepath(notesheetID uint, userID uint, fi
 	return u.trackRepo.GetNotesheet(notesheetID)
 }
 
+// GetNotesheet retrieves notesheet details if user has access.
 func (u *TrackUsecase) GetNotesheet(notesheetID uint, userID uint) (*model.Notesheet, error) {
 	notesheet, err := u.trackRepo.GetNotesheet(notesheetID)
 	if err != nil {

@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// UserRepository handles database operations for users.
 type UserRepository struct {
 	db *gorm.DB
 }
@@ -20,6 +21,7 @@ func NewUserRepository() *UserRepository {
 	}
 }
 
+// GetUserByEmail retrieves a user by their email address.
 func (r *UserRepository) GetUserByEmail(email string) (*model.User, error) {
 	var user model.User
 
@@ -31,6 +33,7 @@ func (r *UserRepository) GetUserByEmail(email string) (*model.User, error) {
 	return &user, nil
 }
 
+// CreateUser persists a new user to the database.
 func (r *UserRepository) CreateUser(user *model.User) error {
 	result := r.db.Create(user)
 	if result.Error != nil {
@@ -40,6 +43,7 @@ func (r *UserRepository) CreateUser(user *model.User) error {
 	return nil
 }
 
+// UpdateUser updates an existing user in the database.
 func (r *UserRepository) UpdateUser(user *model.User) error {
 	result := r.db.Save(user)
 	if result.Error != nil {
@@ -50,6 +54,7 @@ func (r *UserRepository) UpdateUser(user *model.User) error {
 	return nil
 }
 
+// DeleteUser removes a user from the database.
 func (r *UserRepository) DeleteUser(userID uint) error {
 	result := r.db.Delete(&model.User{}, userID)
 	if result.Error != nil {
@@ -59,6 +64,7 @@ func (r *UserRepository) DeleteUser(userID uint) error {
 	return nil
 }
 
+// GetUserByID retrieves a user by their ID.
 func (r *UserRepository) GetUserByID(id uint) (*model.User, error) {
 	var user model.User
 
@@ -70,6 +76,7 @@ func (r *UserRepository) GetUserByID(id uint) (*model.User, error) {
 	return &user, nil
 }
 
+// GetUserGroupRoles retrieves all group roles for a user.
 func (r *UserRepository) GetUserGroupRoles(userID uint) ([]model.UserGroupRole, error) {
 	var roles []model.UserGroupRole
 	result := r.db.Where("user_id = ?", userID).Find(&roles)
@@ -79,6 +86,7 @@ func (r *UserRepository) GetUserGroupRoles(userID uint) ([]model.UserGroupRole, 
 	return roles, nil
 }
 
+// GetUserGroupRoles retrieves all group roles for a user.
 func (r *UserRepository) ResetPassword(userID uint, newPassword string) error {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
 	if err != nil {
@@ -88,13 +96,13 @@ func (r *UserRepository) ResetPassword(userID uint, newPassword string) error {
 	return r.db.Model(&model.User{}).Where("id = ?", userID).Update("password_hash", string(hashedPassword)).Error
 }
 
+// GetTotalUsers returns the total number of users in the system.
 func (r *UserRepository) GetTotalUsers() (int64, error) {
 	var count int64
 	err := r.db.Model(&model.User{}).Count(&count).Error
 	return count, err
 }
 
-// repositories/GroupRepository.go
 func (r *GroupRepository) GetTotalGroups() (int64, error) {
 	var count int64
 	err := r.db.Model(&model.Group{}).Count(&count).Error

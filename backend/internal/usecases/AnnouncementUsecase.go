@@ -8,6 +8,7 @@ import (
 	"errors"
 )
 
+// AnnouncementUsecase handles announcement-related business logic.
 type AnnouncementUsecase struct {
 	announcementRepo *repositories.AnnouncementRepository
 	groupRepo        *repositories.GroupRepository
@@ -24,6 +25,7 @@ func NewAnnouncementUsecase() *AnnouncementUsecase {
 	}
 }
 
+// CreateAnnouncement creates a new announcement and notifies recipients.
 func (u *AnnouncementUsecase) CreateAnnouncement(title, description string, priority, groupID, senderID uint, recipientIDs []uint) (*model.Announcement, error) {
 	role, err := u.groupRepo.GetUserRole(senderID, groupID)
 	if err != nil {
@@ -82,6 +84,7 @@ func (u *AnnouncementUsecase) CreateAnnouncement(title, description string, prio
 	return announcement, nil
 }
 
+// DeleteAnnouncement removes an announcement if user has permissions.
 func (u *AnnouncementUsecase) DeleteAnnouncement(announcementID, userID uint) error {
 	announcement, err := u.announcementRepo.GetByID(announcementID)
 	if err != nil {
@@ -99,10 +102,12 @@ func (u *AnnouncementUsecase) DeleteAnnouncement(announcementID, userID uint) er
 	return u.announcementRepo.Delete(announcementID)
 }
 
+// GetUserAnnouncements retrieves announcements for a specific user.
 func (u *AnnouncementUsecase) GetUserAnnouncements(userID uint) ([]*model.Announcement, error) {
 	return u.announcementRepo.GetUserAnnouncements(userID)
 }
 
+// GetGroupAnnouncements retrieves announcements for a specific group.
 func (u *AnnouncementUsecase) GetGroupAnnouncements(groupID, userID uint) ([]*model.Announcement, error) {
 	_, err := u.groupRepo.GetUserRole(userID, groupID)
 	if err != nil {

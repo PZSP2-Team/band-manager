@@ -13,6 +13,7 @@ import (
 
 var db *gorm.DB
 
+// dropDB drops all database tables (used for development/testing).
 func dropDB() {
 	db.Migrator().DropTable(
 		&model.Group{},
@@ -33,6 +34,7 @@ func dropDB() {
 	fmt.Println("all tables dropped successfully")
 }
 
+// createDB creates all required database tables using GORM AutoMigrate.
 func createDB() {
 	err := db.AutoMigrate(
 		&model.Group{},
@@ -52,6 +54,9 @@ func createDB() {
 	fmt.Println("migrations completed successfully")
 }
 
+// InitDB initializes the database connection and performs migrations.
+// It uses environment variables for connection details and creates
+// required tables using GORM AutoMigrate.
 func InitDB() {
 	host := os.Getenv("POSTGRES_HOST")
 	user := os.Getenv("POSTGRES_USER")
@@ -82,6 +87,7 @@ func InitDB() {
 	fmt.Println("backend_manager_db connection successful")
 }
 
+// GetDB returns the global database connection instance.
 func GetDB() *gorm.DB {
 	return db
 }

@@ -2,6 +2,7 @@ package model
 
 import "time"
 
+// Event represents a musical event or rehearsal.
 type Event struct {
 	ID                  uint                `gorm:"primarykey" json:"id"`
 	Title               string              `gorm:"not null" json:"title"`

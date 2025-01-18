@@ -1,5 +1,6 @@
 package model
 
+// UserGroupRole represents a user's role within a group.
 type UserGroupRole struct {
 	UserID  uint   `gorm:"primarykey" json:"user_id"`
 	GroupID uint   `gorm:"primarykey" json:"group_id"`

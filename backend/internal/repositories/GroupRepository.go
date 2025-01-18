@@ -9,6 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// GroupRepository handles database operations for groups.
 type GroupRepository struct {
 	db *gorm.DB
 }
@@ -19,6 +20,7 @@ func NewGroupRepository() *GroupRepository {
 	}
 }
 
+// AddUserToGroup adds a user to a group with specified role.
 func (r *GroupRepository) AddUserToGroup(userID uint, groupID uint, role string) error {
 	return r.db.Create(&model.UserGroupRole{
 		UserID:  userID,
@@ -27,6 +29,7 @@ func (r *GroupRepository) AddUserToGroup(userID uint, groupID uint, role string)
 	}).Error
 }
 
+// GetUserRole retrieves a user's role within a group.
 func (r *GroupRepository) GetUserRole(userID uint, groupID uint) (string, error) {
 	var role model.UserGroupRole
 	err := r.db.Where("user_id = ? AND group_id = ?", userID, groupID).First(&role).Error
@@ -36,6 +39,7 @@ func (r *GroupRepository) GetUserRole(userID uint, groupID uint) (string, error)
 	return role.Role, nil
 }
 
+// CreateGroup persists a new group to the database.
 func (r *GroupRepository) CreateGroup(group *model.Group) error {
 	result := r.db.Create(group)
 	if result.Error != nil {
@@ -44,6 +48,7 @@ func (r *GroupRepository) CreateGroup(group *model.Group) error {
 	return nil
 }
 
+// GetGroupByAccessToken retrieves a group using its access token.
 func (r *GroupRepository) GetGroupByAccessToken(accessToken string) (*model.Group, error) {
 	var group model.Group
 	result := r.db.Where("access_token = ?", accessToken).First(&group)
@@ -53,6 +58,7 @@ func (r *GroupRepository) GetGroupByAccessToken(accessToken string) (*model.Grou
 	return &group, nil
 }
 
+// GetGroupByID retrieves a group by its ID with related users.
 func (r *GroupRepository) GetGroupByID(id uint) (*model.Group, error) {
 	var group model.Group
 	result := r.db.Preload("Users").First(&group, id)
@@ -65,6 +71,7 @@ func (r *GroupRepository) GetGroupByID(id uint) (*model.Group, error) {
 	return &group, nil
 }
 
+// GetGroupMembers retrieves all members of a group.
 func (r *GroupRepository) GetGroupMembers(groupID uint) ([]*model.User, error) {
 	var roles []model.UserGroupRole
 	err := r.db.Where("group_id = ?", groupID).Preload("User").Find(&roles).Error
@@ -79,11 +86,13 @@ func (r *GroupRepository) GetGroupMembers(groupID uint) ([]*model.User, error) {
 	return users, nil
 }
 
+// RemoveUserFromGroup removes a user from a group.
 func (r *GroupRepository) RemoveUserFromGroup(userID uint, groupID uint) error {
 
 	return r.db.Delete(&model.UserGroupRole{}, "user_id = ? AND group_id = ?", userID, groupID).Error
 }
 
+// UpdateUserRole updates a user's role within a group.
 func (r *GroupRepository) UpdateUserRole(userID uint, groupID uint, newRole string) error {
 	return r.db.Model(&model.UserGroupRole{}).
 		Where("user_id = ? AND group_id = ?", userID, groupID).

@@ -1,5 +1,6 @@
 package model
 
+// Subgroup represents a subset of group members.
 type Subgroup struct {
 	ID            uint            `gorm:"primarykey" json:"id"`
 	GroupID       uint            `gorm:"not null;" json:"group_id"`

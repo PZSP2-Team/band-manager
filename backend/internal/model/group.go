@@ -1,5 +1,6 @@
 package model
 
+// Group represents a band or musical organization.
 type Group struct {
 	ID            uint            `gorm:"primarykey" json:"id"`
 	Name          string          `gorm:"not null" json:"name"`

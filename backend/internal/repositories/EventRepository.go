@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// EventRepository handles database operations for events.
 type EventRepository struct {
 	db *gorm.DB
 }
@@ -16,6 +17,8 @@ func NewEventRepository() *EventRepository {
 		db: db.GetDB(),
 	}
 }
+
+// GetEventUsers retrieves all users associated with an event.
 func (r *EventRepository) GetEventUsers(eventID uint) ([]*model.User, error) {
 	var event model.Event
 	err := r.db.Preload("Users").First(&event, eventID).Error
@@ -24,6 +27,8 @@ func (r *EventRepository) GetEventUsers(eventID uint) ([]*model.User, error) {
 	}
 	return event.Users, nil
 }
+
+// AddUsersToEvent associates users with an event.
 func (r *EventRepository) AddUsersToEvent(eventID uint, userIDs []uint) error {
 	var users []*model.User
 	if err := r.db.Find(&users, userIDs).Error; err != nil {
@@ -32,10 +37,12 @@ func (r *EventRepository) AddUsersToEvent(eventID uint, userIDs []uint) error {
 	return r.db.Model(&model.Event{ID: eventID}).Association("Users").Append(users)
 }
 
+// CreateEvent persists a new event to the database.
 func (r *EventRepository) CreateEvent(event *model.Event) error {
 	return r.db.Create(event).Error
 }
 
+// GetEventByID retrieves an event by its ID with related entities.
 func (r *EventRepository) GetEventByID(id uint) (*model.Event, error) {
 	var event model.Event
 	if err := r.db.Preload("Group").Preload("Users").Preload("Tracks").First(&event, id).Error; err != nil {
@@ -44,14 +51,17 @@ func (r *EventRepository) GetEventByID(id uint) (*model.Event, error) {
 	return &event, nil
 }
 
+// UpdateEvent updates an existing event in the database.
 func (r *EventRepository) UpdateEvent(event *model.Event) error {
 	return r.db.Save(event).Error
 }
 
+// DeleteEvent removes an event from the database.
 func (r *EventRepository) DeleteEvent(id uint) error {
 	return r.db.Delete(&model.Event{}, id).Error
 }
 
+// GetGroupEvents retrieves all events for a specific group.
 func (r *EventRepository) GetGroupEvents(groupID uint) ([]*model.Event, error) {
 	var events []*model.Event
 	if err := r.db.Preload("Users").Where("group_id = ?", groupID).Find(&events).Error; err != nil {
@@ -60,6 +70,7 @@ func (r *EventRepository) GetGroupEvents(groupID uint) ([]*model.Event, error) {
 	return events, nil
 }
 
+// GetGroupEvents retrieves all events for a specific group.
 func (r *EventRepository) GetUserEvents(userID uint) ([]*model.Event, error) {
 	var events []*model.Event
 	err := r.db.Preload("Users").
@@ -69,6 +80,7 @@ func (r *EventRepository) GetUserEvents(userID uint) ([]*model.Event, error) {
 	return events, err
 }
 
+// GetUserEvents retrieves all events a user is participating in.
 func (r *EventRepository) AddTracksToEvent(eventID uint, trackIDs []uint) error {
 	var tracks []*model.Track
 	if err := r.db.Find(&tracks, trackIDs).Error; err != nil {
@@ -78,6 +90,7 @@ func (r *EventRepository) AddTracksToEvent(eventID uint, trackIDs []uint) error 
 	return r.db.Model(&model.Event{ID: eventID}).Association("Tracks").Append(tracks)
 }
 
+// AddTracksToEvent associates tracks with an event.
 func (r *EventRepository) GetEventTracks(eventID uint) ([]*model.Track, error) {
 	var event model.Event
 	err := r.db.Preload("Tracks", func(db *gorm.DB) *gorm.DB {

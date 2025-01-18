@@ -2,6 +2,7 @@ package model
 
 import "time"
 
+// GoogleToken stores Google OAuth tokens for calendar integration.
 type GoogleToken struct {
 	ID           uint      `gorm:"primarykey"`
 	UserID       uint      `gorm:"uniqueIndex"`

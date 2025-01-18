@@ -1,5 +1,6 @@
 package model
 
+// Track represents a musical piece.
 type Track struct {
 	ID           uint          `gorm:"primarykey" json:"id"`
 	Name         string        `gorm:"not null" json:"name"`

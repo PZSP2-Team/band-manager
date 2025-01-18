@@ -1,5 +1,6 @@
 package model
 
+// Notesheet represents sheet music associated with a track.
 type Notesheet struct {
 	ID         uint        `gorm:"primarykey" json:"id"`
 	Filepath   string      `gorm:"not null" json:"filepath"`

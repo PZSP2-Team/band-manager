@@ -1,5 +1,6 @@
 package model
 
+// User represents a system user.
 type User struct {
 	ID            uint            `gorm:"primarykey" json:"id"`
 	FirstName     string          `gorm:"not null" json:"first_name"`

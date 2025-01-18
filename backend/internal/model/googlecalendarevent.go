@@ -2,6 +2,7 @@ package model
 
 import "time"
 
+// GoogleCalendarEvent represents synced Google Calendar event data.
 type GoogleCalendarEvent struct {
 	ID         uint      `gorm:"primarykey" json:"id"`
 	EventID    uint      `gorm:"not null;uniqueIndex" json:"event_id"`

@@ -10,6 +10,7 @@ import (
 	"time"
 )
 
+// EventUsecase implements event management logic.
 type EventUsecase struct {
 	eventRepo    *repositories.EventRepository
 	groupRepo    *repositories.GroupRepository
@@ -29,6 +30,8 @@ func NewEventUsecase(gcService *services.GoogleCalendarService, emailService *se
 		emailService: emailService,
 	}
 }
+
+// CreateEvent creates a new event with optional Google Calendar integration.
 func (u *EventUsecase) CreateEvent(title, description, location string, date time.Time,
 	groupID uint, trackIDs []uint, userIDs []uint, userID uint) (*model.Event, error) {
 
@@ -61,6 +64,7 @@ func (u *EventUsecase) CreateEvent(title, description, location string, date tim
 	return event, nil
 }
 
+// DeleteEvent removes an event and its Google Calendar entry.
 func (u *EventUsecase) DeleteEvent(id uint, userID uint) error {
 	event, err := u.eventRepo.GetEventByID(id)
 	if err != nil {
@@ -72,6 +76,7 @@ func (u *EventUsecase) DeleteEvent(id uint, userID uint) error {
 	return u.eventRepo.DeleteEvent(id)
 }
 
+// GetGroupEvents retrieves all events for a specific group.
 func (u *EventUsecase) GetGroupEvents(groupID uint, userID uint) ([]*model.Event, error) {
 	if !u.isUserInGroup(userID, groupID) {
 		return nil, errors.New("User not in group")
@@ -79,10 +84,12 @@ func (u *EventUsecase) GetGroupEvents(groupID uint, userID uint) ([]*model.Event
 	return u.eventRepo.GetGroupEvents(groupID)
 }
 
+// GetUserEvents retrieves all events a user is participating in.
 func (u *EventUsecase) GetUserEvents(userID uint) ([]*model.Event, error) {
 	return u.eventRepo.GetUserEvents(userID)
 }
 
+// GetEventTracks retrieves tracks associated with an event.
 func (u *EventUsecase) GetEventTracks(eventID uint, userID uint) ([]*model.Track, error) {
 	event, err := u.eventRepo.GetEventByID(eventID)
 	if err != nil {
@@ -96,6 +103,7 @@ func (u *EventUsecase) GetEventTracks(eventID uint, userID uint) ([]*model.Track
 	return u.eventRepo.GetEventTracks(eventID)
 }
 
+// GetEvent retrieves event details if user has access.
 func (u *EventUsecase) GetEvent(eventID uint, userID uint) (*model.Event, error) {
 	event, err := u.eventRepo.GetEventByID(eventID)
 	if err != nil {
@@ -109,6 +117,7 @@ func (u *EventUsecase) GetEvent(eventID uint, userID uint) (*model.Event, error)
 	return event, nil
 }
 
+// UpdateEvent modifies event details and updates Google Calendar.
 func (u *EventUsecase) UpdateEvent(id uint, title, description, location string,
 	date time.Time, trackIDs []uint, userIDs []uint, userID uint) error {
 
@@ -139,6 +148,8 @@ func (u *EventUsecase) UpdateEvent(id uint, title, description, location string,
 
 	return nil
 }
+
+// Validates if the user has sufficient permissions (manager or moderator) in the group.
 func (u *EventUsecase) validateUserPermissions(userID, groupID uint) error {
 	role, err := u.groupRepo.GetUserRole(userID, groupID)
 	if err != nil {
@@ -150,6 +161,7 @@ func (u *EventUsecase) validateUserPermissions(userID, groupID uint) error {
 	return nil
 }
 
+// Checks if the user is a member of the group.
 func (u *EventUsecase) isUserInGroup(userID, groupID uint) bool {
 	_, err := u.groupRepo.GetUserRole(userID, groupID)
 	if err != nil {
@@ -158,6 +170,7 @@ func (u *EventUsecase) isUserInGroup(userID, groupID uint) bool {
 	return true
 }
 
+// Adds tracks to the event, ensuring they belong to the same group.
 func (u *EventUsecase) addTracksToEvent(event *model.Event, trackIDs []uint) error {
 	if len(trackIDs) == 0 {
 		return nil
@@ -176,6 +189,7 @@ func (u *EventUsecase) addTracksToEvent(event *model.Event, trackIDs []uint) err
 	return u.eventRepo.AddTracksToEvent(event.ID, trackIDs)
 }
 
+// Adds users to the event, checking if they belong to the group.
 func (u *EventUsecase) addUsersToEvent(event *model.Event, userIDs []uint) error {
 	if len(userIDs) > 0 {
 		for _, assignedUserID := range userIDs {
@@ -197,6 +211,7 @@ func (u *EventUsecase) addUsersToEvent(event *model.Event, userIDs []uint) error
 	return u.eventRepo.AddUsersToEvent(event.ID, allUserIDs)
 }
 
+// Handles external integrations like Google Calendar and email notifications.
 func (u *EventUsecase) handleExternalIntegrations(event *model.Event, userIDs []uint) {
 	if u.gcService != nil {
 		if err := u.gcService.CreateCalendarEvent(event); err != nil {
@@ -215,6 +230,7 @@ func (u *EventUsecase) handleExternalIntegrations(event *model.Event, userIDs []
 	}
 }
 
+// Returns a list of users to receive event notifications (either specific users or all group members).
 func (u *EventUsecase) getEventRecipients(groupID uint, userIDs []uint) ([]*model.User, error) {
 	if len(userIDs) > 0 {
 		var recipients []*model.User
@@ -231,6 +247,7 @@ func (u *EventUsecase) getEventRecipients(groupID uint, userIDs []uint) ([]*mode
 	return u.groupRepo.GetGroupMembers(groupID)
 }
 
+// Updates basic event details (title, description, location, date).
 func (u *EventUsecase) updateEventBasicInfo(event *model.Event, title, description, location string, date time.Time) error {
 	event.Title = title
 	event.Description = description

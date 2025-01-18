@@ -10,6 +10,7 @@ import (
 	"fmt"
 )
 
+// GroupUsecase implements group management logic.
 type GroupUsecase struct {
 	groupRepo *repositories.GroupRepository
 	userRepo  *repositories.UserRepository
@@ -22,6 +23,7 @@ func NewGroupUsecase() *GroupUsecase {
 	}
 }
 
+// MemberInfo holds the details of a member in a group.
 type MemberInfo struct {
 	ID        uint   `json:"id"`
 	FirstName string `json:"first_name"`
@@ -30,6 +32,7 @@ type MemberInfo struct {
 	Role      string `json:"role"`
 }
 
+// GroupInfo holds the details of a group.
 type GroupInfo struct {
 	ID           uint   `json:"id"`
 	Name         string `json:"name"`
@@ -38,12 +41,14 @@ type GroupInfo struct {
 	MembersCount int    `json:"members_count"`
 }
 
+// generateAccessToken generates a random access token for group access.
 func generateAccessToken() string {
 	bytes := make([]byte, 16)
 	rand.Read(bytes)
 	return hex.EncodeToString(bytes)
 }
 
+// CreateGroup creates a new band group and sets up initial roles.
 func (u *GroupUsecase) CreateGroup(name, description string, userID uint) (string, uint, error) {
 	_, err := u.userRepo.GetUserByID(userID)
 
@@ -70,6 +75,7 @@ func (u *GroupUsecase) CreateGroup(name, description string, userID uint) (strin
 	return helpers.RoleManager, group.ID, nil
 }
 
+// JoinGroup processes a user's request to join a group via access token.
 func (u *GroupUsecase) JoinGroup(userID uint, accessToken string) (string, uint, string, error) {
 	group, err := u.groupRepo.GetGroupByAccessToken(accessToken)
 	if err != nil {
@@ -95,6 +101,7 @@ func (u *GroupUsecase) JoinGroup(userID uint, accessToken string) (string, uint,
 	return helpers.RoleMember, group.ID, group.Name, nil
 }
 
+// GetGroupInfo retrieves group details and access token for managers.
 func (u *GroupUsecase) GetGroupInfo(userID uint, groupID uint) (string, string, string, error) {
 	role, err := u.groupRepo.GetUserRole(userID, groupID)
 	if err != nil {
@@ -114,6 +121,7 @@ func (u *GroupUsecase) GetGroupInfo(userID uint, groupID uint) (string, string, 
 	return group.Name, group.Description, accessToken, nil
 }
 
+// GetGroupMembers retrieves all members of a group with their roles.
 func (u *GroupUsecase) GetGroupMembers(groupID, requestingUserID uint) ([]MemberInfo, error) {
 	_, err := u.groupRepo.GetUserRole(requestingUserID, groupID)
 	if err != nil {
@@ -143,6 +151,7 @@ func (u *GroupUsecase) GetGroupMembers(groupID, requestingUserID uint) ([]Member
 	return memberInfos, nil
 }
 
+// GetUserGroups retrieves all groups a user belongs to.
 func (u *GroupUsecase) GetUserGroups(userID uint) ([]GroupInfo, error) {
 	roles, err := u.userRepo.GetUserGroupRoles(userID)
 	if err != nil {
@@ -170,6 +179,7 @@ func (u *GroupUsecase) GetUserGroups(userID uint) ([]GroupInfo, error) {
 	return groupInfos, nil
 }
 
+// RemoveMember removes a user from a group if requester has permissions.
 func (u *GroupUsecase) RemoveMember(groupID, userToRemoveID, requestingUserID uint) error {
 
 	requesterRole, err := u.groupRepo.GetUserRole(requestingUserID, groupID)
@@ -188,6 +198,7 @@ func (u *GroupUsecase) RemoveMember(groupID, userToRemoveID, requestingUserID ui
 	return u.groupRepo.RemoveUserFromGroup(userToRemoveID, groupID)
 }
 
+// UpdateMemberRole changes a user's role within a group.
 func (u *GroupUsecase) UpdateMemberRole(groupID uint, userToUpdateID uint, requestingUserID uint, newRole string) error {
 	requesterRole, err := u.groupRepo.GetUserRole(requestingUserID, groupID)
 	if err != nil {
@@ -209,6 +220,7 @@ func (u *GroupUsecase) UpdateMemberRole(groupID uint, userToUpdateID uint, reque
 	return u.groupRepo.UpdateUserRole(userToUpdateID, groupID, newRole)
 }
 
+// isValidRole checks if the provided role is valid.
 func isValidRole(role string) bool {
 	validRoles := []string{helpers.RoleManager, helpers.RoleModerator, helpers.RoleMember}
 	for _, r := range validRoles {

@@ -2,6 +2,7 @@ package model
 
 import "time"
 
+// Announcement represents a message sent to group or subgroup members.
 type Announcement struct {
 	ID          uint      `gorm:"primarykey" json:"id"`
 	Title       string    `gorm:"not null" json:"title"`
