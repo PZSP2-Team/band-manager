@@ -37,12 +37,6 @@ cp .env.example .env
 docker-compose up -d --build
 ```
 
-The application will be available at:
-
-- Frontend: `http://localhost:3000`
-
-Backend is only available through frontend, because next.js uses proxy pass to backend requests and JWT verification
-
 ## Environment Variables
 
 ### Database
@@ -74,8 +68,8 @@ Backend is only available through frontend, because next.js uses proxy pass to b
 
 ```
 band-manager/
-├── [frontend/](frontend)           # Next.js application
-├── [backend/](backend)           # Go server
+├── [frontend/]           # Next.js application
+├── [backend/]           # Go server
 ├── docker-compose.yml # Docker Compose configuration
 └── .env              # Environment variables
 ```
