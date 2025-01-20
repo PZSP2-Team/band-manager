@@ -131,6 +131,7 @@ func main() {
 	http.HandleFunc("/api/track/notesheet/file/", enableCORS(trackHandler.DownloadNotesheetFile))
 	http.HandleFunc("/api/track/notesheet/create/", enableCORS(trackHandler.CreateNotesheetWithFile))
 	http.HandleFunc("/api/track/delete/", trackHandler.DeleteTrack)
+	http.HandleFunc("/api/group/refresh-token/", enableCORS(groupHandler.RefreshAccessToken))
 
 	// Event management endpoints
 	// POST /api/event/create - Creates new event

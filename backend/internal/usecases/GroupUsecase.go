@@ -23,6 +23,27 @@ func NewGroupUsecase() *GroupUsecase {
 	}
 }
 
+// RefreshAccessToken generates and updates a new access token for a group.
+func (u *GroupUsecase) RefreshAccessToken(groupID uint, requestingUserID uint) (string, error) {
+	role, err := u.groupRepo.GetUserRole(requestingUserID, groupID)
+	if err != nil {
+		return "", errors.New("user not in group")
+	}
+
+	if role != helpers.RoleManager {
+		return "", errors.New("insufficient permissions - only managers can refresh access token")
+	}
+
+	newToken := generateAccessToken()
+
+	err = u.groupRepo.UpdateAccessToken(groupID, newToken)
+	if err != nil {
+		return "", fmt.Errorf("failed to update access token: %v", err)
+	}
+
+	return newToken, nil
+}
+
 // MemberInfo holds the details of a member in a group.
 type MemberInfo struct {
 	ID        uint   `json:"id"`

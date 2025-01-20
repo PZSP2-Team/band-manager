@@ -135,6 +135,45 @@ func (h *GroupHandler) GetGroupInfo(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
+// RefreshAccessToken handles PUT /api/group/refresh-token/{groupId}/{userId}
+// Generates new access token for a group if requester is manager.
+func (h *GroupHandler) RefreshAccessToken(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPut {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	pathParts := strings.Split(r.URL.Path, "/")
+	if len(pathParts) < 4 {
+		http.Error(w, "Invalid URL format", http.StatusBadRequest)
+		return
+	}
+
+	groupID, err := strconv.ParseUint(pathParts[len(pathParts)-2], 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid group ID", http.StatusBadRequest)
+		return
+	}
+
+	userID, err := strconv.ParseUint(pathParts[len(pathParts)-1], 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	newToken, err := h.groupUsecase.RefreshAccessToken(uint(groupID), uint(userID))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"access_token": newToken,
+		"message":      "Access token refreshed successfully",
+	})
+}
+
 // GetGroupMembers handles GET /api/group/members/{groupId}/{userId}
 // Returns list of group members with their roles.
 func (h *GroupHandler) GetGroupMembers(w http.ResponseWriter, r *http.Request) {

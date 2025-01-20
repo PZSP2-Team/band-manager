@@ -98,3 +98,10 @@ func (r *GroupRepository) UpdateUserRole(userID uint, groupID uint, newRole stri
 		Where("user_id = ? AND group_id = ?", userID, groupID).
 		Update("role", newRole).Error
 }
+
+// UpdateAccessToken updates a group's access token.
+func (r *GroupRepository) UpdateAccessToken(groupID uint, newToken string) error {
+	return r.db.Model(&model.Group{}).
+		Where("id = ?", groupID).
+		Update("access_token", newToken).Error
+}
