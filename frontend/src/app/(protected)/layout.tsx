@@ -3,6 +3,11 @@ import Sidebar from "@/src/app/components/Sidebar";
 import NavigationBar from "@/src/app/components/Navigation";
 import { GroupProvider } from "../contexts/GroupContext";
 
+/**
+ * Protected layout component that wraps authenticated pages.
+ * Provides consistent layout structure with header, sidebar, and navigation.
+ * Wraps content in GroupProvider context.
+ */
 export default function ProtectedLayout({
   children,
 }: {

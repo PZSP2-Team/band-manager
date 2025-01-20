@@ -1,5 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 
+/**
+ * Proxy endpoint for notesheet creation.
+ * Forwards POST request to backend service and handles response.
+ *
+ * Endpoint: POST /api/track/notesheet/create
+ *
+ * @description
+ * Acts as a proxy between frontend and backend services:
+ * - Forwards incoming request (body and headers) to backend
+ * - Handles backend response and error states
+ * - Maintains same status codes from backend
+ *
+ * Error Handling:
+ * - Returns backend error response if request fails
+ * - Returns 500 status for unexpected errors
+ */
 export async function POST(req: NextRequest) {
   try {
     const response = await fetch(

@@ -8,23 +8,35 @@ import { RequireGroup } from "@/src/app/components/RequireGroup";
 import { RequireModerator } from "@/src/app/components/RequireModerator";
 import LoadingScreen from "@/src/app/components/LoadingScreen";
 
+/**
+ * Represents the component's render state
+ */
 type RenderState =
   | { status: "loading" }
   | { status: "loaded" }
   | { status: "error" };
 
+/**
+ * Represents a subgroup within the main group
+ */
 type Subgroup = {
   id: number;
   name: string;
   users: number[];
 };
 
+/**
+ * Represents a subgroup within the main group
+ */
 type User = {
   id: number;
   first_name: string;
   last_name: string;
 };
 
+/**
+ * Represents the structure of the announcement creation form
+ */
 type AnnouncementForm = {
   title: string;
   description: string;
@@ -32,6 +44,11 @@ type AnnouncementForm = {
   user_ids: number[];
 };
 
+/**
+ * Page component for creating new announcements.
+ * Requires moderator privileges and group membership.
+ * Allows selection of recipients by subgroups or individual users.
+ */
 export default function CreateAnnouncement() {
   const { groupId } = useGroup();
   const router = useRouter();
@@ -53,6 +70,15 @@ export default function CreateAnnouncement() {
   const usersDropdownRef = useRef<HTMLDivElement>(null);
   const subgroupsDropdownRef = useRef<HTMLDivElement>(null);
 
+  /**
+   * Fetches subgroups and users data when component mounts or dependencies change.
+   * Dependencies: groupId, sessionStatus, session?.user?.id
+   *
+   * Side effects:
+   * - Sets subgroups state with fetched subgroups
+   * - Sets users state with fetched group members
+   * - Updates renderState based on fetch result
+   */
   useEffect(() => {
     if (sessionStatus === "loading") return;
     const fetchSubgroups = async () => {
@@ -86,12 +112,19 @@ export default function CreateAnnouncement() {
     }
   }, [groupId, sessionStatus, session?.user?.id]);
 
+  /**
+   * Checks if all users in a subgroup are selected
+   */
   const isSubgroupSelected = (subgroup: Subgroup) => {
     return subgroup.users.every((userId) =>
       announcementForm.user_ids.includes(userId),
     );
   };
 
+  /**
+   * Toggles selection state for all users in a subgroup.
+   * Side effect: Updates announcementForm.user_ids state
+   */
   const toggleSubgroup = (subgroup: Subgroup) => {
     setAnnouncementForm((prev) => {
       const newUserIds = new Set(prev.user_ids);
@@ -109,6 +142,10 @@ export default function CreateAnnouncement() {
     });
   };
 
+  /**
+   * Toggles selection state for a single user
+   * Side effect: Updates announcementForm.user_ids state
+   */
   const toggleUser = (userId: number) => {
     setAnnouncementForm((prev) => {
       const newUserIds = prev.user_ids.includes(userId)
@@ -122,6 +159,12 @@ export default function CreateAnnouncement() {
     });
   };
 
+  /**
+   * Handles form submission to create a new announcement.
+   * Side effects:
+   * - Creates new announcement via API
+   * - Redirects to announcements page on success
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -147,6 +190,10 @@ export default function CreateAnnouncement() {
     }
   };
 
+  /**
+   * Handles clicking outside of dropdowns to close them.
+   * Side effect: Closes dropdowns when clicking outside their areas
+   */
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (

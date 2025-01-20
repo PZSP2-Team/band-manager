@@ -1,8 +1,34 @@
 import type { NextConfig } from "next";
 
+/**
+ * Next.js configuration with proxy routing setup
+ * Handles routing between frontend and backend services
+ */
 const nextConfig: NextConfig = {
   ...(process.env.NODE_ENV === "production" ? { output: "standalone" } : {}),
   trailingSlash: false,
+  /**
+   * Rewrite rules for API request proxying
+   *
+   * Rules:
+   * 1. Notesheet creation endpoint
+   *    - Source: /api/track/notesheet/create
+   *    - Requires user-id header
+   *
+   * 2. Next.js Authentication endpoints
+   *    - Source: /api/auth/*
+   *    - Handles all auth-related routes
+   *
+   * 3. Backend Authentication endpoints
+   *    - Source: /api/verify/*
+   *    - Proxies to backend authentication service
+   *    - No auth header required
+   *
+   * 4. General API endpoints
+   *    - Source: /api/*
+   *    - Proxies to backend API
+   *    - Requires user-id header
+   */
   async rewrites() {
     return [
       {

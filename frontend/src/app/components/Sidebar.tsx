@@ -6,17 +6,33 @@ import { useGroup } from "../contexts/GroupContext";
 import { useRouter } from "next/navigation";
 import LoadingScreen from "./LoadingScreen";
 
+/**
+ * Represents a group's basic information and user's role in it
+ */
 type Group = {
   id: number;
   name: string;
   role: string;
 };
 
+/**
+ * Represents the component's render state
+ */
 type RenderState =
   | { status: "loading" }
   | { status: "loaded" }
   | { status: "error" };
 
+/**
+ * Sidebar component providing group navigation and management.
+ * Allows users to view, select, create, and join groups.
+ *
+ * Features:
+ * - Group list display with active selection
+ * - Group creation modal
+ * - Group joining via access code
+ * - Role-based group selection
+ */
 export default function Sidebar() {
   const { groupId, setGroupId, setUserRole } = useGroup();
   const router = useRouter();
@@ -33,12 +49,26 @@ export default function Sidebar() {
   const [errorMessage, setErrorMessage] = useState("");
   const [success, setSuccess] = useState(false);
 
+  /**
+   * Handles group selection and navigation
+   * Side effects:
+   * - Updates group context (groupId and userRole)
+   * - Navigates to events page
+   */
   const handleGroupSelect = (groupId: number, userRole: string) => {
     setGroupId(groupId);
     setUserRole(userRole);
     router.push("/events");
   };
 
+  /**
+   * Fetches user's groups on component mount
+   * Dependencies: sessionStatus, session?.user?.id
+   *
+   * Side effects:
+   * - Updates groupList state with fetched groups
+   * - Updates renderState based on fetch result
+   */
   useEffect(() => {
     if (sessionStatus === "loading") return;
     const fetchGroups = async () => {
@@ -60,6 +90,12 @@ export default function Sidebar() {
     fetchGroups();
   }, [sessionStatus, session?.user?.id]);
 
+  /**
+   * Handles joining a group via access token
+   * Side effects:
+   * - Updates groupList with new group on success
+   * - Updates error/success states
+   */
   const handleJoinGroup = async () => {
     setErrorMessage("");
 
@@ -94,6 +130,13 @@ export default function Sidebar() {
     }
   };
 
+  /**
+   * Handles creation of a new group
+   * Side effects:
+   * - Updates groupList with new group on success
+   * - Updates error/success states
+   * - Validates required fields
+   */
   const handleCreateGroup = async () => {
     if (!groupName || !groupDescription) {
       setErrorMessage("Please fill in all fields");

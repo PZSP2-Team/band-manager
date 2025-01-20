@@ -14,11 +14,17 @@ import {
   Music,
 } from "lucide-react";
 
+/**
+ * Represents the component's render state
+ */
 type RenderState =
   | { status: "loading" }
   | { status: "loaded" }
   | { status: "error" };
 
+/**
+ * Represents a musical event with tracks
+ */
 type Event = {
   id: number;
   title: string;
@@ -28,6 +34,9 @@ type Event = {
   tracks: Track[];
 };
 
+/**
+ * Represents a musical track added to event repertoire
+ */
 type Track = {
   id: number;
   name: string;
@@ -35,12 +44,21 @@ type Track = {
   notesheets: Notesheet[];
 };
 
+/**
+ * Represents a notesheet file attached to a track
+ */
 type Notesheet = {
   id: number;
   track_id: number;
   filepath: string;
 };
 
+/**
+ * Page component displaying detailed information about a specific event.
+ * Shows event details, tracks list, and downloadable notesheets.
+ * Requires certain subgroup permissions to download specific notesheets.
+ * Requires group membership to access.
+ */
 export default function EventDetailsPage() {
   const params = useParams();
   const navRouter = useNavigationRouter();
@@ -61,6 +79,10 @@ export default function EventDetailsPage() {
     status: "loading",
   });
 
+  /**
+   * Toggles the expanded/collapsed state of a track section
+   * Side effect: Updates expandedTracks state
+   */
   const toggleTrack = (trackId: number) => {
     setExpandedTracks((prev) => ({
       ...prev,
@@ -68,6 +90,15 @@ export default function EventDetailsPage() {
     }));
   };
 
+  /**
+   * Fetches event details and associated notesheets for each track
+   * Dependencies: id, sessionStatus, session?.user?.id
+   *
+   * Side effects:
+   * - Updates event state with fetched data
+   * - Updates renderState based on fetch result
+   * - Fetches available notesheets for each track basing on user permissions
+   */
   useEffect(() => {
     if (sessionStatus === "loading") return;
     const fetchEventDetails = async () => {
@@ -119,6 +150,14 @@ export default function EventDetailsPage() {
     fetchEventDetails();
   }, [id, sessionStatus, session?.user?.id]);
 
+  /**
+   * Handles downloading of notesheet files
+   * Creates temporary link element to trigger file download
+   *
+   * Side effects:
+   * - Triggers file download in browser
+   * - Creates and removes temporary DOM elements
+   */
   const handleDownload = async (notesheetId: number, fileName: string) => {
     try {
       const response = await fetch(

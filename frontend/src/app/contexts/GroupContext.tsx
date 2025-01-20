@@ -2,6 +2,13 @@
 
 import { createContext, useContext, useState } from "react";
 
+/**
+ * Type definition for the group context value
+ * @property {number | null} groupId - Currently selected group ID
+ * @property {string | null} userRole - User's role in current group
+ * @property {Function} setGroupId - Updates group ID in context and localStorage
+ * @property {Function} setUserRole - Updates user role in context and localStorage
+ */
 type GroupContextType = {
   groupId: number | null;
   userRole: string | null;
@@ -11,6 +18,15 @@ type GroupContextType = {
 
 const GroupContext = createContext<GroupContextType | undefined>(undefined);
 
+/**
+ * Context provider for group-related state management.
+ * Manages group selection and user role persistence across the application.
+ *
+ * Features:
+ * - Persists group selection in localStorage
+ * - Persists user role in localStorage
+ * - Provides group context to child components
+ */
 export function GroupProvider({ children }: { children: React.ReactNode }) {
   const [groupId, setGroupId] = useState<number | null>(() => {
     if (typeof window !== "undefined") {
@@ -27,6 +43,10 @@ export function GroupProvider({ children }: { children: React.ReactNode }) {
     return null;
   });
 
+  /**
+   * Updates group ID in state and localStorage
+   * Side effect: Syncs group ID between state and localStorage
+   */
   const handleSetGroupId = (id: number | null) => {
     setGroupId(id);
     if (id) {
@@ -36,6 +56,10 @@ export function GroupProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  /**
+   * Updates user role in state and localStorage
+   * Side effect: Syncs user role between state and localStorage
+   */
   const handleSetUserRole = (role: string | null) => {
     setUserRole(role);
     if (role) {
@@ -59,6 +83,12 @@ export function GroupProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * Custom hook to access group context
+ * Ensures component is wrapped in GroupProvider
+ *
+ * @returns {GroupContextType} Group context value
+ */
 export function useGroup() {
   const context = useContext(GroupContext);
   if (context === undefined) {

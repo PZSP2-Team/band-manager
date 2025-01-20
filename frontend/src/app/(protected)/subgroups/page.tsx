@@ -8,17 +8,26 @@ import { useGroup } from "../../contexts/GroupContext";
 import { RequireGroup } from "@/src/app/components/RequireGroup";
 import { RequireManager } from "@/src/app/components/RequireManager";
 
+/**
+ * Represents the component's render state
+ */
 type RenderState =
   | { status: "loading" }
   | { status: "loaded" }
   | { status: "error" };
 
+/**
+ * Represents a subgroup containing users
+ */
 type Subgroup = {
   id: number;
   name: string;
   users: number[];
 };
 
+/**
+ * Represents a user that can be added to subgroups
+ */
 type User = {
   id: number;
   first_name: string;
@@ -26,6 +35,11 @@ type User = {
   email: string;
 };
 
+/**
+ * Page component for managing subgroups.
+ * Allows managers to create, delete subgroups and manage their members.
+ * Requires manager role and group membership to access.
+ */
 export default function SubgroupsPage() {
   const { groupId } = useGroup();
   const router = useRouter();
@@ -42,6 +56,15 @@ export default function SubgroupsPage() {
     number | null
   >(null);
 
+  /**
+   * Fetches group members and subgroups data
+   * Dependencies: groupId, sessionStatus, session?.user?.id
+   *
+   * Side effects:
+   * - Updates availableUsers state with group members
+   * - Updates subgroups state with group's subgroups
+   * - Updates renderState based on fetch results
+   */
   useEffect(() => {
     if (sessionStatus === "loading") return;
     const fetchData = async () => {
@@ -80,6 +103,12 @@ export default function SubgroupsPage() {
     }
   }, [groupId, sessionStatus, session?.user?.id]);
 
+  /**
+   * Toggles expansion state of a subgroup and resets selection states
+   * Side effects:
+   * - Updates expandedGroup state
+   * - Resets selectedUserIds and showUserDropdown when changing groups
+   */
   const handleGroupExpand = (groupId: number) => {
     if (expandedGroup !== groupId) {
       setSelectedUserIds([]);
@@ -88,6 +117,10 @@ export default function SubgroupsPage() {
     setExpandedGroup((prev) => (prev === groupId ? null : groupId));
   };
 
+  /**
+   * Removes a user from a subgroup
+   * Side effect: Updates subgroups state by removing user
+   */
   const handleRemoveUser = async (subgroupId: number, userId: number) => {
     try {
       const response = await fetch(
@@ -119,6 +152,12 @@ export default function SubgroupsPage() {
     }
   };
 
+  /**
+   * Adds selected users to a subgroup
+   * Side effects:
+   * - Updates subgroups state with new users
+   * - Resets selection states after adding
+   */
   const handleAddSelectedUsers = async (subgroupId: number) => {
     try {
       const response = await fetch(
@@ -156,6 +195,10 @@ export default function SubgroupsPage() {
     }
   };
 
+  /**
+   * Toggles selection state of a user
+   * Side effect: Updates selectedUserIds state
+   */
   const handleUserSelect = (userId: number) => {
     setSelectedUserIds((prev) =>
       prev.includes(userId)
@@ -164,6 +207,12 @@ export default function SubgroupsPage() {
     );
   };
 
+  /**
+   * Deletes a subgroup
+   * Side effects:
+   * - Removes subgroup from subgroups state
+   * - Closes delete confirmation modal
+   */
   const handleDeleteSubgroup = async (subgroupId: number) => {
     try {
       const response = await fetch(

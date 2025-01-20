@@ -1,6 +1,11 @@
 "use client";
 import { RequireDashboard } from "../../components/RequireDashboard";
 
+/**
+ * Landing page for groups section.
+ * Displays guidance message when no group is selected.
+ * Requires user to be logged in to access dashboard.
+ */
 export default function GroupsPage() {
   return (
     <RequireDashboard>
