@@ -2,8 +2,8 @@ version: "3.8"
 
 services:
   db:
-    networks:
-      - internal
+    # networks:
+    #   - internal
     image: postgres:16-alpine
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
@@ -16,10 +16,12 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    ports:
+      - "5435:5432"
 
   backend:
-    networks:
-      - internal
+    # networks:
+    #   - internal
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -40,26 +42,27 @@ services:
     depends_on:
       db:
         condition: service_healthy
-
-  frontend:
-    networks:
-      - internal
-    build:
-      context: ./frontend
-      dockerfile: ${NODE_ENV:-development}.Dockerfile
-    environment:
-      NODE_ENV: ${NODE_ENV:-development}
-      PORT: ${FRONTEND_PORT}
     ports:
-      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - /app/.next
+      - "8080:8080" 
+  # frontend:
+  #   networks:
+  #     - internal
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: ${NODE_ENV:-development}.Dockerfile
+  #   environment:
+  #     NODE_ENV: ${NODE_ENV:-development}
+  #     PORT: ${FRONTEND_PORT}
+  #   ports:
+  #     - "${FRONTEND_PORT}:${FRONTEND_PORT}"
+  #   volumes:
+  #     - ./frontend:/app
+  #     - /app/node_modules
+  #     - /app/.next
 
-networks:
-  internal:
-    internal: true
+# networks:
+#   internal:
+#     internal: true
 
 volumes:
   postgres_data:
