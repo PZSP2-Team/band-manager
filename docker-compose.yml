@@ -2,8 +2,6 @@ version: "3.8"
 
 services:
   db:
-    # networks:
-    #   - internal
     image: postgres:16-alpine
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
@@ -20,8 +18,6 @@ services:
       - "5435:5432"
 
   backend:
-    # networks:
-    #   - internal
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -43,26 +39,20 @@ services:
       db:
         condition: service_healthy
     ports:
-      - "8080:8080" 
-  # frontend:
-  #   networks:
-  #     - internal
-  #   build:
-  #     context: ./frontend
-  #     dockerfile: ${NODE_ENV:-development}.Dockerfile
-  #   environment:
-  #     NODE_ENV: ${NODE_ENV:-development}
-  #     PORT: ${FRONTEND_PORT}
-  #   ports:
-  #     - "${FRONTEND_PORT}:${FRONTEND_PORT}"
-  #   volumes:
-  #     - ./frontend:/app
-  #     - /app/node_modules
-  #     - /app/.next
-
-# networks:
-#   internal:
-#     internal: true
+      - ${BACKEND_PORT}:${BACKEND_PORT}
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ${NODE_ENV:-development}.Dockerfile
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: ${FRONTEND_PORT}
+    ports:
+      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
+    volumes:
+      # - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
 
 volumes:
   postgres_data:
