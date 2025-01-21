@@ -4,14 +4,25 @@ import { NextResponse } from "next/server";
 type PublicPath = "/login" | "/register" | "/";
 const PUBLIC_PATHS: PublicPath[] = ["/login", "/register", "/"];
 
-const PUBLIC_PREFIXES = ["/api/verify"] as const;
+const PUBLIC_PREFIXES = [
+  "/api/verify",
+  "_next",
+  "/static",
+  "/images",
+  "/public",
+] as const;
 
 function isPublicPath(path: string) {
   if (PUBLIC_PATHS.includes(path as PublicPath)) {
     return true;
   }
-
-  return PUBLIC_PREFIXES.some((prefix) => path.startsWith(prefix));
+  if (PUBLIC_PREFIXES.some((prefix) => path.startsWith(prefix))) {
+    return true;
+  }
+  if (path.match(/\.(jpg|jpeg|png|gif|svg|ico)$/)) {
+    return true;
+  }
+  return false;
 }
 
 export default withAuth(
@@ -19,6 +30,9 @@ export default withAuth(
     const path = req.nextUrl.pathname;
 
     if (isPublicPath(path) && req.nextauth.token) {
+      if (path.match(/\.(jpg|jpeg|png|gif|svg|ico)$/)) {
+        return NextResponse.next();
+      }
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
 
