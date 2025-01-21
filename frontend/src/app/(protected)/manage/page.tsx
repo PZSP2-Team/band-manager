@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useGroup } from "../../contexts/GroupContext";
 import LoadingScreen from "@/src/app/components/LoadingScreen";
 import { useSession } from "next-auth/react";
-import { User } from "lucide-react";
+import { User, RefreshCw } from "lucide-react";
 
 /**
  * Represents the component's render state
@@ -73,6 +73,7 @@ export default function ManageGroupPage() {
   });
   const [groupInfo, setGroupInfo] = useState<GroupInfo | null>(null);
   const [members, setMembers] = useState<GroupMember[]>([]);
+  const [isRefreshingToken, setIsRefreshingToken] = useState(false);
 
   /**
    * Fetches group information and member data simultaneously
@@ -195,6 +196,36 @@ export default function ManageGroupPage() {
     }
   };
 
+  const handleRefreshToken = async () => {
+    setIsRefreshingToken(true);
+    try {
+      const response = await fetch(
+        `/api/group/refresh-token/${groupId}/${session?.user?.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to regenerate token");
+      }
+
+      const data = await response.json();
+      setGroupInfo((prev) =>
+        prev ? { ...prev, access_token: data.access_token } : null,
+      );
+      alert("Access token has been regenerated!");
+    } catch (error) {
+      console.error("Error regenerating token:", error);
+      alert("Failed to regenerate token. Please try again.");
+    } finally {
+      setIsRefreshingToken(false);
+    }
+  };
+
   if (renderState.status === "loading") return <LoadingScreen />;
   if (renderState.status === "error")
     return (
@@ -208,12 +239,22 @@ export default function ManageGroupPage() {
       <h1 className="text-3xl font-bold mb-4">{groupInfo?.name}</h1>
       <p className="text-gray-600 mb-4">{groupInfo?.description}</p>
       {groupInfo?.access_token && (
-        <div className="mb-6">
+        <div className="mb-6 flex items-center gap-4">
           <p className="text-customGray">
             <span className="hover:cursor-pointer" onClick={handleCopyToken}>
               {groupInfo.access_token}
             </span>
           </p>
+          <button
+            onClick={handleRefreshToken}
+            disabled={isRefreshingToken}
+            className="flex items-center gap-2 px-6 py-2 bg-blue-600 transition text-white rounded shadow hover:bg-blue-500 disabled:bg-blue-300"
+          >
+            <RefreshCw
+              className={`h-4 w-4 ${isRefreshingToken ? "animate-spin" : ""}`}
+            />
+            Refresh token
+          </button>
         </div>
       )}
 
