@@ -7,6 +7,12 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   ...(process.env.NODE_ENV === "production" ? { output: "standalone" } : {}),
   trailingSlash: false,
+  images: {
+    unoptimized: true,
+    dangerouslyAllowSVG: true,
+    contentDispositionType: "attachment",
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+  },
   /**
    * Rewrite rules for API request proxying
    *
